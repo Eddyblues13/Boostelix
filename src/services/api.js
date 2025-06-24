@@ -1,5 +1,5 @@
 const api = axios.create({
-  baseURL: 'https://some-domain.com/api/',
+  baseURL: import.meta.VITE_APP_BASE_URL,
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json"
