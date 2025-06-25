@@ -15,16 +15,16 @@ const Navbar = () => {
         {/* Desktop Layout - Centered */}
         <div className="hidden md:flex flex-col items-center py-6">
           {/* Logo Section - Centered on Desktop */}
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center justify-center mb-3">
             <Link to="/" className="flex items-center space-x-4 group">
               {/* Logo Icon */}
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+              {/* <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
                 <div className="text-white font-bold text-2xl tracking-tight">SM</div>
-              </div>
+              </div> */}
               {/* Logo Text */}
               <div className="text-center">
-                <div className="text-blue-800 font-bold text-3xl tracking-tight">SM</div>
-                <div className="text-blue-600 text-sm font-semibold tracking-widest -mt-1">EXPLOITS</div>
+                <div className="text-blue-800 font-bold text-3xl tracking-tight">BE</div>
+                <div className="text-blue-600 text-sm font-semibold tracking-widest -mt-1">Boost Elix</div>
               </div>
             </Link>
           </div>
