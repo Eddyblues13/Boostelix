@@ -33,7 +33,7 @@ const Navbar = () => {
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-12">
               <Link
-                to="/signin"
+                to="/"
                 className="text-blue-600 hover:text-blue-800 font-medium text-lg transition-all duration-300 hover:scale-105 relative group"
               >
                 Sign in
