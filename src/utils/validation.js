@@ -1,9 +1,9 @@
 import * as yup from 'yup';
 
 export const loginSchema = yup.object().shape({
-  username: yup
+  login: yup
     .string()
-    .required('Username is required')
+    .required('Email or Username is required')
     .min(3, 'Username must be at least 3 characters'),
 
   password: yup
@@ -11,7 +11,7 @@ export const loginSchema = yup.object().shape({
     .required('Password is required')
     .matches(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/,
-      'Password must have at least one lowercase, one uppercase, and one number'
+      'Incorrect login details'
     ),
 });
 
