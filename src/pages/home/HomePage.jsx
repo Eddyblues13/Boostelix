@@ -1,5 +1,15 @@
 import { Sparkles } from 'lucide-react';
 import LoginSection from "./LoginSection";
+import Whyeffective from '../sections/why';
+import HomeFeatures from '../sections/features';
+import Reason from '../sections/reason';
+import HowItWorks from '../sections/how';
+import { Link } from 'react-router-dom';
+import { Features } from 'tailwindcss';
+import CustomerStories from '../sections/CustomerStories';
+import FAQ from '../sections/Faq';
+import BeginnerVideo from '../sections/BeginnerVideo';
+
 
 const HomePage = () => {
   return (
@@ -22,7 +32,7 @@ const HomePage = () => {
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
             <Sparkles className="text-blue-600 w-8 h-8 mr-3 animate-pulse" />
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-6xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
               BOOST YOUR SOCIAL MEDIA MARKETING!
             </h1>
             <Sparkles className="text-blue-600 w-8 h-8 ml-3 animate-pulse" />
@@ -44,7 +54,35 @@ const HomePage = () => {
         </div>
 
         <LoginSection />
-      </div>
+         {/* Beginner Video Guide */}
+  
+     
+    {/* Features Block */}
+
+     <BeginnerVideo/>
+    <HomeFeatures/>
+
+    {/* Get Started Call to Action */}
+    <div className="mt-16 text-center bg-blue-50 p-10 rounded-lg shadow">
+      <h4 className="text-blue-700 text-2xl font-bold mb-6">READY TO GET STARTED?</h4>
+      <Link to ="/signup"
+        className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+      >
+        Get Started Now
+      </Link>
+
+      {/* WHY IS SOCIAL MEDIA MARKETING SO EFFECTIVE? */}
+<Whyeffective/>
+
+    </div>
+  </div>
+
+<Reason/>
+<HowItWorks/>
+<CustomerStories/>
+<FAQ/>
+  
+      
     </section>
   );
 };
