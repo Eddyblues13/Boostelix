@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import Button from "../../components/Button";
 import { signupSchema } from '../../utils/validation';
-import api from '../../services/api'; 
 
 const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +17,7 @@ const SignUpPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const APP_URL = import.meta.env.VITE_APP_BASE_URL;
 
   const registerUser = async (e) => {
     e.preventDefault();
@@ -35,7 +36,7 @@ const SignUpPage = () => {
       setIsLoading(true);
 
       // API request using Axios
-      const response = await api.post('/api/register', {
+      const response = await axios.post(`${APP_URL}/api/register`, {
         username: username.trim(),
         email: email.trim(),
         firstname: firstname.trim(),
@@ -43,6 +44,7 @@ const SignUpPage = () => {
         password,
         password_confirmation: confirmPassword // Laravel expects this naming
       });
+      console.log(response);
 
       // Handle successful registration
       localStorage.setItem('authToken', response.data.token);
