@@ -36,7 +36,7 @@ const SignUpPage = () => {
       setIsLoading(true);
 
       // API request using Axios
-      const response = await axios.post(`${APP_URL}/api/register`, {
+      const response = await axios.post(`${APP_URL}/register`, {
         username: username.trim(),
         email: email.trim(),
         firstname: firstname.trim(),

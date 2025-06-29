@@ -5,7 +5,7 @@ import Footer from './components/Footer';
 import HomePage from './pages/home/HomePage';
 import SignUpPage from './pages/home/SignUpPage';
 import Dashboard from "./pages/dashboard/Dashboard";
-import ProtectedRoute from './pages/ProtectedRoute';
+import ProtectedRoute from './config/ProtectedRoute';
 
 const Layout = ({ children }) => {
   const location = useLocation();

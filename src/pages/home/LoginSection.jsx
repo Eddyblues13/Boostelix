@@ -23,7 +23,7 @@ const LoginSection = () => {
       setIsLoading(true);
 
       // API request using Axios
-      const response = await axios.post(`${APP_URL}/api/login`, {
+      const response = await axios.post(`${APP_URL}/login`, {
         login: login.trim(),
         password
       });
