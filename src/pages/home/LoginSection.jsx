@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff } from 'lucide-react';
+import axios from 'axios';
 import Button from "../../components/Button";
 import { loginSchema } from '../../utils/validation';
-import api from '../../services/api'; 
 
 const LoginSection = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,6 +12,7 @@ const LoginSection = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const APP_URL = import.meta.env.VITE_APP_BASE_URL;
 
   const loginUser = async (e) => {
     e.preventDefault();
@@ -22,7 +23,7 @@ const LoginSection = () => {
       setIsLoading(true);
 
       // API request using Axios
-      const response = await api.post('/api/login', {
+      const response = await axios.post(`${APP_URL}/api/login`, {
         login: login.trim(),
         password
       });
