@@ -17,7 +17,9 @@ const Header = ({
   setSidebarOpen,
   selectedCurrency,
   setSelectedCurrency,
-  currencies
+  currencies,
+  user,
+  onLogout 
 }) => {
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -91,14 +93,14 @@ const Header = ({
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />
               </div>
-              <span className="font-medium text-gray-700 hidden sm:block">bensonate</span>
+              <span className="font-medium text-gray-700 hidden sm:block">  {user?.username || 'Loading...'}</span>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             
             {profileDropdownOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <div className="font-medium text-gray-800">bensonate</div>
+                  <div className="font-medium text-gray-800"> {user?.username || 'Loading...'}</div>
                   <div className="text-sm text-gray-500">Premium Member</div>
                 </div>
                 <div className="py-2">
@@ -115,7 +117,7 @@ const Header = ({
                     <span className="text-gray-700">Help Center</span>
                   </button>
                   <hr className="my-2" />
-                  <button className="w-full flex items-center space-x-3 px-4 py-2 hover:bg-red-50 text-left text-red-600">
+                  <button  onClick={onLogout} className="w-full flex items-center space-x-3 px-4 py-2 hover:bg-red-50 text-left text-red-600">
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>
                   </button>
