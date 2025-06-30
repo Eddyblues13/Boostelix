@@ -44,8 +44,7 @@ const SignUpPage = () => {
         password,
         password_confirmation: confirmPassword // Laravel expects this naming
       });
-      console.log(response);
-
+      
       // Handle successful registration
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('userData', JSON.stringify(response.data.user));
