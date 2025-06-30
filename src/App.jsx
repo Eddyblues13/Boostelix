@@ -6,6 +6,7 @@ import HomePage from './pages/home/HomePage';
 import SignUpPage from './pages/home/SignUpPage';
 import Dashboard from "./pages/dashboard/Dashboard";
 import ProtectedRoute from './config/ProtectedRoute';
+import NewOrder from './pages/dashboard/NewOrder';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -34,7 +35,10 @@ const App = () => {
                 <Dashboard />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<NewOrder />} />
+          </Route> 
+          
         </Routes>
       </Layout>
     </Router>

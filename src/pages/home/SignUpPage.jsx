@@ -39,8 +39,8 @@ const SignUpPage = () => {
       const response = await axios.post(`${APP_URL}/register`, {
         username: username.trim(),
         email: email.trim(),
-        firstname: firstname.trim(),
-        lastname: lastname.trim(),
+        first_name: firstname.trim(),
+        last_name: lastname.trim(),
         password,
         password_confirmation: confirmPassword // Laravel expects this naming
       });
