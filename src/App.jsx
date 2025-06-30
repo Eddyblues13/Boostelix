@@ -4,7 +4,7 @@ import Navbar from './components/NavBar';
 import Footer from './components/Footer';
 import HomePage from './pages/home/HomePage';
 import SignUpPage from './pages/home/SignUpPage';
-import Dashboard from "./pages/dashboard/Dashboard";
+import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import ProtectedRoute from './config/ProtectedRoute';
 import NewOrder from './pages/dashboard/NewOrder';
 
@@ -32,7 +32,7 @@ const App = () => {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/dashboard" element={
               <ProtectedRoute>
-                <Dashboard />
+                <DashboardLayout />
               </ProtectedRoute>
             }
           >
