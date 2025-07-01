@@ -7,6 +7,8 @@ import SignUpPage from './pages/home/SignUpPage';
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import ProtectedRoute from './config/ProtectedRoute';
 import NewOrder from './pages/dashboard/NewOrder';
+import Updates from './pages/dashboard/Updates';
+import AddFunds from './pages/dashboard/AddFunds';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -37,6 +39,8 @@ const App = () => {
             }
           >
             <Route index element={<NewOrder />} />
+            <Route path="updates" element={<Updates />} />
+            <Route path="add-funds" element={<AddFunds />} />
           </Route> 
           
         </Routes>

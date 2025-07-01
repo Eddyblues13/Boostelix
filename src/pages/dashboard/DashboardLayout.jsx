@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Header from '../../components/dashboard/Header';
 import Sidebar from '../../components/dashboard/SideBar';
-import api from '../../services/api';
+import { getUserFromLocalStorage } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [selectedCurrency, setSelectedCurrency] = useState({ code: 'NGN', symbol: '₦', name: 'Nigerian Naira' });
-  const [activeNavItem, setActiveNavItem] = useState('New Order');
 
   const navigate = useNavigate();
 
@@ -23,20 +22,14 @@ const DashboardLayout = () => {
   ];
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await api.get('/user');
-        setUser(response.data);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          handleLogout();
-        } else {
-          toast.error(err.response?.data?.message || 'Failed to load user data');
-        }
-      }
-    };
-    fetchUserData();
-  }, []);
+  const userData = getUserFromLocalStorage();
+  if (userData) {
+    setUser(userData);
+  } else {
+    handleLogout();
+  }
+}, []);
+
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -71,8 +64,6 @@ const DashboardLayout = () => {
         <Sidebar
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          activeNavItem={activeNavItem}
-          setActiveNavItem={setActiveNavItem}
           selectedCurrency={selectedCurrency}
           setSelectedCurrency={setSelectedCurrency}
           currencies={currencies}
