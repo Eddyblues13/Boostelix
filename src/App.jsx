@@ -9,9 +9,12 @@ import ProtectedRoute from './config/ProtectedRoute';
 import NewOrder from './pages/dashboard/NewOrder';
 import Updates from './pages/dashboard/Updates';
 import AddFunds from './pages/dashboard/AddFunds';
+import OrderHistory from './pages/dashboard/OrderHistory';
+import MassOrder from './pages/dashboard/MassOrder';
+import ChildPanel from './pages/dashboard/ChildPanel';
+import Affiliate from './pages/dashboard/Affiliate';
+import Services from './pages/dashboard/Services';
 import Support from './pages/dashboard/Support';
-
-
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -44,8 +47,13 @@ const App = () => {
             <Route index element={<NewOrder />} />
             <Route path="updates" element={<Updates />} />
             <Route path="add-funds" element={<AddFunds />} />
+            <Route path="orders" element={<OrderHistory />} />
+            <Route path="mass-order" element={<MassOrder />} />
+            <Route path="child-panel" element={<ChildPanel />} />
+            <Route path="affiliate" element={<Affiliate />} />
+            <Route path="services" element={<Services />} />
             <Route path="support" element={<Support />} />
-             <Route path="services" element={<Services />} />
+            <Route path="services" element={<Services />} />
           </Route> 
           
         </Routes>
