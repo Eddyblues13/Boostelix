@@ -14,6 +14,7 @@ import MassOrder from './pages/dashboard/MassOrder';
 import ChildPanel from './pages/dashboard/ChildPanel';
 import Affiliate from './pages/dashboard/Affiliate';
 import Services from './pages/dashboard/Services';
+import Support from './pages/dashboard/Support';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -50,6 +51,8 @@ const App = () => {
             <Route path="mass-order" element={<MassOrder />} />
             <Route path="child-panel" element={<ChildPanel />} />
             <Route path="affiliate" element={<Affiliate />} />
+            <Route path="services" element={<Services />} />
+            <Route path="support" element={<Support />} />
             <Route path="services" element={<Services />} />
           </Route> 
           
