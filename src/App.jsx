@@ -9,6 +9,9 @@ import ProtectedRoute from './config/ProtectedRoute';
 import NewOrder from './pages/dashboard/NewOrder';
 import Updates from './pages/dashboard/Updates';
 import AddFunds from './pages/dashboard/AddFunds';
+import Support from './pages/dashboard/Support';
+
+
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -41,6 +44,8 @@ const App = () => {
             <Route index element={<NewOrder />} />
             <Route path="updates" element={<Updates />} />
             <Route path="add-funds" element={<AddFunds />} />
+            <Route path="support" element={<Support />} />
+             <Route path="services" element={<Services />} />
           </Route> 
           
         </Routes>
