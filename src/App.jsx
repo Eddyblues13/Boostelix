@@ -18,7 +18,8 @@ import Services from './pages/dashboard/Services';
 import Support from './pages/dashboard/Support';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
-import Dashboard from './pages/Admin/Dashboard';
+import Dashboard from './pages/admin/Dashboard';
+
 
 
 const Layout = ({ children }) => {
