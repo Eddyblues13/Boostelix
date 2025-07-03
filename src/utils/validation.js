@@ -50,3 +50,13 @@ export const signupSchema = yup.object().shape({
     .oneOf([yup.ref('password')], 'Passwords must match'),
 });
 
+export const AdminLoginSchema = yup.object().shape({
+  email: yup
+    .string()
+    .required('Email is required')
+    .email('Invalid email'),
+    
+  password: yup
+    .string()
+    .required('Password is required')
+});

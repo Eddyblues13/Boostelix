@@ -5,7 +5,8 @@ import Footer from './components/Footer';
 import HomePage from './pages/home/HomePage';
 import SignUpPage from './pages/home/SignUpPage';
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
-import ProtectedRoute from './config/ProtectedRoute';
+import ProtectedRoute from './routes/ProtectedRoute';
+import AdminRoutes from './routes/AdminRoutes';
 import NewOrder from './pages/dashboard/NewOrder';
 import Updates from './pages/dashboard/Updates';
 import AddFunds from './pages/dashboard/AddFunds';
@@ -15,6 +16,9 @@ import ChildPanel from './pages/dashboard/ChildPanel';
 import Affiliate from './pages/dashboard/Affiliate';
 import Services from './pages/dashboard/Services';
 import Support from './pages/dashboard/Support';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminLogin from './pages/admin/AdminLogin';
+import Dashboard from './pages/admin/dashboard';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -38,6 +42,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardLayout />
@@ -55,7 +60,15 @@ const App = () => {
             <Route path="support" element={<Support />} />
             <Route path="services" element={<Services />} />
           </Route> 
-          
+          <Route path="/admin" element={
+            <AdminRoutes>
+              <AdminLayout />
+            </AdminRoutes>
+          }
+          >
+            <Route path="dashboard" element={<Dashboard />} />
+          </Route>
+        
         </Routes>
       </Layout>
     </Router>

@@ -19,7 +19,6 @@ const BeginnerVideo = () => {
             height="100%"
             frameBorder="0"
             allow="autoplay; fullscreen"
-            allowFullScreen
             className="rounded-lg shadow"
           ></iframe>
         </div>
