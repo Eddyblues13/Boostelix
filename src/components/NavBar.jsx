@@ -12,11 +12,24 @@ const Navbar = () => {
 
   return (
     <>
-      <Helmet>
-      <meta 
-      name="description" 
-     content="Buy Instagram followers, YouTube views & TikTok likes from Boost Elix – the cheapest SMM panel with real users & instant delivery! 24/7 support. Start growing now!" 
-       />
+ <Helmet>
+        {/* Standard SEO Meta */}
+        <title>Boost Elix - Premium SMM Services</title>
+        <meta name="description" content="Buy Instagram followers, YouTube views & TikTok likes from Boost Elix - cheapest SMM panel with real users & instant delivery!" />
+        
+        {/* Open Graph/Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://boostelix.com" />
+        <meta property="og:title" content="Boost Elix - Premium SMM Services" />
+        <meta property="og:description" content="Get real Instagram followers, YouTube views & TikTok likes. Instant delivery, 24/7 support. Start growing today!" />
+        <meta property="og:image" content="https://boostelix.com/og-image.jpg" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://boostelix.com" />
+        <meta name="twitter:title" content="Boost Elix - Premium SMM Services" />
+        <meta name="twitter:description" content="Cheapest SMM panel for real Instagram followers, YouTube views & TikTok likes" />
+        <meta name="twitter:image" content="https://boostelix.com/og-image.jpg" />
       </Helmet>
     <nav className="bg-white shadow-lg relative z-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -105,7 +118,7 @@ const Navbar = () => {
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="px-6 pt-4 pb-6 space-y-4">
             <Link
-              to="/signin"
+              to="/"
               className="text-blue-600 hover:text-blue-800 block py-3 text-lg font-medium transition-colors duration-200 border-b border-gray-100"
               onClick={() => setIsMenuOpen(false)}
             >
