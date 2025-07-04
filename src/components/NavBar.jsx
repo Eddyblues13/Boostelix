@@ -69,12 +69,12 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-3 group">
             {/* Logo Icon */}
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
-              <div className="text-white font-bold text-xl tracking-tight">SM</div>
+              <div className="text-white font-bold text-xl tracking-tight">BE</div>
             </div>
             {/* Logo Text */}
             <div>
-              <div className="text-blue-800 font-bold text-xl tracking-tight">SM</div>
-              <div className="text-blue-600 text-xs font-semibold tracking-widest -mt-1">EXPLOITS</div>
+              <div className="text-blue-800 font-bold text-xl tracking-tight">BE</div>
+              <div className="text-blue-600 text-xs font-semibold tracking-widest -mt-1">Boost Elix</div>
             </div>
           </Link>
 
