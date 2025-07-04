@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,6 +11,13 @@ const Navbar = () => {
   };
 
   return (
+    <>
+      <Helmet>
+      <meta 
+      name="description" 
+     content="Buy Instagram followers, YouTube views & TikTok likes from Boost Elix – the cheapest SMM panel with real users & instant delivery! 24/7 support. Start growing now!" 
+       />
+      </Helmet>
     <nav className="bg-white shadow-lg relative z-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Desktop Layout - Centered */}
@@ -128,6 +136,7 @@ const Navbar = () => {
         </div>
       )}
     </nav>
+    </>
   );
 };
 
