@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Header from '../../components/dashboard/Header';
-import Sidebar from '../../components/dashboard/SideBar';
+import Sidebar from '../../components/dashboard/Sidebar';
 import { getUserFromLocalStorage } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
