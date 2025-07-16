@@ -13,6 +13,7 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const APP_URL = import.meta.env.VITE_APP_BASE_URL;
+  console.log(APP_URL);
 
   const loginUser = async (e) => {
     e.preventDefault();
