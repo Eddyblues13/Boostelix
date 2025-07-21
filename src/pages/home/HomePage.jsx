@@ -4,7 +4,7 @@ import LoginSection from "./LoginSection"; // Assuming LoginSection is still nee
 const HomePage = () => {
   return (
     <section className="relative min-h-screen pt-24 sm:pt-32 md:pt-36 lg:pt-40 bg-gradient-to-br from-blue-50 via-white to-blue-100 overflow-hidden flex items-center justify-center py-16">
-      {/* Animated Background Elements - Made more subtle and modern */}
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-200 rounded-full opacity-10 blur-3xl animate-pulse"></div>
         <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-blue-300 rounded-full opacity-15 blur-3xl animate-bounce-slow"></div>
@@ -14,15 +14,15 @@ const HomePage = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         {/* Left Section: Text Content */}
-        <div className="text-center lg:text-left">
-          <div className="flex items-center justify-center lg:justify-start mb-6">
-            <Sparkles className="text-blue-600 w-8 h-8 mr-3 animate-sparkle" />
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
+        <div className="text-left">
+          <div className="flex flex-wrap items-center justify-start sm:justify-center lg:justify-start gap-3 mb-2 sm:mb-3 md:mb-6">
+            <Sparkles className="text-blue-600 w-8 h-8 animate-sparkle shrink-0" />
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent text-left">
               Increase Your Social Media Presence
             </h1>
           </div>
           <p className="text-lg md:text-xl text-gray-700 font-medium mb-8 max-w-2xl mx-auto lg:mx-0">
-            To grow your social media fast, quality service is key. Smexploits.com offers top services for platforms like YouTube, Instagram, TikTok, Facebook, Twitter, Telegram, Spotify, and more.
+            To grow your social media fast, quality service is key. Boostelix offers top services for platforms like YouTube, Instagram, TikTok, Facebook, Twitter, Telegram, Spotify, and more.
           </p>
           <div className="flex justify-center lg:justify-start">
             <button className="px-8 py-4 bg-blue-600 text-white font-semibold text-lg rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 flex items-center">
@@ -38,15 +38,14 @@ const HomePage = () => {
         {/* Right Section: Illustration Image */}
         <div className="relative flex justify-center items-center p-8">
           <img
-            // This is how you access an image directly from your public folder:
-            // Just ensure 'social-media-growth-illustration.png' is in your 'public' directory.
             src="/social-home.svg"
             alt="Social Media Growth Illustration"
-            className="max-w-full h-auto rounded-lg  transform hover:scale-105 transition-transform duration-500 ease-in-out"
+            className="max-w-full h-auto rounded-lg transform hover:scale-105 transition-transform duration-500 ease-in-out"
           />
         </div>
       </div>
-      {/* Assuming LoginSection is a separate component and fits elsewhere or is a modal/sidebar trigger */}
+
+      {/* Optional login section */}
       {/* <LoginSection /> */}
     </section>
   );
