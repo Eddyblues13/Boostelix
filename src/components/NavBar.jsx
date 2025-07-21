@@ -1,155 +1,115 @@
-import React, { useState } from 'react';
-import { Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { IoMenu, IoClose } from "react-icons/io5";
+import { Link } from "react-router-dom";
+
+const navLinks = [
+  { name: "Sign In", path: "/signin" },
+  { name: "API", path: "/api" },
+  { name: "Services", path: "/services" },
+];
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const toggleMenu = () => setIsOpen(!isOpen);
+  const closeMenu = () => setIsOpen(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY) {
+        setShowNavbar(false); // scrolling down
+      } else {
+        setShowNavbar(true); // scrolling up
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   return (
-    <>
- <Helmet>
-        {/* Standard SEO Meta */}
-        <title>Boost Elix - Premium SMM Services</title>
-        <meta name="description" content="Buy Instagram followers, YouTube views & TikTok likes from Boost Elix - cheapest SMM panel with real users & instant delivery!" />
-        
-        {/* Open Graph/Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://boostelix.com" />
-        <meta property="og:title" content="Boost Elix - Premium SMM Services" />
-        <meta property="og:description" content="Get real Instagram followers, YouTube views & TikTok likes. Instant delivery, 24/7 support. Start growing today!" />
-        <meta property="og:image" content="https://boostelix.com/og-image.jpg" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://boostelix.com" />
-        <meta name="twitter:title" content="Boost Elix - Premium SMM Services" />
-        <meta name="twitter:description" content="Cheapest SMM panel for real Instagram followers, YouTube views & TikTok likes" />
-        <meta name="twitter:image" content="https://boostelix.com/og-image.jpg" />
-      </Helmet>
-    <nav className="bg-white shadow-lg relative z-50">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Desktop Layout - Centered */}
-        <div className="hidden md:flex flex-col items-center py-6">
-          {/* Logo Section - Centered on Desktop */}
-          <div className="flex items-center justify-center mb-3">
-            <Link to="/" className="flex items-center space-x-4 group">
-              {/* Logo Icon */}
-              {/* <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <div className="text-white font-bold text-2xl tracking-tight">SM</div>
-              </div> */}
-              {/* Logo Text */}
-              <div className="text-center">
-                <div className="text-blue-800 font-bold text-3xl tracking-tight">BE</div>
-                <div className="text-blue-600 text-sm font-semibold tracking-widest -mt-1">Boost Elix</div>
-              </div>
+    <motion.header
+      initial={{ y: 0 }}
+      animate={{ y: showNavbar ? 0 : -100 }}
+      transition={{ duration: 0.3 }}
+      className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md shadow border-b border-white/30"
+    >
+      <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        {/* Logo */}
+        <Link
+          to="/"
+          className="text-3xl font-extrabold text-blue-600 tracking-tight"
+        >
+          Boostelix
+        </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-6 ml-auto">
+          {navLinks.map(({ name, path }) => (
+            <Link
+              key={name}
+              to={path}
+              className="text-gray-700 hover:text-blue-600 text-lg font-medium transition-colors duration-200"
+            >
+              {name}
             </Link>
-          </div>
-
-          {/* Desktop Navigation Links - Centered */}
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-12">
-              <Link
-                to="/"
-                className="text-blue-600 hover:text-blue-800 font-medium text-lg transition-all duration-300 hover:scale-105 relative group"
-              >
-                Sign in
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-              <Link
-                to="/services"
-                className="text-gray-700 hover:text-blue-700 font-medium text-lg transition-all duration-300 hover:scale-105 relative group"
-              >
-                Services
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-              <Link
-                to="/api"
-                className="text-gray-700 hover:text-blue-700 font-medium text-lg transition-all duration-300 hover:scale-105 relative group"
-              >
-                API
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-              <Link
-                to="/signup"
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl transform"
-              >
-                Sign up
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Layout - Logo Left, Menu Right */}
-        <div className="md:hidden flex justify-between items-center py-4">
-          {/* Logo Section - Left aligned on Mobile */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            {/* Logo Icon */}
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
-              <div className="text-white font-bold text-xl tracking-tight">BE</div>
-            </div>
-            {/* Logo Text */}
-            <div>
-              <div className="text-blue-800 font-bold text-xl tracking-tight">BE</div>
-              <div className="text-blue-600 text-xs font-semibold tracking-widest -mt-1">Boost Elix</div>
-            </div>
-          </Link>
-
-          {/* Mobile menu button - Right aligned */}
-          <button
-            onClick={toggleMenu}
-            className="bg-gray-50 p-3 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+          ))}
+          <Link
+            to="/signup"
+            className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold text-sm"
           >
-            {isMenuOpen ? (
-              <X className="block h-6 w-6" />
-            ) : (
-              <Menu className="block h-6 w-6" />
-            )}
-          </button>
+            Sign Up
+          </Link>
         </div>
-      </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
-          <div className="px-6 pt-4 pb-6 space-y-4">
-            <Link
-              to="/"
-              className="text-blue-600 hover:text-blue-800 block py-3 text-lg font-medium transition-colors duration-200 border-b border-gray-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sign in
-            </Link>
-            <Link
-              to="/services"
-              className="text-gray-700 hover:text-blue-700 block py-3 text-lg font-medium transition-colors duration-200 border-b border-gray-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Services
-            </Link>
-            <Link
-              to="/api"
-              className="text-gray-700 hover:text-blue-700 block py-3 text-lg font-medium transition-colors duration-200 border-b border-gray-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              API
-            </Link>
-            <Link
-              to="/signup"
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white block py-3 px-6 rounded-full font-semibold text-lg transition-all duration-300 text-center mt-6"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sign up
-            </Link>
-          </div>
-        </div>
-      )}
-    </nav>
-    </>
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={toggleMenu}
+          className="md:hidden text-gray-800 text-3xl focus:outline-none"
+          aria-label="Toggle mobile menu"
+        >
+          {isOpen ? <IoClose /> : <IoMenu />}
+        </button>
+      </nav>
+
+      {/* Mobile Dropdown Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="md:hidden bg-white px-6 py-6 space-y-4 shadow-lg"
+          >
+            {[...navLinks, { name: "Sign Up", path: "/signup" }].map(
+              ({ name, path }) => (
+                <Link
+                  key={name}
+                  to={path}
+                  onClick={closeMenu}
+                  className={`block text-base font-medium transition duration-200 ${
+                    name === "Sign Up"
+                      ? "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                      : "text-gray-800 hover:text-blue-600"
+                  }`}
+                >
+                  {name}
+                </Link>
+              )
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   );
 };
 

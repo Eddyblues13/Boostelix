@@ -1,88 +1,53 @@
 import { Sparkles } from 'lucide-react';
-import LoginSection from "./LoginSection";
-import Whyeffective from '../sections/why';
-import HomeFeatures from '../sections/features';
-import Reason from '../sections/reason';
-import HowItWorks from '../sections/how';
-import { Link } from 'react-router-dom';
-import { Features } from 'tailwindcss';
-import CustomerStories from '../sections/CustomerStories';
-import FAQ from '../sections/Faq';
-import BeginnerVideo from '../sections/BeginnerVideo';
-
+import LoginSection from "./LoginSection"; // Assuming LoginSection is still needed, though not directly in the screenshot's hero area.
 
 const HomePage = () => {
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0">
-        {/* Floating Circles */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-blue-300 rounded-full opacity-30 animate-bounce"></div>
-        <div className="absolute bottom-32 left-1/4 w-16 h-16 bg-blue-400 rounded-full opacity-25 animate-pulse"></div>
-        <div className="absolute bottom-20 right-1/3 w-20 h-20 bg-blue-200 rounded-full opacity-20 animate-bounce"></div>
-        
-        {/* Gradient Orbs */}
-        <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full opacity-10 blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-gradient-to-r from-blue-500 to-blue-700 rounded-full opacity-10 blur-3xl animate-pulse"></div>
+    <section className="relative min-h-screen pt-40 bg-gradient-to-br from-blue-50 via-white to-blue-100 overflow-hidden flex items-center justify-center py-16">
+      {/* Animated Background Elements - Made more subtle and modern */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-200 rounded-full opacity-10 blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-blue-300 rounded-full opacity-15 blur-3xl animate-bounce-slow"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-blue-400 rounded-full opacity-10 blur-3xl animate-pulse-slow"></div>
+        <div className="absolute bottom-1/3 right-1/2 w-56 h-56 bg-blue-200 rounded-full opacity-10 blur-3xl animate-bounce"></div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-20">
-        {/* Hero Title */}
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <Sparkles className="text-blue-600 w-8 h-8 mr-3 animate-pulse" />
-            <h1 className="text-2xl md:text-6xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
-              BOOST YOUR SOCIAL MEDIA MARKETING!
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        {/* Left Section: Text Content */}
+        <div className="text-center lg:text-left">
+          <div className="flex items-center justify-center lg:justify-start mb-6">
+            <Sparkles className="text-blue-600 w-8 h-8 mr-3 animate-sparkle" />
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
+              Increase Your Social Media Presence
             </h1>
-            <Sparkles className="text-blue-600 w-8 h-8 ml-3 animate-pulse" />
           </div>
-          <p className="text-xl md:text-2xl text-gray-700 font-medium mb-8 max-w-4xl mx-auto">
-            The most powerful social media marketing tool you can find.
+          <p className="text-lg md:text-xl text-gray-700 font-medium mb-8 max-w-2xl mx-auto lg:mx-0">
+            To grow your social media fast, quality service is key. Smexploits.com offers top services for platforms like YouTube, Instagram, TikTok, Facebook, Twitter, Telegram, Spotify, and more.
           </p>
+          <div className="flex justify-center lg:justify-start">
+            <button className="px-8 py-4 bg-blue-600 text-white font-semibold text-lg rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 flex items-center">
+              See All Services
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        {/* Service Description */}
-        <div className="mb-12 max-w-5xl mx-auto">
-          <p className="text-blue-700 font-semibold text-lg mb-4">
-            Boost Elix is a Cheap SMM and SEO service Provider.
-          </p>
-          <p className="text-gray-600 text-base leading-relaxed">
-            Fast, Reliable and Secure, offering World Best Quality and Cheapest Automatic Social Media Services 
-            which is specially developed for Resellers with High Speed order completion and amazingly cheap prices!
-          </p>
+        {/* Right Section: Illustration Image */}
+        <div className="relative flex justify-center items-center p-8">
+          <img
+            // This is how you access an image directly from your public folder:
+            // Just ensure 'social-media-growth-illustration.png' is in your 'public' directory.
+            src="/social-home.svg"
+            alt="Social Media Growth Illustration"
+            className="max-w-full h-auto rounded-lg  transform hover:scale-105 transition-transform duration-500 ease-in-out"
+          />
         </div>
-
-        <LoginSection />
-         {/* Beginner Video Guide */}
-  
-     
-    {/* Features Block */}
-
-     <BeginnerVideo/>
-    <HomeFeatures/>
-
-    {/* Get Started Call to Action */}
-    <div className="mt-16 text-center bg-blue-50 p-10 rounded-lg shadow">
-      <h4 className="text-blue-700 text-2xl font-bold mb-6">READY TO GET STARTED?</h4>
-      <Link to ="/signup"
-        className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
-      >
-        Get Started Now
-      </Link>
-
-      {/* WHY IS SOCIAL MEDIA MARKETING SO EFFECTIVE? */}
-<Whyeffective/>
-
-    </div>
-  </div>
-
-<Reason/>
-<HowItWorks/>
-<CustomerStories/>
-<FAQ/>
-  
-      
+      </div>
+      {/* Assuming LoginSection is a separate component and fits elsewhere or is a modal/sidebar trigger */}
+      {/* <LoginSection /> */}
     </section>
   );
 };
