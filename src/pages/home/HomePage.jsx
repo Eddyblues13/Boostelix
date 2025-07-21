@@ -3,7 +3,7 @@ import LoginSection from "./LoginSection"; // Optional
 
 const HomePage = () => {
   return (
-    <section className="relative min-h-screen pt-24 sm:pt-32 md:pt-36 lg:pt-40 bg-gradient-to-br from-blue-50 via-white to-blue-100 overflow-hidden flex items-center justify-center py-16">
+    <section className="relative min-h-screen pt-35 sm:pt-37 md:pt-36 lg:pt-40 bg-gradient-to-br from-blue-50 via-white to-blue-100 overflow-hidden flex items-center justify-center py-16">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-200 rounded-full opacity-10 blur-3xl animate-pulse"></div>
