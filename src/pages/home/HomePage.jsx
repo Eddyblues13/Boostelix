@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import LoginSection from "./LoginSection"; // Assuming LoginSection is still needed, though not directly in the screenshot's hero area.
+import LoginSection from "./LoginSection"; // Optional
 
 const HomePage = () => {
   return (
@@ -14,15 +14,15 @@ const HomePage = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         {/* Left Section: Text Content */}
-        <div className="text-left">
-          <div className="flex flex-wrap items-center justify-start sm:justify-center lg:justify-start gap-3 mb-2 sm:mb-3 md:mb-6">
-            <Sparkles className="text-blue-600 w-8 h-8 animate-sparkle shrink-0" />
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent text-left">
+        <div className="text-center lg:text-left">
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-2 sm:mb-3 md:mb-6">
+            <Sparkles className="text-blue-600 w-8 h-8 animate-sparkle shrink-0 hidden sm:block" />
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
               Increase Your Social Media Presence
             </h1>
           </div>
           <p className="text-lg md:text-xl text-gray-700 font-medium mb-8 max-w-2xl mx-auto lg:mx-0">
-            To grow your social media fast, quality service is key. Boostelix offers top services for platforms like YouTube, Instagram, TikTok, Facebook, Twitter, Telegram, Spotify, and more.
+            To grow your social media fast, quality service is key. Smexploits.com offers top services for platforms like YouTube, Instagram, TikTok, Facebook, Twitter, Telegram, Spotify, and more.
           </p>
           <div className="flex justify-center lg:justify-start">
             <button className="px-8 py-4 bg-blue-600 text-white font-semibold text-lg rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 flex items-center">
