@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IoMenu, IoClose } from "react-icons/io5";
 import { Link } from "react-router-dom";
@@ -11,37 +11,12 @@ const navLinks = [
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showNavbar, setShowNavbar] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY > lastScrollY) {
-        setShowNavbar(false); // scrolling down
-      } else {
-        setShowNavbar(true); // scrolling up
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
   return (
-    <motion.header
-      initial={{ y: 0 }}
-      animate={{ y: showNavbar ? 0 : -100 }}
-      transition={{ duration: 0.3 }}
-      className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md shadow border-b border-white/30"
-    >
+    <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md shadow border-b border-white/30">
       <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link
@@ -109,7 +84,7 @@ const Navbar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </header>
   );
 };
 
