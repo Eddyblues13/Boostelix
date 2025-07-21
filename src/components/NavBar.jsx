@@ -16,7 +16,7 @@ const Navbar = () => {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md shadow border-b border-white/30">
+    <header className="fixed top-0 left-0 w-full z-50 bg-[#f0f9ff]/90 backdrop-blur-md">
       <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link
@@ -63,7 +63,7 @@ const Navbar = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden bg-white px-6 py-6 space-y-4 shadow-lg"
+            className="md:hidden bg-[#f0f9ff] px-6 py-6 space-y-4 shadow-lg"
           >
             {[...navLinks, { name: "Sign Up", path: "/signup" }].map(
               ({ name, path }) => (
