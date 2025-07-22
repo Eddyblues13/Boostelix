@@ -1,125 +1,140 @@
-import { NavLink } from 'react-router-dom';
-import { 
-  ShoppingCart, 
-  CreditCard, 
-  History, 
-  Headphones, 
-  Settings, 
-  DollarSign,
-  Users,
-  Zap,
-  Bell,
-  Wallet,
-  ChevronDown,
-  Globe,
-  X
-} from 'lucide-react';
-import { useState, useRef } from 'react';
+"use client"
 
-const Sidebar = ({
-  sidebarOpen,
-  setSidebarOpen,
-  selectedCurrency,
-  setSelectedCurrency,
-  currencies
-}) => {
-  const [mobileCurrencyDropdownOpen, setMobileCurrencyDropdownOpen] = useState(false);
-  const mobileCurrencyRef = useRef(null);
+import { NavLink, useLocation } from "react-router-dom"
+import {
+  ShoppingCart,
+  CreditCard,
+  History,
+  Headphones,
+  Settings,
+  DollarSign,
+  Menu
+} from "lucide-react"
+import { CSS_COLORS, THEME_COLORS } from "../constant/colors"
+import { useEffect } from "react"
+
+const Sidebar = ({ sidebarOpen, setSidebarOpen, user }) => {
+  const location = useLocation()
+
+  // Collapse sidebar on mobile after route change
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false)
+    }
+  }, [location.pathname])
 
   const sidebarItems = [
-    { icon: ShoppingCart, label: 'New Order', to: '/dashboard' },
-    { icon: CreditCard, label: 'Add Funds', to: '/dashboard/add-funds' },
-    { icon: History, label: 'Order History', to: '/dashboard/orders' },
-    { icon: Headphones, label: 'Customer Support', to: '/dashboard/support' },
-    { icon: Settings, label: 'Services', to: '/dashboard/services' },
-    { icon: DollarSign, label: 'Make Money', to: '/dashboard/affiliate' },
-    { icon: Users, label: 'Child Panel', to: '/dashboard/child-panel' },
-    { icon: Settings, label: 'Mass Order', to: '/dashboard/mass-order' },
-    { icon: Zap, label: 'API Access', to: '/dashboard/api' },
-    { icon: Bell, label: 'Updates', to: '/dashboard/updates' },
-  ];
+    { icon: ShoppingCart, label: "New order", to: "/dashboard" },
+    { icon: CreditCard, label: "Add funds", to: "/dashboard/add-funds" },
+    { icon: History, label: "Order history", to: "/dashboard/orders" },
+    { icon: Headphones, label: "Customer Support", to: "/dashboard/support" },
+    { icon: Settings, label: "Services", to: "/dashboard/services" },
+    { icon: DollarSign, label: "Make money", to: "/dashboard/affiliate" },
+  ]
 
   return (
-    <aside className={`
-      fixed inset-y-0 left-0 z-40 w-72 bg-white/95 backdrop-blur-lg border-r border-gray-200/50
-      transform transition-transform duration-300 ease-in-out
-      ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      overflow-y-auto
-    `}>
-      <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-gray-200 flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-sm">BE</span>
+    <>
+      {/* Backdrop for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-40 w-64
+          transform transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          overflow-y-auto text-white
+        `}
+        style={{
+          background: CSS_COLORS.background.sidebar,
+          boxShadow: "4px 0 15px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <div className="flex flex-col h-full">
+          {/* Logo & Toggle */}
+          <div className={`p-6 border-b ${THEME_COLORS.border.primary200}`}>
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white text-lg">boostelix.com</span>
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className={`p-1 rounded-lg transition-colors ${THEME_COLORS.hover.primary100}`}
+              >
+                <Menu className="w-5 h-5 text-white" />
+              </button>
+            </div>
           </div>
-          <span className="font-bold text-gray-800 text-lg">Boostelix</span>
-          <button 
-            onClick={() => setSidebarOpen(false)} 
-            className="lg:hidden p-2 rounded-xl hover:bg-gray-100 text-gray-600 ml-auto"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
-        <div className="px-4 py-3 lg:hidden border-b border-gray-200 relative">
-          <button
-            onClick={() => setMobileCurrencyDropdownOpen(!mobileCurrencyDropdownOpen)}
-            className="w-full bg-blue-50 border border-blue-200 px-4 py-3 rounded-xl flex items-center justify-between hover:bg-blue-100 transition-colors"
-          >
-            <div className="flex items-center space-x-2">
-              <Wallet className="w-4 h-4 text-blue-600" />
-              <span className="font-semibold text-blue-700">{selectedCurrency.symbol} 0</span>
+          {/* User Profile */}
+          <div className={`p-6 border-b ${THEME_COLORS.border.primary200}`}>
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar || "/placeholder.svg"}
+                    alt={user.username || "User"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-blue-600 font-bold text-xl">
+                    {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
+                  </span>
+                )}
+              </div>
+              <div>
+                <div className="text-white font-medium">{user?.username || "Loading..."}</div>
+                <div className="text-sm text-gray-300">0+</div>
+              </div>
             </div>
-            <ChevronDown 
-              className={`w-4 h-4 text-blue-400 transition-transform ${mobileCurrencyDropdownOpen ? 'rotate-180' : ''}`} 
-            />
-          </button>
-          {mobileCurrencyDropdownOpen && (
-            <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-[60]">
-              {currencies.map((currency) => (
-                <button
-                  key={currency.code}
-                  onClick={() => {
-                    setSelectedCurrency(currency);
-                    setMobileCurrencyDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left border-b border-gray-100 last:border-b-0"
-                >
-                  <Globe className="w-4 h-4 text-gray-400" />
-                  <div>
-                    <div className="font-medium text-gray-700">{currency.symbol} {currency.code}</div>
-                    <div className="text-xs text-gray-500">{currency.name}</div>
-                  </div>
-                </button>
-              ))}
+          </div>
+
+          {/* Menu Title */}
+          <div className="px-6 py-4">
+            <span className="text-xs font-medium text-white/70 uppercase tracking-wider">
+              Menu
+            </span>
+          </div>
+
+          {/* Navigation Items */}
+          <nav className="flex-1 px-4 pb-4">
+            <div className="space-y-1">
+              {sidebarItems.map((item, index) => {
+                const isActive = location.pathname === item.to
+                return (
+                  <NavLink
+                    key={index}
+                    to={item.to}
+                    className={`relative w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+                      isActive
+                        ? `${THEME_COLORS.text.primary100} font-semibold`
+                        : "text-white hover:bg-blue-100/10 hover:text-white"
+                    }`}
+                    style={
+                      isActive
+                        ? { background: CSS_COLORS.background.activeSidebar }
+                        : {}
+                    }
+                  >
+                    <item.icon
+                      className={`w-5 h-5 transition-colors ${
+                        isActive
+                          ? THEME_COLORS.text.primary100
+                          : "text-white/70 group-hover:text-white"
+                      }`}
+                    />
+                    <span className="relative z-10">{item.label}</span>
+                  </NavLink>
+                )
+              })}
             </div>
-          )}
+          </nav>
         </div>
+      </aside>
+    </>
+  )
+}
 
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          {sidebarItems.map((item, index) => (
-            <NavLink
-              key={index}
-              to={item.to}
-              className={({ isActive }) =>
-                `w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg'
-                    : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-blue-600'}`} />
-                  <span className="font-medium">{item.label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-    </aside>
-  );
-};
-
-export default Sidebar;
+export default Sidebar
