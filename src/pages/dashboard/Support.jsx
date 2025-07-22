@@ -1,174 +1,543 @@
-import React from 'react';
-import { AlertTriangle, MessageSquareWarning, Search } from 'lucide-react';
+"use client"
 
+import { useState, useEffect } from "react"
+import { ChevronDown } from "lucide-react"
+import toast from "react-hot-toast"
+import { fetchUserData } from "../../services/userService"
+import { CSS_COLORS } from "../../components/constant/colors"
 
 const Support = () => {
+  const [user, setUser] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState("order")
+  const [subject, setSubject] = useState("Order")
+  const [request, setRequest] = useState("Refill")
+  const [orderIds, setOrderIds] = useState("")
+  const [message, setMessage] = useState("")
+  const [expandedFaq, setExpandedFaq] = useState("why-choose")
+
+  const categories = [
+    { id: "order", label: "Order", icon: "📦" },
+    { id: "payment", label: "Payment", icon: "💳" },
+    { id: "child-panel", label: "Child Panel", icon: "👶" },
+    { id: "api", label: "API", icon: "🔌" },
+    { id: "bug", label: "Bug", icon: "⚠️" },
+    { id: "request", label: "Request", icon: "🙋" },
+    { id: "other", label: "Other", icon: "💬" },
+  ]
+
+  const subjectOptions = {
+    order: ["Order", "Order Issue", "Order Status", "Order Cancellation"],
+    payment: ["Payment", "Payment Issue", "Refund Request", "Payment Method"],
+    "child-panel": ["Child Panel", "Panel Access", "Panel Setup", "Panel Issue"],
+    api: ["API", "API Access", "API Documentation", "API Error"],
+    bug: ["Bug", "Technical Issue", "System Error", "Feature Bug"],
+    request: ["Request", "Feature Request", "Service Request", "General Request"],
+    other: ["Other", "General Inquiry", "Feedback", "Complaint"],
+  }
+
+  const requestOptions = {
+    order: ["Refill", "Speed Up", "Cancel", "Status Check"],
+    payment: ["Refund", "Payment Proof", "Transaction Issue", "Method Change"],
+    "child-panel": ["Access Request", "Setup Help", "Configuration", "Reset"],
+    api: ["API Key", "Documentation", "Integration Help", "Error Fix"],
+    bug: ["Report Bug", "Fix Request", "System Issue", "Feature Problem"],
+    request: ["New Feature", "Service Addition", "Improvement", "Custom Request"],
+    other: ["General Help", "Information", "Feedback", "Complaint"],
+  }
+
+  const faqItems = [
+    {
+      id: "why-choose",
+      question: "Why choose smexploits.com?",
+      answer:
+        "Smexploits makes social media growth simple and affordable. We offer a wide range of services, fast delivery, real-time order tracking, and friendly support. Whether you're a beginner or a reseller, we've got what you need to succeed.",
+    },
+    {
+      id: "beginner-friendly",
+      question: "Is smexploits.com beginner friendly?",
+      answer:
+        "Absolutely! Our platform is designed with beginners in mind. We provide easy-to-use interfaces, detailed guides, step-by-step tutorials, and 24/7 support to help you get started with social media marketing.",
+    },
+    {
+      id: "order-processing",
+      question: "How fast are orders processed?",
+      answer:
+        "Most orders start processing within minutes of placement. Delivery times vary by service type, but we pride ourselves on fast and reliable service delivery. You can track your order progress in real-time.",
+    },
+    {
+      id: "reseller-program",
+      question: "Can I resell smexploits.com services?",
+      answer:
+        "Yes! We offer competitive reseller programs with API access, white-label solutions, and bulk pricing. Contact our support team to learn more about becoming a reseller and earning profits.",
+    },
+    {
+      id: "support-types",
+      question: "What kind of support does smexploits.com offer?",
+      answer:
+        "We provide comprehensive support including live chat, ticket system, email support, and detailed documentation. Our team is available 24/7 to help with orders, payments, technical issues, and general inquiries.",
+    },
+  ]
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetchUserData()
+        setUser(response.data)
+      } catch (err) {
+        toast.error("Failed to fetch user info")
+      }
+    }
+    fetchUser()
+  }, [])
+
+  // Update subject and request when category changes
+  useEffect(() => {
+    const subjects = subjectOptions[selectedCategory] || []
+    const requests = requestOptions[selectedCategory] || []
+    setSubject(subjects[0] || "")
+    setRequest(requests[0] || "")
+  }, [selectedCategory])
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!selectedCategory || !subject) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+    toast.success("Ticket submitted successfully!")
+    // Reset form
+    setOrderIds("")
+    setMessage("")
+  }
+
   return (
-    <div className="p-6 space-y-10 bg-gray-50 min-h-screen">
-      {/* ✅ Ticket Instructions */}
-      <div className="p-6 bg-white rounded-lg shadow space-y-4">
-        <div className="flex items-center space-x-3 text-blue-700">
-          <AlertTriangle className="w-6 h-6" />
-          <h2 className="text-xl font-bold">‼️ IMPORTANT, READ ‼️</h2>
-        </div>
-
-        <div className="space-y-3 text-sm text-gray-800">
-          <p className="font-semibold text-blue-700">Please Use The Following SUBJECTS:</p>
-
-          <div>
-            <h6 className="text-red-600 font-bold">🔴 ORDER REQUEST + ORDER IDs</h6>
-            <p>
-              For issues with an order, go to your order history, copy and paste the order IDs as well as your request in the message tab e.g{' '}
-              <strong>134450 - speed up</strong>, <strong>134455 - refill</strong>, <strong>134458 - cancel</strong>.
-            </p>
-          </div>
-
-          <div>
-            <h6 className="text-gray-700 font-bold">⚪️ PAYMENT (GATEWAY NAME)</h6>
-            <p>
-              For payment issues, state the payment gateway used (e.g. <strong>Flutterwave</strong>), the amount sent, and your email.
-              On weekends, message admin via{' '}
-              <a
-                href="https://t.me/apollosome"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline font-semibold"
-              >
-                TELEGRAM
-              </a>
-              .
-            </p>
-          </div>
-
-          <div>
-            <h6 className="text-blue-600 font-bold">🔵 OTHER</h6>
-            <p>
-              For general questions or complaints, use <strong>OTHER</strong> as the subject and type your message.
-            </p>
-          </div>
-
-          <div className="border-t pt-3">
-            <h6 className="text-blue-700 font-bold">NOTE</h6>
-            <ul className="list-disc list-inside text-gray-700 space-y-1">
-              <li>
-                We respond within <span className="text-green-600 font-semibold">5 Minutes</span> to{' '}
-                <span className="text-yellow-600 font-semibold">6 Hours</span> depending on ticket load.
-              </li>
-              <li>
-                Support is available Monday to Friday from <span className="text-indigo-600 font-semibold">9AM to 5PM</span>.
-              </li>
-              <li>Do not create multiple tickets for the same order ID.</li>
-              <li>Open a new ticket for unrelated issues.</li>
-            </ul>
-          </div>
-
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3">
-            <MessageSquareWarning className="w-6 h-6 text-red-600 mt-1" />
-            <p className="text-red-800 text-sm font-semibold">
-              Notice to all users! Any misbehavior with support may lead to account limitation or suspension.
-            </p>
-          </div>
-        </div>
-      </div>
-<div className="bg-white p-6 rounded-lg shadow mb-8">
-  <h2 className="text-xl font-bold mb-4 text-blue-700">Submit a Support Ticket</h2>
-  
-  <form className="space-y-6" method="post" action="" id="ticketsend">
-    {/* Optional alert (can be conditionally rendered) */}
-    <div className="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-      <strong className="font-bold">Error!</strong>
-      <span className="block sm:inline"> Something went wrong. Please check your inputs.</span>
-    </div>
-
-    <div>
-      <label htmlFor="subject" className="block font-medium mb-1">Subject</label>
-      <input
-        type="text"
-        id="subject"
-        name="TicketForm[subject]"
-        className="w-full border border-gray-300 rounded-md px-4 py-2"
-        placeholder="Enter subject"
-      />
-    </div>
-
-    <div>
-      <label htmlFor="message" className="block font-medium mb-1">Message</label>
-      <textarea
-        id="message"
-        name="TicketForm[message]"
-        rows="6"
-        className="w-full border border-gray-300 rounded-md px-4 py-2"
-        placeholder="Type your message here..."
-      />
-    </div>
-
-    {/* File uploader placeholder */}
-    <div>
-      <label className="block font-medium mb-1">Attach Files (optional)</label>
-      <input type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-      <p className="text-xs text-gray-400 mt-1">Max file size: 5 MB. Supported formats only.</p>
-    </div>
-
-    <div>
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white font-semibold py-3 rounded-md hover:bg-blue-700 transition"
-      >
-        Submit Ticket
-      </button>
-    </div>
-  </form>
-</div>
-
-
-
-      {/* ✅ Search Bar */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <form action="/" method="get" className="flex items-center w-full">
-          <input
-            type="text"
-            name="search"
-            placeholder="Search"
-            className="w-full border border-gray-300 rounded-l-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-5 py-3 rounded-r-md hover:bg-blue-700 transition"
+    <div className="w-full" style={{ backgroundColor: "transparent" }}>
+      {/* Mobile Layout */}
+      <div className="lg:hidden">
+        <div className="w-full p-4 space-y-6">
+          {/* Header */}
+          <div
+            className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
+            style={{ backgroundColor: CSS_COLORS.background.card }}
           >
-            <Search className="w-5 h-5" />
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Ticket Support</h1>
+            <p className="text-gray-600 text-sm">
+              At Smexploits, we understand what works and what doesn't in digital marketing. Our team is here to help
+              with any issue you may have.
+            </p>
+          </div>
+
+          {/* Create Ticket Button */}
+          <button
+            className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg text-lg"
+            style={{ backgroundColor: CSS_COLORS.primary }}
+          >
+            Create Ticket
           </button>
-        </form>
+
+          {/* Ticket Form */}
+          <div
+            className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
+            style={{ backgroundColor: CSS_COLORS.background.card }}
+          >
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Enter your details</h2>
+            <p className="text-gray-600 text-sm mb-6">Please choose the category that best matches your issue:</p>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Category Selection */}
+              <div className="grid grid-cols-2 gap-3">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`flex items-center space-x-2 p-3 rounded-xl border transition-all ${
+                      selectedCategory === category.id
+                        ? "border-teal-500 text-white shadow-lg"
+                        : "border-gray-200 text-gray-700 hover:border-gray-300"
+                    }`}
+                    style={{
+                      backgroundColor: selectedCategory === category.id ? CSS_COLORS.primary : "white",
+                    }}
+                  >
+                    <span className="text-lg">{category.icon}</span>
+                    <span className="font-medium text-sm">{category.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Subject</label>
+                <div className="relative">
+                  <select
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors appearance-none"
+                    style={{ backgroundColor: CSS_COLORS.background.muted }}
+                  >
+                    {(subjectOptions[selectedCategory] || []).map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Order ID (for order category) */}
+              {selectedCategory === "order" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Order ID: [For multiple orders, please separate them using comma. (example:
+                    10867110,10867210,10867500)]
+                  </label>
+                  <textarea
+                    value={orderIds}
+                    onChange={(e) => setOrderIds(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none"
+                    style={{ backgroundColor: CSS_COLORS.background.muted }}
+                    placeholder="Enter order IDs separated by commas"
+                  />
+                </div>
+              )}
+
+              {/* Request */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Request</label>
+                <div className="relative">
+                  <select
+                    value={request}
+                    onChange={(e) => setRequest(e.target.value)}
+                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors appearance-none"
+                    style={{ backgroundColor: CSS_COLORS.background.muted }}
+                  >
+                    {(requestOptions[selectedCategory] || []).map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Message (optional)</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none"
+                  style={{ backgroundColor: CSS_COLORS.background.muted }}
+                  placeholder="Provide additional details about your issue..."
+                />
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: CSS_COLORS.primary }}
+              >
+                Submit Ticket
+              </button>
+            </form>
+          </div>
+
+          {/* Support Info & FAQ */}
+          <div
+            className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
+            style={{ backgroundColor: CSS_COLORS.background.card }}
+          >
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Fast Support Response</h3>
+            <p className="text-gray-600 text-sm mb-4">
+              Need help? Our support team is always ready to assist you as quickly as possible. Whether you have a
+              question about your order, payment, or how to use the panel, we're here to make it easy for you.
+            </p>
+
+            <div
+              className="rounded-xl p-4 text-white mb-6 flex items-center space-x-3"
+              style={{ background: `linear-gradient(135deg, ${CSS_COLORS.primary}, ${CSS_COLORS.primaryDark})` }}
+            >
+              <div className="flex-1">
+                <h4 className="font-semibold mb-2">Ticket Support</h4>
+                <p className="text-sm opacity-90">
+                  Can't find what you're looking for? Create a support ticket and get professional help from our team.
+                  We're here to resolve any issue you may have in no time.
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl">💬</span>
+              </div>
+            </div>
+
+            {/* FAQ */}
+            <div className="space-y-3">
+              {faqItems.map((item) => (
+                <div key={item.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
+                    className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="font-medium text-gray-800 text-sm">{item.question}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ml-2 ${
+                        expandedFaq === item.id ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  {expandedFaq === item.id && (
+                    <div className="px-4 pb-4 border-t border-gray-100">
+                      <p className="text-sm text-gray-600 mt-3">{item.answer}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ✅ Ticket History Table */}
-      <div className="bg-white p-6 rounded-lg shadow overflow-x-auto">
-        <h3 className="text-lg font-bold mb-4">Your Support Tickets</h3>
-        <table className="w-full text-sm text-left border border-gray-200 rounded-lg">
-          <thead className="bg-gray-100 text-gray-700 font-semibold">
-            <tr>
-              <th className="py-3 px-4">ID</th>
-              <th className="py-3 px-4">Subject</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4 whitespace-nowrap">Last Update</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Replace this with dynamic data later */}
-            <tr>
-              <td className="py-4 px-4 text-center text-gray-400" colSpan={4}>
-                No tickets found.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      {/* Desktop Layout */}
+      <div className="hidden lg:block">
+        <div className="w-full p-4 xl:p-6 space-y-6">
+          {/* Header */}
+          <div
+            className="rounded-2xl p-8 shadow-sm border border-white/50 backdrop-blur-sm"
+            style={{ backgroundColor: CSS_COLORS.background.card }}
+          >
+            <h1 className="text-3xl font-bold text-gray-800 mb-3">Ticket Support</h1>
+            <p className="text-gray-600">
+              At Smexploits, we understand what works and what doesn't in digital marketing. Our team is here to help
+              with any issue you may have.
+            </p>
+          </div>
 
-        {/* ✅ Pagination Placeholder */}
-        <div className="mt-6 flex justify-end">
-          {/* Pagination logic or buttons will go here */}
+          {/* Create Ticket Button */}
+          <button
+            className="w-full text-white font-semibold py-5 px-8 rounded-full shadow-lg text-xl hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: CSS_COLORS.primary }}
+          >
+            Create Ticket
+          </button>
+
+          {/* Main Content */}
+          <div className="flex gap-6">
+            {/* Left Column - Ticket Form */}
+            <div className="flex-1">
+              <div
+                className="rounded-2xl p-8 shadow-sm border border-white/50 backdrop-blur-sm"
+                style={{ backgroundColor: CSS_COLORS.background.card }}
+              >
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">Enter your details</h2>
+                <p className="text-gray-600 mb-8">Please choose the category that best matches your issue:</p>
+
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  {/* Category Selection */}
+                  <div className="grid grid-cols-4 gap-4">
+                    {categories.slice(0, 4).map((category) => (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`flex items-center space-x-2 p-4 rounded-xl border transition-all ${
+                          selectedCategory === category.id
+                            ? "border-teal-500 text-white shadow-lg"
+                            : "border-gray-200 text-gray-700 hover:border-gray-300"
+                        }`}
+                        style={{
+                          backgroundColor: selectedCategory === category.id ? CSS_COLORS.primary : "white",
+                        }}
+                      >
+                        <span className="text-xl">{category.icon}</span>
+                        <span className="font-medium">{category.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    {categories.slice(4).map((category) => (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`flex items-center space-x-2 p-4 rounded-xl border transition-all ${
+                          selectedCategory === category.id
+                            ? "border-teal-500 text-white shadow-lg"
+                            : "border-gray-200 text-gray-700 hover:border-gray-300"
+                        }`}
+                        style={{
+                          backgroundColor: selectedCategory === category.id ? CSS_COLORS.primary : "white",
+                        }}
+                      >
+                        <span className="text-xl">{category.icon}</span>
+                        <span className="font-medium">{category.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Subject */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Subject</label>
+                    <div className="relative">
+                      <select
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors appearance-none text-base"
+                        style={{ backgroundColor: CSS_COLORS.background.muted }}
+                      >
+                        {(subjectOptions[selectedCategory] || []).map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Order ID (for order category) */}
+                  {selectedCategory === "order" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Order ID: [For multiple orders, please separate them using comma. (example:
+                        10867110,10867210,10867500)]
+                      </label>
+                      <textarea
+                        value={orderIds}
+                        onChange={(e) => setOrderIds(e.target.value)}
+                        rows={3}
+                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none text-base"
+                        style={{ backgroundColor: CSS_COLORS.background.muted }}
+                        placeholder="Enter order IDs separated by commas"
+                      />
+                    </div>
+                  )}
+
+                  {/* Request */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Request</label>
+                    <div className="relative">
+                      <select
+                        value={request}
+                        onChange={(e) => setRequest(e.target.value)}
+                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors appearance-none text-base"
+                        style={{ backgroundColor: CSS_COLORS.background.muted }}
+                      >
+                        {(requestOptions[selectedCategory] || []).map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Message (optional)</label>
+                    <textarea
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={6}
+                      className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none text-base"
+                      style={{ backgroundColor: CSS_COLORS.background.muted }}
+                      placeholder="Provide additional details about your issue..."
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity text-lg"
+                    style={{ backgroundColor: CSS_COLORS.primary }}
+                  >
+                    Submit Ticket
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* Right Column - Support Info & FAQ */}
+            <div className="w-96">
+              <div className="space-y-6">
+                {/* Support Response Info */}
+                <div
+                  className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
+                  style={{ backgroundColor: CSS_COLORS.background.card }}
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Fast Support Response</h3>
+                  <p className="text-gray-600 text-sm mb-6">
+                    Need help? Our support team is always ready to assist you as quickly as possible. Whether you have a
+                    question about your order, payment, or how to use the panel, we're here to make it easy for you.
+                  </p>
+
+                  <div
+                    className="rounded-xl p-6 text-white flex items-center space-x-3"
+                    style={{ background: `linear-gradient(135deg, ${CSS_COLORS.primary}, ${CSS_COLORS.primaryDark})` }}
+                  >
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-3">Ticket Support</h4>
+                      <p className="text-sm opacity-90 leading-relaxed">
+                        Can't find what you're looking for? Create a support ticket and get professional help from our
+                        team. We're here to resolve any issue you may have in no time.
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-2xl">💬</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* FAQ */}
+                <div
+                  className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm sticky top-24"
+                  style={{ backgroundColor: CSS_COLORS.background.card }}
+                >
+                  <div className="space-y-3">
+                    {faqItems.map((item) => (
+                      <div key={item.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                        <button
+                          onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
+                          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="font-medium text-gray-800 text-sm">{item.question}</span>
+                          <ChevronDown
+                            className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ml-2 ${
+                              expandedFaq === item.id ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedFaq === item.id && (
+                          <div className="px-4 pb-4 border-t border-gray-100">
+                            <p className="text-sm text-gray-600 mt-3 leading-relaxed">{item.answer}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div
+            className="text-center py-6 rounded-2xl text-white"
+            style={{ background: `linear-gradient(135deg, ${CSS_COLORS.primary}, ${CSS_COLORS.primaryDark})` }}
+          >
+            © Copyright 2025 All Rights Reserved.
+          </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Support;
+export default Support
