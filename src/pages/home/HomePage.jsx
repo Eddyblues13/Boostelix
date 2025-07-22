@@ -43,12 +43,24 @@ const HomePage = () => {
             className="max-w-full h-auto rounded-lg transform hover:scale-105 transition-transform duration-500 ease-in-out"
           />
         </div>
+        
+   {/* Optional login section */}
+       { <LoginSection /> } 
+        
       </div>
+    
 
-      {/* Optional login section */}
-      {/* <LoginSection /> */}
+   
+      
     </section>
+
+    
+
   );
+
 };
 
+
+     
+   
 export default HomePage;
