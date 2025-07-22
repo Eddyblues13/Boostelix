@@ -21,7 +21,7 @@ const Navbar = () => {
         {/* Logo */}
         <Link
           to="/"
-          className="text-3xl font-extrabold text-blue-600 tracking-tight"
+          className="text-3xl font-extrabold text-blue-900 tracking-tight"
         >
           Boostelix
         </Link>
@@ -32,14 +32,14 @@ const Navbar = () => {
             <Link
               key={name}
               to={path}
-              className="text-gray-700 hover:text-blue-600 text-lg font-medium transition-colors duration-200"
+              className="text-gray-700 hover:text-blue-900 text-lg font-medium transition-colors duration-200"
             >
               {name}
             </Link>
           ))}
           <Link
             to="/signup"
-            className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold text-sm"
+            className="ml-4 bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-950 transition duration-300 font-semibold text-sm"
           >
             Sign Up
           </Link>
@@ -73,8 +73,8 @@ const Navbar = () => {
                   onClick={closeMenu}
                   className={`block text-base font-medium transition duration-200 ${
                     name === "Sign Up"
-                      ? "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                      : "text-gray-800 hover:text-blue-600"
+                      ? "bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-950"
+                      : "text-gray-800 hover:text-blue-900"
                   }`}
                 >
                   {name}

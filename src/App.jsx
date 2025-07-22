@@ -19,12 +19,13 @@ import Support from './pages/dashboard/Support';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
+import ServicesPage from './pages/home/servicesPage';
 
 
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const showLayout = ["/", "/signup"].includes(location.pathname);
+  const showLayout = ["/", "/signup", "/services"].includes(location.pathname);
 
   return (
     <>
@@ -45,6 +46,7 @@ const App = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/services" element={<ServicesPage />} />
           <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardLayout />
