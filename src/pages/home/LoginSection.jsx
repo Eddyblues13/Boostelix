@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import axios from 'axios';
-import Button from "../../components/Button";
 import { loginSchema } from '../../utils/validation';
 
 const LoginSection = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const APP_URL = import.meta.env.VITE_APP_BASE_URL;
@@ -18,17 +18,14 @@ const LoginSection = () => {
     e.preventDefault();
 
     try {
-      // Validate form inputs
       await loginSchema.validate({ login, password }, { abortEarly: false });
       setIsLoading(true);
 
-      // API request using Axios
       const response = await axios.post(`${APP_URL}/login`, {
         login: login.trim(),
         password
       });
 
-      // Store token and user data
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('userData', JSON.stringify(response.data.user));
 
@@ -36,19 +33,14 @@ const LoginSection = () => {
       navigate('/dashboard');
 
     } catch (err) {
-      // Handle validation errors
       if (err.name === "ValidationError") {
         toast.error(err.inner[0].message);
-      } 
-      // Handle API errors
-      else if (err.response) {
+      } else if (err.response) {
         const errorData = err.response.data;
-        const errorMsg = errorData.message || 
-                         (errorData.errors ? Object.values(errorData.errors).flat().join(' ') : 'Login failed');
+        const errorMsg = errorData.message ||
+          (errorData.errors ? Object.values(errorData.errors).flat().join(' ') : 'Login failed');
         toast.error(errorMsg);
-      } 
-      // Handle network errors
-      else {
+      } else {
         toast.error(err.message || "Network error. Please try again.");
       }
     } finally {
@@ -57,110 +49,112 @@ const LoginSection = () => {
   }
 
   return (
-<section className="relative min-h-screen pt-28 sm:pt-32 md:pt-36 lg:pt-40 bg-[#f0f9ff] overflow-hidden flex items-center justify-center py-16">
-  {/* Background Blur Animation */}
-  <div className="absolute inset-0 z-0">
-    <div className="absolute top-1/4 left-1/3 w-48 h-48 bg-blue-200 rounded-full opacity-10 blur-3xl animate-pulse-slow"></div>
-    <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-blue-300 rounded-full opacity-15 blur-3xl animate-bounce-slow"></div>
-    <div className="absolute bottom-1/3 left-1/4 w-56 h-56 bg-blue-200 rounded-full opacity-10 blur-3xl animate-bounce"></div>
-  </div>
+    <div className="bg-[#f0f9ff] flex items-start justify-center pt-4 p-2">
+      <div className="bg-white rounded-3xl p-6 w-full max-w-md lg:max-w-6xl">
+        <h1 className="text-2xl font-bold text-blue-900 mb-4 text-left">
+          Login to your account
+        </h1>
 
-  {/* Login Form */}
-  <div className="relative z-10 max-w-md w-full mx-auto px-6">
-    <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm border border-gray-100">
-      <form onSubmit={loginUser} className="space-y-6">
-        {/* Login Field */}
-        <div>
-          <label htmlFor="login" className="block text-sm font-semibold text-gray-700 mb-2">
-            Email or Username
-          </label>
-          <input
-            type="text"
-            id="login"
-            name="login"
-            value={login}
-            onChange={(e) => setLogin(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
-            placeholder="Enter your email or username"
-            disabled={isLoading}
-            autoComplete="username"
-          />
-        </div>
+        <form onSubmit={loginUser} className="space-y-4">
+          {/* Username and Password Fields */}
+          <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-4 lg:space-y-0">
+            <div className="relative flex-1">
+              <div className="flex items-center bg-gray-100 rounded-full px-4 py-3">
+                <div className="bg-blue-900 rounded-full p-2 mr-3">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <input
+                  type="text"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-500"
+                  placeholder="Username"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
 
-        {/* Password Field */}
-        <div>
-          <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-            Password
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
-              placeholder="Enter your password"
-              disabled={isLoading}
-              autoComplete="current-password"
-            />
+            <div className="relative flex-1">
+              <div className="flex items-center bg-gray-100 rounded-full px-4 py-3">
+                <div className="bg-blue-900 rounded-full p-2 mr-3">
+                  <Lock className="w-5 h-5 text-white" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="flex-1 bg-transparent outline-none text-gray-700"
+                  placeholder="••••••••"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="ml-2 text-gray-500 hover:text-gray-700 transition-colors"
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Remember Me + Forgot Password + Sign In */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-4 space-y-4 lg:space-y-0">
+            <div className="flex items-center justify-between text-sm lg:flex-1">
+              <div className="flex items-center cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-blue-900 border-gray-300 rounded focus:ring-blue-500 mr-2"
+                  disabled={isLoading}
+                />
+                <span className="text-gray-700">Remember me</span>
+              </div>
+
+              <button
+                type="button"
+                className="text-blue-900 hover:text-blue-950 font-medium"
+                onClick={() => console.log('Forgot password clicked')}
+                disabled={isLoading}
+              >
+                Forgot password?
+              </button>
+            </div>
+
             <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors duration-200"
+              type="submit"
               disabled={isLoading}
+              className="w-full lg:w-auto lg:px-8 bg-blue-900 hover:bg-blue-950 text-white font-semibold py-4 px-6 rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Signing In...</span>
+                </div>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </div>
-        </div>
 
-        {/* Remember Me + Forgot */}
-        <div className="flex items-center justify-between">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              name="rememberMe"
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              disabled={isLoading}
-            />
-            <span className="ml-2 text-sm text-gray-600">Remember me</span>
-          </label>
-          <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200">
-            Forgot password?
-          </Link>
-        </div>
+          {/* Sign Up */}
+          <div className="text-center text-sm">
+            <span className="text-gray-600">Do not have an account? </span>
 
-        {/* Sign In Button */}
-        <Button 
-          type="submit" 
-          disabled={isLoading}
-          className={`w-full ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Processing...
-            </div>
-          ) : "Sign in"}
-        </Button>
-
-        {/* Sign Up Link */}
-        <div className="text-center">
-          <span className="text-gray-600">Do not have an account? </span>
-          <Link to="/signup" className="text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-200">
+               <Link to="/signup" className="text-blue-900 hover:text-blue-950 font-semibold">
             Sign up
           </Link>
-        </div>
-      </form>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-</section>
-
-  )
-}
+  );
+};
 
 export default LoginSection;

@@ -1,16 +1,21 @@
+import React from 'react';
+
 const Whyeffective = () => {
   return (
-    <div className="mt-20 bg-white p-8 rounded-lg shadow-md">
-      {/* WHY IS SOCIAL MEDIA MARKETING SO EFFECTIVE? */}
-      <h4 className="text-2xl font-bold text-blue-700 mb-4">
-        WHY IS SOCIAL MEDIA MARKETING SO EFFECTIVE?
-      </h4>
-      <p className="text-gray-700 mb-3">
-        It is very clear to see that social marketing has become a treasured tool in the scheme of things these days. Considering that more and more people run their businesses online and buy products on the internet, marketers cannot afford to neglect social networking sites to get in touch with customers.
-      </p>
-      <p className="text-gray-700">
-        Here BOOST ELIX will promote you to different social media entries to bring in a broader audience to your customer base. When you use our services, we guarantee that you will see an increase in your client base. It also means that you will have plenty of help to market your products or services using this media.
-      </p>
+    <div className="bg-gradient-to-b from-[#f0f9ff] to-white text-center px-4 py-16">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-blue-900 mb-6">
+          Why you should buy SMMPANEL Services from BOOSTELIX
+        </h2>
+        <p className="text-gray-700 text-lg leading-relaxed mb-4">
+          A fantastic selection of Social media services to fit your needs. You also have access to more followers, likes,
+          comments, views, subscribers, watch time, streams, and verification on all social media platforms.
+        </p>
+        <p className="text-gray-700 text-lg leading-relaxed">
+          fllCkr Quality is our top priority. Our SMM services are 100% genuine, safe, and compliant with each social
+          network’s terms and services. We ensure that our services help enhance your online reputation.
+        </p>
+      </div>
     </div>
   );
 };
