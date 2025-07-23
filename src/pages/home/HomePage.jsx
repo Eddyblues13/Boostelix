@@ -26,7 +26,7 @@ const HomePage = () => {
             </h1>
           </div>
           <p className="text-lg md:text-xl text-gray-700 font-medium mb-8 max-w-2xl mx-auto lg:mx-0">
-            To grow your social media fast, quality service is key. Smexploits.com offers top services for platforms like YouTube, Instagram, TikTok, Facebook, Twitter, Telegram, Spotify, and more.
+            To grow your social media fast, quality service is key. Boostelix.com offers top services for platforms like YouTube, Instagram, TikTok, Facebook, Twitter, Telegram, Spotify, and more.
           </p>
           <div className="flex justify-center lg:justify-start">
             <button className="px-8 py-4 bg-blue-900 text-white font-semibold text-lg rounded-full shadow-lg hover:bg-blue-950 transition-all duration-300 transform hover:scale-105 flex items-center">
