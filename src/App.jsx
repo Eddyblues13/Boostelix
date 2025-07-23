@@ -4,6 +4,7 @@ import Navbar from './components/NavBar';
 import Footer from './components/Footer';
 import HomePage from './pages/home/HomePage';
 import SignUpPage from './pages/home/SignUpPage';
+import ServicesPage from './pages/home/ServicesPage';
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import ProtectedRoute from './routes/ProtectedRoute';
 import AdminRoutes from './routes/AdminRoutes';
@@ -22,9 +23,10 @@ import Dashboard from './pages/admin/Dashboard';
 
 
 
+
 const Layout = ({ children }) => {
   const location = useLocation();
-  const showLayout = ["/", "/signup"].includes(location.pathname);
+  const showLayout = ["/", "/signup", "/services"].includes(location.pathname);
 
   return (
     <>
@@ -44,7 +46,9 @@ const App = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUpPage />} />
+           <Route path="/services" element={<ServicesPage />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/services" element={<ServicesPage />} />
           <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardLayout />
