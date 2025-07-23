@@ -3,6 +3,14 @@ import LoginSection from "./LoginSection"; // Optional
 import StatsDashboard from '../sections/Statistics';
 import Why from '../sections/why';
 import HomeFeatures from '../sections/features';
+import RiseSocial from '../sections/Ready';
+import SmmServicesInsight from '../sections/ServicesInsight';
+import PaymentSection from '../sections/PaymentSection';
+import BoostSection from '../sections/BoostSection';
+import HowItWorks from '../sections/how';
+import FaqSection from '../sections/Faq';
+import TestimonialsSection from '../sections/CustomerStories';
+import GetStarted from '../sections/Getstarted';
 
 const HomePage = () => {
   return (
@@ -61,7 +69,17 @@ const HomePage = () => {
        <StatsDashboard /> 
        <Why />
        <HomeFeatures/> 
+       <RiseSocial/>
+       <SmmServicesInsight/>
+       <PaymentSection/>
+       <BoostSection/>
+       <HowItWorks/>
+       <FaqSection/>
+       <TestimonialsSection/>
+       <GetStarted/>
       </> 
+
+      
       
 
   );
