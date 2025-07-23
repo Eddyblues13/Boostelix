@@ -1,72 +1,84 @@
-import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import React, { useState } from 'react';
 
-const faqs = [
+const faqData = [
   {
-    question: "What is the purpose of SMM panels?",
-    answer: "SMM panel is an online shop where you can find various SMM services.",
+    question: 'What is Boostelix.com?',
+    answer:
+      'Boostelix.com is a social media marketing (SMM) panel where you can buy real engagement services like followers, likes, views, and more for platforms like Instagram, TikTok, YouTube, and others.',
   },
   {
-    question: "What types of SMM services do you offer here?",
-    answer: "On our panel you can find different types of SMM services, such as views, followers, likes, etc.",
+    question: 'How does SMM panel works?',
+    answer:
+      'An SMM panel connects you to automated marketing services. You select a service (e.g., Instagram followers), enter details, and the panel delivers it using APIs from service providers.',
   },
   {
-    question: "Is it safe to buy your SMM services?",
-    answer: "Yes, of course, It is safe to buy our SMM services, your accounts won't be banned.",
+    question: 'How to find a best SMM panel?',
+    answer:
+      'Look for a panel that is fast, affordable, has reliable support, real user reviews, and offers regular updates, like Smexploits.',
   },
   {
-    question: "What are mass orders for?",
-    answer: "The mass order option makes it easy to place several orders with different links at the same time.",
+    question: 'How to earn money from a panel?',
+    answer:
+      'You can resell SMM services by creating your own panel (or child panel), setting your own prices, and keeping the profit margin.',
   },
   {
-    question: 'What does "Drip-feed" mean?',
-    answer: 'Drip-feed allows you to build engagement on your account at your preferred speed. For example, instead of receiving 1000 likes instantly, you can get 100/day for 10 days.',
+    question: 'What is a child panel?',
+    answer:
+      'A child panel is a mini version of a main SMM panel. It’s fully branded with your own name and pricing but powered by the main provider’s services.',
   },
   {
-    question: "Mass orders — what are they?",
-    answer: "A mass order is a feature that helps users place multiple orders with different links at the same time.",
+    question: 'How does a child panel work?',
+    answer:
+      'You buy a child panel from a main provider, set your pricing, and resell their services under your own brand. You manage users and payments while the main panel handles order delivery.',
   },
 ];
 
-const FAQ = () => {
-  const [openIndex, setOpenIndex] = useState(null);
+const FaqSection = () => {
+  const [activeIndex, setActiveIndex] = useState(null);
 
-  const toggleIndex = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
+  const toggle = (index) => {
+    setActiveIndex(index === activeIndex ? null : index);
   };
 
   return (
-    <div className="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-bold text-blue-700 mb-2">Popular Questions</h2>
-        <p className="text-gray-600 mb-10">
-          See below to get answers to some of the most frequently asked questions on our panel.
-        </p>
-      </div>
-
-      <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
-        {faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="bg-white p-5 rounded-lg shadow-md cursor-pointer"
-            onClick={() => toggleIndex(index)}
-          >
-            <div className="flex justify-between items-center">
-              <p className="font-semibold text-gray-800">{faq.question}</p>
-              {openIndex === index ? (
-                <ChevronUp className="text-blue-600" />
-              ) : (
-                <ChevronDown className="text-blue-600" />
+    <section className="bg-[#f0f9ff] py-20 px-4 sm:px-6 lg:px-12">
+      <div className="max-w-6xl mx-auto">
+        <h4 className="text-3xl font-bold text-center text-blue-900 mb-10">
+          Frequently Asked Questions
+        </h4>
+        <div className="grid md:grid-cols-2 gap-6">
+          {faqData.map((item, index) => (
+            <div
+              key={index}
+              className="bg-white border border-blue-100 rounded-lg shadow-sm hover:shadow-md transition duration-300"
+            >
+              <button
+                onClick={() => toggle(index)}
+                className="w-full text-left px-6 py-4 flex justify-between items-center focus:outline-none"
+              >
+                <span className="text-blue-900 font-semibold">{item.question}</span>
+                <svg
+                  className={`w-5 h-5 text-blue-900 transition-transform duration-300 ${
+                    activeIndex === index ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {activeIndex === index && (
+                <div className="px-6 pb-4 text-gray-700 text-sm">
+                  <span className="font-bold text-blue-900">Ans:</span> {item.answer}
+                </div>
               )}
             </div>
-            {openIndex === index && (
-              <div className="mt-3 text-gray-600 text-sm">{faq.answer}</div>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 
-export default FAQ;
+export default FaqSection;

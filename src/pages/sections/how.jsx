@@ -1,84 +1,105 @@
+import React, { useState } from 'react';
 
-
-import { LogIn, CreditCard, User, ShoppingCart } from "lucide-react";
+const steps = [
+  {
+    number: '01',
+    title: 'Register An Account',
+    desc: 'To begin with, you need to create an account and log in.',
+  },
+  {
+    number: '02',
+    title: 'Add Funds',
+    desc: 'Choose a preferred payment method and fund your wallet to start placing orders.',
+  },
+  {
+    number: '03',
+    title: 'Order a Service',
+    desc: 'Choose the SMM services you want and easily place your orders.',
+  },
+  {
+    number: '04',
+    title: 'Enjoy Great Result',
+    desc: "We'll inform you when your order is ready, then you can enjoy great results.",
+  },
+];
 
 const HowItWorks = () => {
+  const [showModal, setShowModal] = useState(false);
+
   return (
-    <div className="bg-white py-14 px-4 sm:px-6 lg:px-8">
-      <h3 className="text-3xl text-center font-bold mb-4">How our panel works</h3>
-      <p className="text-center text-gray-600 mb-12">
-        Follow these 4 simple steps to get started on our panel and grow your business.
-      </p>
-
-      <div className="max-w-5xl mx-auto grid gap-8 sm:gap-10 md:grid-cols-2">
-
-        {/* Step 1 */}
-        <div className="flex items-start space-x-5">
-          <div className="relative w-16 h-16">
-            <div className="w-16 h-16 rounded-full border-4 border-blue-500 flex items-center justify-center text-blue-600 shrink-0">
-              <LogIn size={25} />
-            </div>
-            <span className="absolute -top-3 -right-3 bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">1</span>
-          </div>
-          <div>
-            <h4 className="text-xl font-semibold mb-1">Register & log in</h4>
-            <p className="text-gray-600">Start with creating a panel account and log in.</p>
-          </div>
-        </div>
-
-        {/* Step 2 */}
-        <div className="flex items-start space-x-5">
-          <div className="relative w-16 h-16">
-            <div className="w-16 h-16 rounded-full border-4 border-green-500 flex items-center justify-center text-green-600 shrink-0">
-              <CreditCard size={25} />
-            </div>
-            <span className="absolute -top-3 -right-3 bg-green-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">2</span>
-          </div>
-          <div>
-            <h4 className="text-xl font-semibold mb-1">Make a deposit</h4>
-            <p className="text-gray-600">
-              Add funds through a payment option that works best for you.
-            </p>
+    <section className="bg-white py-20 px-4 sm:px-6 lg:px-12">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-start">
+        {/* Left: Image + Intro */}
+        <div>
+          <h3 className="text-3xl font-bold text-blue-900 mb-4">How it works?</h3>
+          <p className="text-gray-700 mb-6">
+            Check out the step-by-step tutorial on how to get started on our SMM panel.
+          </p>
+          <div className="relative w-full max-w-md rounded-lg overflow-hidden shadow-lg">
+            <img
+              src="https://i.23robo.info/projects/smexploits/img/how-work-img.webp"
+              alt="How it works"
+              className="w-full"
+            />
+            <button
+              onClick={() => setShowModal(true)}
+              className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 transition duration-300"
+            >
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition transform">
+                <svg className="w-6 h-6 text-blue-900" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </button>
           </div>
         </div>
 
-        {/* Step 3 */}
-        <div className="flex items-start space-x-5">
-          <div className="relative w-16 h-16">
-            <div className="w-16 h-16 rounded-full border-4 border-purple-500 flex items-center justify-center text-purple-600 shrink-0">
-              <User size={25} />
+        {/* Right: Steps in Boxes */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {steps.map((step) => (
+            <div
+              key={step.number}
+              className="bg-[#f0f9ff] border border-blue-100 rounded-2xl p-6 shadow hover:shadow-md hover:scale-[1.02] transition duration-300"
+            >
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="bg-blue-900 text-white w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold">
+                  {step.number}
+                </div>
+                <h5 className="text-lg font-semibold text-blue-900">{step.title}</h5>
+              </div>
+              <p className="text-gray-600 text-sm">{step.desc}</p>
             </div>
-            <span className="absolute -top-3 -right-3 bg-purple-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">3</span>
-          </div>
-          <div>
-            <h4 className="text-xl font-semibold mb-1">Choose services</h4>
-            <p className="text-gray-600">
-              Select SMM services to help your business receive more publicity.
-            </p>
-          </div>
-        </div>
-
-        {/* Step 4 */}
-        <div className="flex items-start space-x-5">
-          <div className="relative w-16 h-16">
-            <div className="w-16 h-16 rounded-full border-4 border-red-500 flex items-center justify-center text-red-600 shrink-0">
-              <ShoppingCart size={25} />
-            </div>
-            <span className="absolute -top-3 -right-3 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">4</span>
-          </div>
-          <div>
-            <h4 className="text-xl font-semibold mb-1">Great results</h4>
-            <p className="text-gray-600">
-              You will be satisfied with our SMM services when your order is ready.
-            </p>
-          </div>
+          ))}
         </div>
       </div>
-    </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-lg overflow-hidden w-full max-w-3xl shadow-xl">
+            <div className="relative pt-[56.25%]">
+              <iframe
+                className="absolute top-0 left-0 w-full h-full"
+                src="https://www.youtube.com/embed/ggCXWAJ1gRA?autoplay=1"
+                title="YouTube video"
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              ></iframe>
+            </div>
+            <div className="text-right p-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-950 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 };
 
 export default HowItWorks;
-
- 
-
