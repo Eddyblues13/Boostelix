@@ -11,7 +11,12 @@ import toast from "react-hot-toast"
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState(null)
-  const [selectedCurrency, setSelectedCurrency] = useState({ code: "NGN", symbol: "₦", name: "Nigerian Naira" })
+  const [selectedCurrency, setSelectedCurrency] = useState({
+    code: "NGN",
+    symbol: "₦",
+    name: "Nigerian Naira"
+  })
+
   const navigate = useNavigate()
 
   const currencies = [
@@ -40,7 +45,7 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: CSS_COLORS.background.primary }}>
+    <div className="min-h-screen flex flex-col" style={{ background: CSS_COLORS.background.primary }}>
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -62,7 +67,8 @@ const DashboardLayout = () => {
       />
 
       {/* Sidebar + Main */}
-      <div className="flex">
+      <div className="flex flex-1">
+        {/* Sidebar */}
         <Sidebar
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
@@ -72,10 +78,10 @@ const DashboardLayout = () => {
           user={user}
         />
 
-        {/* Main Content - Increased space */}
-        <main className="flex-1 lg:ml-64">
-          <div className="w-full min-h-[calc(100vh-6rem)]">
-            <div className="min-h-full p-2 lg:p-4" style={{ backgroundColor: CSS_COLORS.background.overlay }}>
+        {/* Main Content */}
+        <main className="flex-1 pt-16 lg:ml-64">
+          <div className="w-full min-h-[calc(100vh-4rem)]">
+            <div className="min-h-full p-3 sm:p-4" style={{ backgroundColor: CSS_COLORS.background.overlay }}>
               <Outlet />
             </div>
           </div>
