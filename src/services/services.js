@@ -7,4 +7,4 @@ export const fetchSmmCategories = async () => {
 export const fetchSmmServices = async (categoryId) => {
     const response = await api.get(`/services?category_id=${categoryId}`);
      return response;
-}
+} 
