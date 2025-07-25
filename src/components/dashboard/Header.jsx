@@ -29,10 +29,7 @@ const Header = ({
             <Menu className="w-5 h-5 text-gray-600" />
           </button>
 
-          {/* Logo (Mobile) */}
-          <div className="block lg:hidden">
-            <span className="font-bold text-gray-800 text-lg">Boostelix</span>
-          </div>
+        
 
           {/* Page Title - Desktop only */}
           <div className="hidden lg:flex items-center space-x-3">
