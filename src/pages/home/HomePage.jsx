@@ -15,7 +15,7 @@ import GetStarted from '../sections/Getstarted';
 const HomePage = () => {
   return (
     <>
-    <section className="relative min-h-screen pt-16 sm:pt-20 md:pt-24 lg:pt-28 overflow-hidden flex items-center justify-center py-8">
+    <section className="relative min-h-screen pt-20 sm:pt-24 md:pt-28 lg:pt-32 overflow-hidden flex items-center justify-center py-8">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-200 rounded-full opacity-10 blur-3xl animate-pulse"></div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IoMenu, IoClose } from "react-icons/io5";
 import { Link } from "react-router-dom";
@@ -11,12 +11,45 @@ const navLinks = [
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
 
+  useEffect(() => {
+    let timeoutId;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down
+        setShowNavbar(false);
+      } else {
+        // Scrolling up
+        setShowNavbar(true);
+      }
+
+      setLastScrollY(currentScrollY);
+
+      // Optional: Keep it visible if scrolling stops
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setShowNavbar(true);
+      }, 200); // Delay in ms
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-[#f0f9ff]/90 backdrop-blur-md">
+    <header
+      className={`fixed top-0 left-0 w-full z-50 bg-[#f0f9ff]/90 backdrop-blur-md transform transition-transform duration-300 ${
+        showNavbar ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link
