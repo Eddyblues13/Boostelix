@@ -8,3 +8,8 @@ export const fetchSmmServices = async (categoryId) => {
     const response = await api.get(`/services?category_id=${categoryId}`);
      return response;
 } 
+
+export const fetchAllSmmServices = async () => {
+    const response = await api.get("/all-services");
+     return response;
+}
