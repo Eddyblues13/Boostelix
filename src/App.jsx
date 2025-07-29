@@ -20,6 +20,13 @@ import Support from './pages/dashboard/Support';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
+import ManageApiProviders from './pages/admin/ManageApiProviders';
+import ManageUsers from './pages/admin/ManageUsers';
+import AdminUserView from "./pages/admin/AdminUserView";
+import AdminUserEdit from "./pages/admin/AdminUserEdit";
+import AddSubtractBalance from "./pages/admin/AddSubtractBalance";
+
+
 
 
 
@@ -40,7 +47,7 @@ const Layout = ({ children }) => {
 
 const App = () => {
   return (
-    <Router>
+    <Router> 
       <Toaster position="top-right" reverseOrder={false} />
       <Layout>
         <Routes>
@@ -73,6 +80,11 @@ const App = () => {
           }
           >
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="api-providers" element={<ManageApiProviders />} />
+            <Route path="manage-users" element={<ManageUsers />} />
+            <Route path="users/:id/View" element={<AdminUserView />} />
+            <Route path="users/:id/Edit" element={<AdminUserEdit />} />
+            <Route path="users/:id/balance" element={<AddSubtractBalance />} />
           </Route>
         
         </Routes>
