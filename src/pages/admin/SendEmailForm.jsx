@@ -1,14 +1,87 @@
 "use client"
 
-import { useState } from "react"
-import { X, Check, Menu, Link, Code, HelpCircle, ImageIcon } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useParams } from "react-router-dom"
 import toast from "react-hot-toast"
-import { sendEmailToUser } from "../../services/adminService"
+import { useEditor, EditorContent } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
+import Underline from "@tiptap/extension-underline"
+import { TextStyle } from "@tiptap/extension-text-style"
+import { Color } from "@tiptap/extension-color"
+import TextAlign from "@tiptap/extension-text-align"
+import { Highlight } from "@tiptap/extension-highlight"
+import CodeBlock from "@tiptap/extension-code-block"
+import Image from "@tiptap/extension-image"
+import { 
+  Mail, 
+  Send, 
+  AlertCircle, 
+  X as XIcon, 
+  Check as CheckIcon, 
+  Loader2, 
+  ChevronDown, 
+  ChevronUp, 
+  Bold, 
+  Italic, 
+  Underline as UnderlineIcon, 
+  Strikethrough, 
+  List, 
+  ListOrdered, 
+  Code, 
+  AlignLeft, 
+  AlignCenter, 
+  AlignRight, 
+  Image as ImageIcon 
+} from "lucide-react"
+import { getUserById, sendEmailToUser } from "../../services/adminService"
 
-const SendEmailForm = ({ user, onCancel }) => {
+const SendEmailForm = ({ user: propUser, onCancel }) => {
+  const params = useParams()
+  const userId = params.id
+  const [user, setUser] = useState(propUser || null)
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      TextStyle,
+      Color,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Highlight,
+      CodeBlock,
+      Image,
+    ],
+    content: message,
+    onUpdate: ({ editor }) => {
+      setMessage(editor.getHTML())
+    },
+  })
+
+  useEffect(() => {
+    if (!propUser && userId) {
+      const fetchUser = async () => {
+        try {
+          const userData = await getUserById(userId)
+          setUser(userData)
+        } catch (error) {
+          toast.error("Failed to fetch user data")
+        }
+      }
+      fetchUser()
+    }
+  }, [userId, propUser])
+
+  const insertImage = () => {
+    const url = window.prompt('Enter the URL of the image:')
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run()
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -19,6 +92,7 @@ const SendEmailForm = ({ user, onCancel }) => {
       toast.success(response.message || "Email sent successfully")
       setSubject("")
       setMessage("")
+      editor.commands.clearContent()
       onCancel?.()
     } catch (error) {
       if (error.response) {
@@ -39,65 +113,154 @@ const SendEmailForm = ({ user, onCancel }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-        <div className="mb-4 sm:mb-0">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-            Send Email To {user.username}
-          </h2>
-          <p className="text-gray-600 mt-1 text-sm">Compose and send an email to the user.</p>
-        </div>
-        <button
-          onClick={onCancel}
-          className="self-end sm:self-auto p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-        >
-          <X className="w-5 h-5 text-gray-500" />
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+    <div className="p-4 bg-white rounded-lg shadow">
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+            Subject
+          </label>
           <input
             type="text"
+            id="subject"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder="Write Subject"
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Write your message here..."
-            rows={8}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-y text-sm"
-            required
-          />
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 mt-2 text-xs text-gray-500 flex flex-wrap gap-2 items-center">
-            <span className="font-bold">B</span>
-            <span className="italic">I</span>
-            <span className="underline">U</span>
-            <span>Rubik</span>
-            <span className="text-purple-600">A</span>
-            <span><Check /></span>
-            <span><Menu /></span>
-            <span><Link /></span>
-            <span><ImageIcon /></span>
-            <span><Code /></span>
-            <span><HelpCircle /></span>
+
+        <div className="mb-4">
+          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+            Message
+          </label>
+          <div className="border border-gray-300 rounded-md">
+            {/* Toolbar */}
+            <div className="flex flex-wrap gap-1 p-2 border-b border-gray-200">
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive("bold") ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Bold"
+              >
+                <Bold className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive("italic") ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Italic"
+              >
+                <Italic className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive("underline") ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Underline"
+              >
+                <UnderlineIcon className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive("strike") ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Strikethrough"
+              >
+                <Strikethrough className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive("bulletList") ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Bullet List"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive("orderedList") ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Numbered List"
+              >
+                <ListOrdered className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive("codeBlock") ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Code Block"
+              >
+                <Code className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().setTextAlign("left").run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive({ textAlign: "left" }) ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Align Left"
+              >
+                <AlignLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().setTextAlign("center").run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive({ textAlign: "center" }) ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Align Center"
+              >
+                <AlignCenter className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().setTextAlign("right").run()}
+                className={`p-2 rounded hover:bg-gray-100 ${editor?.isActive({ textAlign: "right" }) ? "bg-gray-100 text-blue-500" : "text-gray-600"}`}
+                title="Align Right"
+              >
+                <AlignRight className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={insertImage}
+                className="p-2 rounded hover:bg-gray-100 text-gray-600"
+                title="Insert Image"
+              >
+                <ImageIcon className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Editor */}
+            <EditorContent 
+              editor={editor} 
+              className="min-h-[200px] p-3 focus:outline-none" 
+            />
           </div>
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center gap-2 font-medium text-sm disabled:opacity-50"
-        >
-          {loading ? "Sending..." : "Send Email"}
-        </button>
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 mr-2" />
+                Send Email
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   )

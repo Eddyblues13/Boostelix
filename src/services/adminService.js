@@ -94,3 +94,62 @@ export const adjustUserBalance = async ({ user_id, amount, type, note = "" }) =>
 
   return response.data
 };
+
+
+
+// Fetch user orders
+export const fetchUserOrders = async (userId) => {
+  const response = await api.get(`/admin/users/${userId}/orders`);
+  return response.data;
+};
+
+// Fetch all categories
+export const fetchCategories = async () => {
+  const response = await api.get(`/admin/users/categories`);
+  return response.data;
+};
+
+// Fetch all services
+export const fetchServices = async () => {
+  const response = await api.get(`/admin/users/services`);
+  return response.data;
+};
+
+
+
+export const deleteOrder = async (id) => {
+  const res = await api.delete(`/orders/${id}`)
+  return res.data
+}
+
+export const updateOrder = async (order) => {
+  const res = await api.put(`/orders/${order.id}`, order)
+  return res.data
+}
+
+export const updateOrderStatus = async (id, status, statusDescription, reason) => {
+  const res = await api.patch(`/orders/${id}/status`, {
+    status,
+    statusDescription,
+    reason,
+  })
+  return res.data
+}
+
+
+
+// Fetch user orders
+export const fetchUserTransactions = async (userId) => {
+  const response = await api.get(`/admin/users/${userId}/transactions`);
+  return response.data;
+};
+
+
+export const sendEmailToAllUsers = async (subject, message) => {
+  const response = await api.post('/admin/send-email-all', {
+    subject,
+    message,
+  });
+  return response.data;
+}
+

@@ -39,14 +39,14 @@ const UserActions = ({ user, onActionSelect, onEdit, onToggleStatus }) => {
         </button>
         
         <button
-          onClick={() => onActionSelect("order", user)}
+           onClick={() => navigate(`/admin/users/${user.id}/orders`)}
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
         >
           <ShoppingCart className="w-4 h-4" />
           Order
         </button>
         <button
-          onClick={() => onActionSelect("transaction", user)}
+          onClick={() => navigate(`/admin/users/${user.id}/transactions`)}
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
         >
           <Receipt className="w-4 h-4" />
@@ -60,7 +60,7 @@ const UserActions = ({ user, onActionSelect, onEdit, onToggleStatus }) => {
           Custom Rate
         </button>
         <button
-          onClick={() => onActionSelect("send_email", user)}
+               onClick={() => navigate(`/admin/users/${user.id}/send-email`)}
           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
         >
           <Send className="w-4 h-4" />
