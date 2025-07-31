@@ -23,3 +23,11 @@ export const createOrder = async (orderData) => {
     throw error;
   }
 }
+
+
+
+export const fetchAllSmmServices = async () => {
+    const response = await api.get("/all-services");
+     return response;
+}
+
