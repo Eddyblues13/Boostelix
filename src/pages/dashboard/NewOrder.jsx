@@ -13,11 +13,14 @@ import {
   MessageSquare,
   Music,
   Twitch,
-  Globe
+  Globe,
+  Loader2,
+  AlertCircle,
+  CheckCircle2
 } from "lucide-react"
 import toast from "react-hot-toast"
 import { fetchUserData } from "../../services/userService"
-import { fetchSmmCategories, fetchSmmServices } from "../../services/services"
+import { fetchSmmCategories, fetchSmmServices, createOrder } from "../../services/services"
 import { CSS_COLORS } from "../../components/constant/colors"
 
 const NewOrder = () => {
@@ -32,13 +35,14 @@ const NewOrder = () => {
   const [loadingCategories, setLoadingCategories] = useState(false)
   const [loadingServices, setLoadingServices] = useState(false)
   const [showServiceDescription, setShowServiceDescription] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [orderStatus, setOrderStatus] = useState(null)
 
   const totalCost = selectedService && quantity ? (quantity * selectedService.price).toFixed(2) : "0.00"
 
   const getPlatformIcon = (categoryTitle) => {
     if (!categoryTitle) return <Globe className="w-5 h-5 text-gray-500 flex-shrink-0" />;
     
-    // Remove special characters and emojis from the beginning
     const cleanedTitle = categoryTitle.replace(/^[^a-zA-Z0-9]+/, '').toLowerCase();
     
     if (cleanedTitle.includes('instagram')) return <Instagram className="w-5 h-5 text-pink-500 flex-shrink-0" />;
@@ -51,6 +55,55 @@ const NewOrder = () => {
     if (cleanedTitle.includes('telegram')) return <MessageSquare className="w-5 h-5 text-blue-500 flex-shrink-0" />;
     
     return <Globe className="w-5 h-5 text-gray-500 flex-shrink-0" />;
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!selectedCategory || !selectedService || !quantity || !link) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    if (quantity < selectedService.min_amount || quantity > selectedService.max_amount) {
+      toast.error(`Quantity must be between ${selectedService.min_amount} and ${selectedService.max_amount}`);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setOrderStatus(null);
+
+    try {
+      const orderData = {
+        category: selectedCategory.id,
+        service: selectedService.id,
+        link,
+        quantity: parseInt(quantity),
+        check: true // agree to terms
+      };
+
+      const response = await createOrder(orderData); 
+      
+      setOrderStatus({
+        success: true,
+        message: "Order submitted successfully!",
+        orderId: response.data.order_id
+      });
+      
+      toast.success("Order submitted successfully!");
+      
+      // Reset form
+      setQuantity("");
+      setLink("");
+      setSelectedService(null);
+    } catch (error) {
+      console.error("Order submission error:", error);
+      setOrderStatus({
+        success: false,
+        message: error.response?.data?.message || "Failed to submit order"
+      });
+      toast.error(error.response?.data?.message || "Failed to submit order");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Fetch user
@@ -120,8 +173,44 @@ const NewOrder = () => {
     { name: "Website Traffic", icon: "🌐", bgColor: "#6b7280" },
   ]
 
+  // Calculate service metrics
+  const getServiceMetrics = () => {
+    if (!selectedService) return null;
+    
+    const startTime = selectedService.start_time || "5-30 minutes";
+    const speed = selectedService.speed || "100-1000/hour";
+    const avgTime = selectedService.avg_time || "7 hours 43 minutes";
+    const guarantee = selectedService.guarantee || "30 days";
+    
+    return { startTime, speed, avgTime, guarantee };
+  };
+  
+  const metrics = getServiceMetrics();
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "transparent" }}>
+      {/* Order Status Alert */}
+      {orderStatus && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
+          orderStatus.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        }`}>
+          <div className="flex items-start">
+            {orderStatus.success ? (
+              <CheckCircle2 className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+            )}
+            <div>
+              <p className="font-medium">{orderStatus.success ? "Success!" : "Error!"}</p>
+              <p className="text-sm">{orderStatus.message}</p>
+              {orderStatus.success && orderStatus.orderId && (
+                <p className="text-xs mt-1">Order ID: {orderStatus.orderId}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Layout */}
       <div className="lg:hidden">
         <div className="max-w-md mx-auto p-4 space-y-4">
@@ -132,7 +221,7 @@ const NewOrder = () => {
                 <div className="text-4xl">💰</div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Account Balance</p>
-                  <h3 className="text-2xl font-bold text-gray-800">0</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">{user?.balance || "0"}</h3>
                 </div>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl" style={{ backgroundColor: CSS_COLORS.primary }}></div>
@@ -143,7 +232,7 @@ const NewOrder = () => {
                 <div className="text-4xl">👑</div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Account Status</p>
-                  <h3 className="text-xl font-bold text-gray-800">NEW</h3>
+                  <h3 className="text-xl font-bold text-gray-800">{user?.status || "NEW"}</h3>
                 </div>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl" style={{ backgroundColor: CSS_COLORS.primary }}></div>
@@ -165,7 +254,7 @@ const NewOrder = () => {
                 <div className="text-4xl">📦</div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Total Order</p>
-                  <h3 className="text-2xl font-bold text-gray-800">4551537</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">{user?.total_orders || "0"}</h3>
                 </div>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl" style={{ backgroundColor: CSS_COLORS.primary }}></div>
@@ -291,8 +380,10 @@ const NewOrder = () => {
                   type="url"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
+                  placeholder="Enter your profile/post URL"
                   className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   style={{ backgroundColor: CSS_COLORS.background.muted }}
+                  required
                 />
               </div>
 
@@ -305,8 +396,10 @@ const NewOrder = () => {
                   onChange={(e) => setQuantity(e.target.value)}
                   min={selectedService?.min_amount || 0}
                   max={selectedService?.max_amount || 1000000}
+                  placeholder="Enter quantity"
                   className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   style={{ backgroundColor: CSS_COLORS.background.muted }}
+                  required
                 />
               </div>
 
@@ -318,7 +411,7 @@ const NewOrder = () => {
                 </label>
                 <input
                   type="text"
-                  value="7 hours 51 minutes"
+                  value={metrics?.avgTime || "7 hours 51 minutes"}
                   readOnly
                   className="w-full px-4 py-4 border border-gray-200 rounded-xl"
                   style={{ backgroundColor: CSS_COLORS.background.muted }}
@@ -339,10 +432,19 @@ const NewOrder = () => {
 
               {/* Submit Button */}
               <button
-                className="w-full text-white font-semibold py-5 px-6 rounded-full shadow-lg text-lg"
+                onClick={handleSubmitOrder}
+                disabled={isSubmitting}
+                className="w-full text-white font-semibold py-5 px-6 rounded-full shadow-lg text-lg flex items-center justify-center"
                 style={{ backgroundColor: CSS_COLORS.primary }}
               >
-                Submit
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Submit"
+                )}
               </button>
             </div>
           </div>
@@ -357,19 +459,19 @@ const NewOrder = () => {
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                 <h5 className="text-sm font-medium text-gray-600 mb-1">Start Time</h5>
-                <p className="text-sm text-gray-800">--</p>
+                <p className="text-sm text-gray-800">{metrics?.startTime || "--"}</p>
               </div>
               <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                 <h5 className="text-sm font-medium text-gray-600 mb-1">Speed</h5>
-                <p className="text-sm text-gray-800">--</p>
+                <p className="text-sm text-gray-800">{metrics?.speed || "--"}</p>
               </div>
               <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                 <h5 className="text-sm font-medium text-gray-600 mb-1">Avg. Time</h5>
-                <p className="text-sm text-gray-800 font-medium">7 hours 43 minutes</p>
+                <p className="text-sm text-gray-800 font-medium">{metrics?.avgTime || "7 hours 43 minutes"}</p>
               </div>
               <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                 <h5 className="text-sm font-medium text-gray-600 mb-1">Guarantee</h5>
-                <p className="text-sm text-gray-800">--</p>
+                <p className="text-sm text-gray-800">{metrics?.guarantee || "--"}</p>
               </div>
             </div>
             <div>
@@ -412,7 +514,7 @@ const NewOrder = () => {
               <div className="flex flex-col items-center justify-center text-center space-y-2">
                 <div className="text-5xl">👑</div>
                 <p className="text-sm text-gray-500">Account Status</p>
-                <h3 className="text-xl font-bold text-gray-800">NEW</h3>
+                <h3 className="text-xl font-bold text-gray-800">{user?.status || "NEW"}</h3>
               </div>
             </div>
 
@@ -430,7 +532,7 @@ const NewOrder = () => {
               <div className="flex flex-col items-center justify-center text-center space-y-2">
                 <div className="text-5xl">💰</div>
                 <p className="text-sm text-gray-500">Account Balance</p>
-                <h3 className="text-xl font-bold text-gray-800">₦0</h3>
+                <h3 className="text-xl font-bold text-gray-800">₦{user?.balance || "0"}</h3>
               </div>
             </div>
 
@@ -439,7 +541,7 @@ const NewOrder = () => {
               <div className="flex flex-col items-center justify-center text-center space-y-2">
                 <div className="text-5xl">📦</div>
                 <p className="text-sm text-gray-500">Total Order</p>
-                <h3 className="text-xl font-bold text-gray-800">4,551,537</h3>
+                <h3 className="text-xl font-bold text-gray-800">{user?.total_orders || "0"}</h3>
               </div>
             </div>
           </div>
@@ -554,6 +656,7 @@ const NewOrder = () => {
                       placeholder="Enter your profile/post URL"
                       className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       style={{ backgroundColor: CSS_COLORS.background.muted }}
+                      required
                     />
                   </div>
 
@@ -569,6 +672,7 @@ const NewOrder = () => {
                       placeholder="Enter quantity"
                       className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       style={{ backgroundColor: CSS_COLORS.background.muted }}
+                      required
                     />
                   </div>
 
@@ -580,7 +684,7 @@ const NewOrder = () => {
                     </label>
                     <div className="flex items-center space-x-2 p-4 border border-gray-200 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                       <Clock className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                      <span className="text-sm lg:text-base font-medium text-gray-800">7 hours 43 minutes</span>
+                      <span className="text-sm lg:text-base font-medium text-gray-800">{metrics?.avgTime || "7 hours 43 minutes"}</span>
                     </div>
                   </div>
 
@@ -599,10 +703,19 @@ const NewOrder = () => {
 
                   {/* Submit Button */}
                   <button
-                    className="w-full text-white font-semibold py-4 lg:py-5 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity text-base lg:text-lg"
+                    onClick={handleSubmitOrder}
+                    disabled={isSubmitting}
+                    className="w-full text-white font-semibold py-4 lg:py-5 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity text-base lg:text-lg flex items-center justify-center"
                     style={{ backgroundColor: CSS_COLORS.primary }}
                   >
-                    Submit Order
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Submit Order"
+                    )}
                   </button>
 
                   {/* Mobile Service Description Toggle */}
@@ -628,19 +741,19 @@ const NewOrder = () => {
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                     <h5 className="text-sm font-medium text-gray-600 mb-1">Start Time</h5>
-                    <p className="text-sm text-gray-800">--</p>
+                    <p className="text-sm text-gray-800">{metrics?.startTime || "--"}</p>
                   </div>
                   <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                     <h5 className="text-sm font-medium text-gray-600 mb-1">Speed</h5>
-                    <p className="text-sm text-gray-800">--</p>
+                    <p className="text-sm text-gray-800">{metrics?.speed || "--"}</p>
                   </div>
                   <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                     <h5 className="text-sm font-medium text-gray-600 mb-1">Avg. Time</h5>
-                    <p className="text-sm text-gray-800 font-medium">7 hours 43 minutes</p>
+                    <p className="text-sm text-gray-800 font-medium">{metrics?.avgTime || "7 hours 43 minutes"}</p>
                   </div>
                   <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
                     <h5 className="text-sm font-medium text-gray-600 mb-1">Guarantee</h5>
-                    <p className="text-sm text-gray-800">--</p>
+                    <p className="text-sm text-gray-800">{metrics?.guarantee || "--"}</p>
                   </div>
                 </div>
                 <div>

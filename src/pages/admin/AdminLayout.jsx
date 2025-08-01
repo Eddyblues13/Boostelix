@@ -2,28 +2,28 @@ import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Header from '../../components/admin/Header';
 import Sidebar from '../../components/admin/Sidebar';
-import { getUserFromLocalStorage } from '../../utils/helpers';
+import { getAdminFromLocalStorage } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(null);
 
   useEffect(() => {
-    const userData = getUserFromLocalStorage();
-    if (userData) {
-      setUser(userData);
+    const adminData = getAdminFromLocalStorage();
+    if (adminData) {
+      setAdmin(adminData);
     } else {
       handleLogout();
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminData');
     toast.success('Logged out successfully');
-    navigate('/');
+    navigate('/admin/login');
   };
 
   return (
@@ -37,7 +37,7 @@ const AdminLayout = () => {
       <Header
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-        user={user}
+        admin={admin}
         onLogout={handleLogout}
       />
       <div className="flex">

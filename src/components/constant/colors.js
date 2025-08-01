@@ -16,6 +16,7 @@ export const THEME_COLORS = {
     primary200: "text-blue-200",
     primary600: "text-blue-600",
     primary700: "text-blue-700",
+    
   },
   // Border colors
   border: {

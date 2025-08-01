@@ -10,3 +10,18 @@ export const getUserFromLocalStorage = () => {
     return null;
   }
 };
+
+
+
+export const getAdminFromLocalStorage = () => {
+  try {
+    const storedAdmin = localStorage.getItem('adminData');
+    if (!storedAdmin) return null;
+    const parsedAdmin = JSON.parse(storedAdmin);
+    return parsedAdmin;
+  } catch (error) {
+    console.error("Failed to parse admin from localStorage:", error);
+    return null;
+  }
+};
+
