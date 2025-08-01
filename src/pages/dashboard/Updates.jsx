@@ -394,7 +394,7 @@ return (
                   }`}
                   style={{
                     backgroundColor: currentPage === page ? CSS_COLORS.primary : CSS_COLORS.background.muted,
-                    color: currentPage === page ? "white" : CSS_COLORS.primary100,
+                    color: currentPage === page ? "white" : CSS_COLORS.primary200,
                   }}
                 >
                   {page}
