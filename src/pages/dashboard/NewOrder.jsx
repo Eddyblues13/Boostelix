@@ -262,7 +262,7 @@ const NewOrder = () => {
               <div className="flex items-center space-x-4">
                 <div className="text-4xl">💰</div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Account Balance</p>
+                  <p className="text-sm text-gray-500 mb-1">Account Balancee</p>
                   <h3 className="text-2xl font-bold text-gray-800">{user?.balance || "0"}</h3>
                 </div>
               </div>
