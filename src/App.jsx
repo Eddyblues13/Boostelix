@@ -29,6 +29,8 @@ import ManageUserOrders from "./pages/admin/ManageUserOrders";
 import ManageUserTransactions from "./pages/admin/ManageUserTransactions";
 import SendMailAll from "./pages/admin/SendMailAll";
 import SendEmailForm from './pages/admin/SendEmailForm';
+import API from './pages/dashboard/Api';
+import Tutorials from './pages/dashboard/Tutorials';
 
 
 
@@ -76,6 +78,9 @@ const App = () => {
             <Route path="services" element={<Services />} />
             <Route path="support" element={<Support />} />
             <Route path="services" element={<Services />} />
+            <Route path="api" element={<API />} />
+            <Route path="tutorials" element={<Tutorials />} />
+
           </Route> 
           <Route path="/admin" element={
             <AdminRoutes>
