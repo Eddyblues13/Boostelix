@@ -33,6 +33,8 @@ import API from './pages/dashboard/Api';
 import Tutorials from './pages/dashboard/Tutorials';
 
 
+import AddServicesPage from './pages/admin/AddServicesPage';
+import ShowServices from './pages/admin/ShowServices';
 
 
 
@@ -89,6 +91,8 @@ const App = () => {
           }
           >
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="add-services" element={<AddServicesPage />} />
+            <Route path="show-services" element={<ShowServices />} />
             <Route path="api-providers" element={<ManageApiProviders />} />
             <Route path="manage-users" element={<ManageUsers />} />
             <Route path="users/:id/View" element={<AdminUserView />} />

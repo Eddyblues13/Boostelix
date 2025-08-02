@@ -1,0 +1,90 @@
+import React, { useEffect, useState } from 'react';
+import { fetchAllSmmServices } from '../../services/services';
+import toast from 'react-hot-toast';
+import { FixedSizeList as List } from 'react-window';
+
+const ShowServices = () => {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const res = await fetchAllSmmServices();
+        if (res.data.success === true) {
+          setServices(res.data.data);
+        } else {
+          toast.error(res.data.message || 'Failed to load services.');
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Error loading services');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadServices();
+  }, []);
+
+  const TableHeader = () => (
+    <div className="grid min-w-[1000px] grid-cols-8 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-700 px-4 py-2">
+      <div>ID</div>
+      <div>Title</div>
+      <div>Category</div>
+      <div>Rate</div>
+      <div>Min</div>
+      <div>Max</div>
+      <div>Type</div>
+      <div>Provider</div>
+    </div>
+  );
+
+  const Row = ({ index, style }) => {
+    const s = services[index];
+    return (
+      <div
+        style={style}
+        className="grid min-w-[1000px] grid-cols-8 px-4 py-3 items-center text-sm even:bg-gray-50"
+      >
+        <div>{s.api_service_id}</div>
+        <div className="truncate">{s.service_title}</div>
+        <div>{s.category.category_title || '-'}</div>
+        <div>${s.rate_per_1000}</div>
+        <div>{s.min_amount}</div>
+        <div>{s.max_amount}</div>
+        <div>{s.service_type}</div>
+        <div>{s.provider.api_name || '-'}</div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="p-4 lg:p-6">
+      <h2 className="text-xl font-bold mb-5 text-gray-800">All Imported Services</h2>
+
+      {loading ? (
+        <div>Loading...</div>
+      ) : services.length === 0 ? (
+        <div className="text-gray-600">No services found.</div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow overflow-hidden">
+          <div className="max-h-[600px] overflow-auto">
+            <div className="w-full overflow-x-auto">
+              <TableHeader />
+              <List
+                height={500}
+                itemCount={services.length}
+                itemSize={50}
+                width="100%"
+              >
+                {Row}
+              </List>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ShowServices;
