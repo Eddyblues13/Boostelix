@@ -20,6 +20,8 @@ import Support from './pages/dashboard/Support';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
+import AddServicesPage from './pages/admin/AddServicesPage';
+import ShowServices from './pages/admin/ShowServices';
 
 
 
@@ -73,6 +75,8 @@ const App = () => {
           }
           >
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="add-services" element={<AddServicesPage />} />
+            <Route path="show-services" element={<ShowServices />} />
           </Route>
         
         </Routes>
