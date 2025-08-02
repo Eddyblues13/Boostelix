@@ -8,6 +8,9 @@ import {
   Headphones,
   Settings,
   DollarSign,
+  Server,
+  RefreshCw,
+  BookOpen,
   Menu
 } from "lucide-react"
 import { CSS_COLORS, THEME_COLORS } from "../constant/colors"
@@ -30,6 +33,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, user }) => {
     { icon: Headphones, label: "Customer Support", to: "/dashboard/support" },
     { icon: Settings, label: "Services", to: "/dashboard/services" },
     { icon: DollarSign, label: "Make money", to: "/dashboard/affiliate" },
+    { icon: Server, label: "API", to: "/dashboard/api" },
+    { icon: RefreshCw, label: "Updates", to: "/dashboard/updates" },
+    { icon: BookOpen, label: "Tutorials", to: "/dashboard/tutorials" }
   ]
 
   return (

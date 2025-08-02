@@ -13,7 +13,7 @@ import {
 const Header = ({ 
   sidebarOpen, 
   setSidebarOpen,
-  user,
+  admin,
   onLogout 
 }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -54,14 +54,14 @@ const Header = ({
               <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-lg flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />
               </div>
-              <span className="font-medium text-gray-700 hidden sm:block">{user?.username || 'Admin'}</span>
+              <span className="font-medium text-gray-700 hidden sm:block">{admin?.name || 'Admin'}</span>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             
             {profileDropdownOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <div className="font-medium text-gray-800">{user?.username || 'Admin'}</div>
+                  <div className="font-medium text-gray-800">{admin?.name || 'Admin'}</div>
                   <div className="text-sm text-gray-500">System Administrator</div>
                 </div>
                 <div className="py-2">

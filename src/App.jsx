@@ -20,6 +20,19 @@ import Support from './pages/dashboard/Support';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
+import ManageApiProviders from './pages/admin/ManageApiProviders';
+import ManageUsers from './pages/admin/ManageUsers';
+import AdminUserView from "./pages/admin/AdminUserView";
+import AdminUserEdit from "./pages/admin/AdminUserEdit";
+import AddSubtractBalance from "./pages/admin/AddSubtractBalance";
+import ManageUserOrders from "./pages/admin/ManageUserOrders";
+import ManageUserTransactions from "./pages/admin/ManageUserTransactions";
+import SendMailAll from "./pages/admin/SendMailAll";
+import SendEmailForm from './pages/admin/SendEmailForm';
+import API from './pages/dashboard/Api';
+import Tutorials from './pages/dashboard/Tutorials';
+
+
 import AddServicesPage from './pages/admin/AddServicesPage';
 import ShowServices from './pages/admin/ShowServices';
 
@@ -42,7 +55,7 @@ const Layout = ({ children }) => {
 
 const App = () => {
   return (
-    <Router>
+    <Router> 
       <Toaster position="top-right" reverseOrder={false} />
       <Layout>
         <Routes>
@@ -67,6 +80,9 @@ const App = () => {
             <Route path="services" element={<Services />} />
             <Route path="support" element={<Support />} />
             <Route path="services" element={<Services />} />
+            <Route path="api" element={<API />} />
+            <Route path="tutorials" element={<Tutorials />} />
+
           </Route> 
           <Route path="/admin" element={
             <AdminRoutes>
@@ -77,6 +93,15 @@ const App = () => {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="add-services" element={<AddServicesPage />} />
             <Route path="show-services" element={<ShowServices />} />
+            <Route path="api-providers" element={<ManageApiProviders />} />
+            <Route path="manage-users" element={<ManageUsers />} />
+            <Route path="users/:id/View" element={<AdminUserView />} />
+            <Route path="users/:id/Edit" element={<AdminUserEdit />} />
+            <Route path="users/:id/balance" element={<AddSubtractBalance />} />
+            <Route path="users/:id/orders" element={<ManageUserOrders />} />
+            <Route path="users/:id/transactions" element={<ManageUserTransactions />} />
+            <Route path="users/:id/send-email" element={<SendEmailForm />} />
+            <Route path="send-mail" element={<SendMailAll />} />
           </Route>
         
         </Routes>
