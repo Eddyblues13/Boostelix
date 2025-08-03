@@ -32,6 +32,7 @@ import SendEmailForm from './pages/admin/SendEmailForm';
 import API from './pages/dashboard/Api';
 import Tutorials from './pages/dashboard/Tutorials';
 import Account from './pages/dashboard/Account';
+import TransactionCallback from './pages/dashboard/TransactionCallback';
 
 
 import AddServicesPage from './pages/admin/AddServicesPage';
@@ -69,6 +70,7 @@ const App = () => {
           <Route path="/admin/login" element={<AdminLogin />} />
           
           <Route path="/services" element={<ServicesPage />} />
+          <Route path="/payment/callback" element={<TransactionCallback />} />
           <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardLayout />
@@ -88,6 +90,8 @@ const App = () => {
             <Route path="api" element={<API />} />
             <Route path="tutorials" element={<Tutorials />} />
             <Route path="account" element={<Account />} />
+           
+            
 
           </Route> 
           <Route path="/admin" element={
