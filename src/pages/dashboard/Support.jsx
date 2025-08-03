@@ -5,8 +5,13 @@ import { ChevronDown } from "lucide-react"
 import toast from "react-hot-toast"
 import { fetchUserData } from "../../services/userService"
 import { CSS_COLORS } from "../../components/constant/colors"
+import { createTicket, fetchUserTickets} from "../../services/services"
+import { Search } from "lucide-react"
+
+
 
 const Support = () => {
+  const [tickets, setTickets] = useState([])
   const [user, setUser] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState("order")
   const [subject, setSubject] = useState("Order")
@@ -78,6 +83,31 @@ const Support = () => {
     },
   ]
 
+
+  useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const response = await fetchUserData()
+      setUser(response.data)
+    } catch (err) {
+      toast.error("Failed to fetch user info")
+    }
+  }
+
+  const fetchTickets = async () => {
+    try {
+      const response = await fetchUserTickets()
+      setTickets(response.data || [])
+    } catch (err) {
+      toast.error("Failed to load ticket history")
+    }
+  }
+
+  fetchUser()
+  fetchTickets()
+}, [])
+
+
   // Fetch user data
   useEffect(() => {
     const fetchUser = async () => {
@@ -99,17 +129,47 @@ const Support = () => {
     setRequest(requests[0] || "")
   }, [selectedCategory])
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!selectedCategory || !subject) {
-      toast.error("Please fill in all required fields")
-      return
-    }
-    toast.success("Ticket submitted successfully!")
+ const handleSubmit = async (e) => {
+  e.preventDefault()
+
+  if (!selectedCategory || !subject || !request) {
+    toast.error("Please fill in all required fields")
+    return
+  }
+
+  const ticketData = {
+    category_id: selectedCategory,
+    subject,
+    request_type: request,
+    order_ids: orderIds,
+    message,
+  }
+
+  try {
+    const response = await createTicket(ticketData)
+
+    toast.success(response.message || "Ticket submitted successfully!")
+
+      // Refetch history
+      const updatedTickets = await fetchUserTickets()
+      setTickets(updatedTickets)
+    // Optionally: log the ticket for debugging
+    console.log("Ticket created:", response.ticket)
+
     // Reset form
     setOrderIds("")
     setMessage("")
+
+    
+  } 
+  catch (error) {
+    const errorMsg = error?.response?.data?.message || "Failed to submit ticket"
+    toast.error(errorMsg)
+    console.error("Ticket submission error:", errorMsg)
   }
+
+}
+
 
   return (
     <div className="w-full" style={{ backgroundColor: "transparent" }}>
@@ -248,6 +308,14 @@ const Support = () => {
               </button>
             </form>
           </div>
+
+
+
+
+
+
+
+
 
           {/* Support Info & FAQ */}
           <div
@@ -527,6 +595,61 @@ const Support = () => {
             </div>
           </div>
 
+          <div className="mt-10 space-y-6">
+  <h2 className="text-xl font-semibold text-gray-800">My Ticket History</h2>
+
+  <div className="space-y-3">
+    {tickets.length > 0 ? (
+      tickets.map((ticket) => (
+        <div
+          key={ticket.id}
+          className="rounded-2xl p-4 shadow-sm border border-white/50 backdrop-blur-sm"
+          style={{ backgroundColor: CSS_COLORS.background.card }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-semibold text-gray-800">#{ticket.id}</span>
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                ticket.status === 0
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : ticket.status === 1
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
+              {ticket.status === 0 ? 'Pending' : ticket.status === 1 ? 'Answered' : 'Closed'}
+            </span>
+          </div>
+
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Subject:</span>
+              <span className="text-gray-800">{ticket.subject}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Last Updated:</span>
+              <span className="text-gray-800">
+                {new Date(ticket.updated_at || ticket.created_at).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      ))
+    ) : (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Search className="w-8 h-8 text-gray-400" />
+        </div>
+        <p className="text-gray-500 font-medium">No tickets found</p>
+        <p className="text-sm text-gray-400 mt-1">
+          You haven’t submitted any tickets yet
+        </p>
+      </div>
+    )}
+  </div>
+</div>
+
+
           {/* Footer */}
           <div
             className="text-center py-6 rounded-2xl text-white"
@@ -537,6 +660,10 @@ const Support = () => {
         </div>
       </div>
     </div>
+
+
+
+
   )
 }
 

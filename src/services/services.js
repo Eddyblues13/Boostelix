@@ -24,6 +24,32 @@ export const createOrder = async (orderData) => {
   }
 }
 
+//user ticket 
+export const createTicket = async (ticketData) => {
+  try {
+    const response = await api.post('/tickets', ticketData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating ticket:', error);
+    throw error;
+  }
+}
+
+//user ticket history
+export const fetchUserTickets = async () => {
+  try {
+    const response = await api.get('/ticketshistory');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching tickets history:', error);
+    throw error;
+  }
+};
+
 
 
 export const fetchAllSmmServices = async () => {

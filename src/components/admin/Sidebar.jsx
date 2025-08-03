@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   Database,
+  Ticket,
   X,
   Shield
 } from 'lucide-react';
@@ -24,6 +25,7 @@ const Sidebar = ({
     { icon: List, label: 'Show Services', to: '/admin/show-services' },
     { icon: Zap, label: 'Manage API Providers', to: '/admin/api-providers' }, 
     { icon: ShoppingBag, label: 'Orders', to: '/admin/orders' },
+    { icon: Ticket, label: 'Ticket', to: '/admin/tickets' },
     { icon: Users, label: 'All Users', to: '/admin/manage-users' },
     { icon: Mail, label: 'Send Mail', to: '/admin/send-mail' },
     { icon: Database, label: 'System Logs', to: '/admin/system-logs' },

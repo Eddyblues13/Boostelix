@@ -35,7 +35,7 @@ import Tutorials from './pages/dashboard/Tutorials';
 
 import AddServicesPage from './pages/admin/AddServicesPage';
 import ShowServices from './pages/admin/ShowServices';
-
+import AdminTickets from './pages/admin/Tickets';
 
 
 
@@ -63,6 +63,7 @@ const App = () => {
           <Route path="/signup" element={<SignUpPage />} />
            <Route path="/services" element={<ServicesPage />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/dashboard" element={
               <ProtectedRoute>
@@ -95,6 +96,7 @@ const App = () => {
             <Route path="show-services" element={<ShowServices />} />
             <Route path="api-providers" element={<ManageApiProviders />} />
             <Route path="manage-users" element={<ManageUsers />} />
+            <Route path="tickets" element={<AdminTickets />} />
             <Route path="users/:id/View" element={<AdminUserView />} />
             <Route path="users/:id/Edit" element={<AdminUserEdit />} />
             <Route path="users/:id/balance" element={<AddSubtractBalance />} />
