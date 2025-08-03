@@ -53,8 +53,6 @@ export const fetchAllSmmServices = async () => {
 }
 
 
-
-
 export const fetchNewServices = async () => {
   try {
     const response = await api.get('/all-smm-services', {
@@ -81,5 +79,23 @@ export const fetchRecommendedServices = async () => {
     console.error('Error fetching recommended services:', error);
     throw error;
   }
+};
+
+
+export const fetchApiProviders = async () => {
+     return await api.get("/admin/providers/api-providers");
+}
+
+export const fetchServicesFromProvider = async (provider) => {
+     return await api.post("/admin/providers/services/all", {
+          provider
+     });
+}
+
+export const importSelectedServices = (providerId, selectedServices) => {
+  return api.post('/admin/providers/services/save', {
+    api_provider_id: providerId,
+    services: selectedServices,
+  });
 };
 

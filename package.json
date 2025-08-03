@@ -33,7 +33,11 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.2",
     "react-slick": "^0.30.3",
+<<<<<<< HEAD
     "react-toastify": "^11.0.5",
+=======
+    "react-window": "^1.8.11",
+>>>>>>> ca53c0ce45f90e1706a6e2fa4beb07a37d4436dd
     "slick-carousel": "^1.8.1",
     "summernote": "^0.9.1",
     "tailwindcss": "^4.1.10",
