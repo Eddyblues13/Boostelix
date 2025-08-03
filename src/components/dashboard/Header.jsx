@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import { Bell, LogOut, Globe, ChevronDown, Settings, Menu } from "lucide-react"
 import { THEME_COLORS, CSS_COLORS } from "../constant/colors"
-
+import { useNavigate } from "react-router-dom"
 const Header = ({
   sidebarOpen,
   setSidebarOpen,
@@ -15,6 +15,7 @@ const Header = ({
 }) => {
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false)
   const currencyRef = useRef(null)
+  const navigate = useNavigate()
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30 mx-4 mt-4 rounded-2xl shadow-sm">
@@ -106,7 +107,8 @@ const Header = ({
           </button>
 
           {/* Settings */}
-          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <button  
+          onClick={() => navigate(`/dashboard/account`)} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
             <Settings className="w-5 h-5 text-gray-600" />
           </button>
 
