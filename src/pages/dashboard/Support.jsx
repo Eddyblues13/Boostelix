@@ -10,6 +10,10 @@ import { Search } from "lucide-react"
 
 
 
+
+
+
+
 const Support = () => {
   const [tickets, setTickets] = useState([])
   const [user, setUser] = useState(null)
@@ -53,13 +57,13 @@ const Support = () => {
   const faqItems = [
     {
       id: "why-choose",
-      question: "Why choose smexploits.com?",
+      question: "Why choose Boostelix.com?",
       answer:
-        "Smexploits makes social media growth simple and affordable. We offer a wide range of services, fast delivery, real-time order tracking, and friendly support. Whether you're a beginner or a reseller, we've got what you need to succeed.",
+        "Boostelix makes social media growth simple and affordable. We offer a wide range of services, fast delivery, real-time order tracking, and friendly support. Whether you're a beginner or a reseller, we've got what you need to succeed.",
     },
     {
       id: "beginner-friendly",
-      question: "Is smexploits.com beginner friendly?",
+      question: "Is Boostelix.com beginner friendly?",
       answer:
         "Absolutely! Our platform is designed with beginners in mind. We provide easy-to-use interfaces, detailed guides, step-by-step tutorials, and 24/7 support to help you get started with social media marketing.",
     },
@@ -71,41 +75,17 @@ const Support = () => {
     },
     {
       id: "reseller-program",
-      question: "Can I resell smexploits.com services?",
+      question: "Can I resell Boostelix.com services?",
       answer:
         "Yes! We offer competitive reseller programs with API access, white-label solutions, and bulk pricing. Contact our support team to learn more about becoming a reseller and earning profits.",
     },
     {
       id: "support-types",
-      question: "What kind of support does smexploits.com offer?",
+      question: "What kind of support does Boostelix.com offer?",
       answer:
         "We provide comprehensive support including live chat, ticket system, email support, and detailed documentation. Our team is available 24/7 to help with orders, payments, technical issues, and general inquiries.",
     },
   ]
-
-
-  useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const response = await fetchUserData()
-      setUser(response.data)
-    } catch (err) {
-      toast.error("Failed to fetch user info")
-    }
-  }
-
-  const fetchTickets = async () => {
-    try {
-      const response = await fetchUserTickets()
-      setTickets(response.data || [])
-    } catch (err) {
-      toast.error("Failed to load ticket history")
-    }
-  }
-
-  fetchUser()
-  fetchTickets()
-}, [])
 
 
   // Fetch user data
@@ -118,7 +98,22 @@ const Support = () => {
         toast.error("Failed to fetch user info")
       }
     }
+
+    //fetch user Tickets
+   const fetchTickets = async () => {
+  try {
+    const tickets = await fetchUserTickets(); // already returns the array
+    setTickets(tickets); // ✅ set directly
+  } catch (err) {
+    toast.error("Failed to load ticket history");
+  }
+
+  };
+
+  
+
     fetchUser()
+    fetchTickets()
   }, [])
 
   // Update subject and request when category changes
@@ -183,7 +178,7 @@ const Support = () => {
           >
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Ticket Support</h1>
             <p className="text-gray-600 text-sm">
-              At Smexploits, we understand what works and what doesn't in digital marketing. Our team is here to help
+              At Boostelix, we understand what works and what doesn't in digital marketing. Our team is here to help
               with any issue you may have.
             </p>
           </div>
@@ -381,7 +376,7 @@ const Support = () => {
           >
             <h1 className="text-3xl font-bold text-gray-800 mb-3">Ticket Support</h1>
             <p className="text-gray-600">
-              At Smexploits, we understand what works and what doesn't in digital marketing. Our team is here to help
+              At Boostelix, we understand what works and what doesn't in digital marketing. Our team is here to help
               with any issue you may have.
             </p>
           </div>

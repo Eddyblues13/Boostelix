@@ -43,12 +43,14 @@ export const createTicket = async (ticketData) => {
 export const fetchUserTickets = async () => {
   try {
     const response = await api.get('/ticketshistory');
-    return response.data;
+    console.log('Tickets from API:', response.data.tickets); // ✅ Confirm structure
+    return response.data.tickets;
   } catch (error) {
     console.error('Error fetching tickets history:', error);
-    throw error;
+    return [];
   }
 };
+
 
 
 
