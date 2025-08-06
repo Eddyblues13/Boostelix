@@ -100,15 +100,22 @@ const NewOrder = () => {
         service: selectedService.id,
         link,
         quantity: Number.parseInt(quantity),
-        check: true, // agree to terms
+        check: true,
       }
 
       const response = await createOrder(orderData)
+      
+      // Updated response handling
+      const orderId = response.order_id || response.data?.order_id
+      
+      if (!orderId) {
+        throw new Error("Order ID not received in response")
+      }
 
       setOrderStatus({
         success: true,
         message: "Order submitted successfully!",
-        orderId: response.data.order_id,
+        orderId: orderId,
       })
 
       toast.success("Order submitted successfully!")
@@ -121,9 +128,9 @@ const NewOrder = () => {
       console.error("Order submission error:", error)
       setOrderStatus({
         success: false,
-        message: error.response?.data?.message || "Failed to submit order",
+        message: error.response?.data?.message || error.message || "Failed to submit order",
       })
-      toast.error(error.response?.data?.message || "Failed to submit order")
+      toast.error(error.response?.data?.message || error.message || "Failed to submit order")
     } finally {
       setIsSubmitting(false)
     }
@@ -210,7 +217,6 @@ const NewOrder = () => {
     { name: "Email Marketing", icon: Mail, bgColor: "#3498db" },
   ]
 
-  // Calculate service metrics
   const getServiceMetrics = () => {
     if (!selectedService) return null
 
@@ -262,7 +268,7 @@ const NewOrder = () => {
               <div className="flex items-center space-x-4">
                 <div className="text-4xl">💰</div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Account Balancee</p>
+                  <p className="text-sm text-gray-500 mb-1">Account Balance</p>
                   <h3 className="text-2xl font-bold text-gray-800">{user?.balance || "0"}</h3>
                 </div>
               </div>

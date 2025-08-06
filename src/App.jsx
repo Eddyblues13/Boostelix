@@ -31,6 +31,7 @@ import SendMailAll from "./pages/admin/SendMailAll";
 import SendEmailForm from './pages/admin/SendEmailForm';
 import API from './pages/dashboard/Api';
 import Tutorials from './pages/dashboard/Tutorials';
+import Account from './pages/dashboard/Account';
 
 
 import AddServicesPage from './pages/admin/AddServicesPage';
@@ -83,6 +84,7 @@ const App = () => {
             <Route path="services" element={<Services />} />
             <Route path="api" element={<API />} />
             <Route path="tutorials" element={<Tutorials />} />
+            <Route path="account" element={<Account />} />
 
           </Route> 
           <Route path="/admin" element={
@@ -104,6 +106,7 @@ const App = () => {
             <Route path="users/:id/transactions" element={<ManageUserTransactions />} />
             <Route path="users/:id/send-email" element={<SendEmailForm />} />
             <Route path="send-mail" element={<SendMailAll />} />
+             
           </Route>
         
         </Routes>

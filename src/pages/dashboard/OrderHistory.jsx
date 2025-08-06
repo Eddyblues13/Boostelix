@@ -1,19 +1,18 @@
 "use client"
-
 import { useState, useEffect } from "react"
-import { Search, ExternalLink } from "lucide-react"
+import { Search, ExternalLink, RefreshCw, Download } from "lucide-react"
 import toast from "react-hot-toast"
-import { fetchUserData } from "../../services/userService"
-import { CSS_COLORS } from "../../components/constant/colors"
+import { THEME_COLORS, CSS_COLORS } from "../../components/constant/colors"
+import { fetchOrderHistory } from "../../services/services"
 
 const statusTabs = [
-  { id: "all", label: "All", count: 0, color: null },
-  { id: "pending", label: "Pending", count: 3, color: "#3b82f6" }, // blue
-  { id: "in-progress", label: "In progress", count: 2, color: "#f59e0b" }, // orange
-  { id: "completed", label: "Completed", count: 15, color: "#10b981" }, // green
-  { id: "partial", label: "Partial", count: 1, color: "#8b5cf6" }, // purple
-  { id: "processing", label: "Processing", count: 4, color: "#06b6d4" }, // cyan
-  { id: "canceled", label: "Canceled", count: 0, color: "#ef4444" }, // red
+  { id: "all", label: "All", color: null },
+  { id: "pending", label: "Pending", color: "#3b82f6" },
+  { id: "in-progress", label: "In progress", color: "#f59e0b" },
+  { id: "completed", label: "Completed", color: "#10b981" },
+  { id: "partial", label: "Partial", color: "#8b5cf6" },
+  { id: "processing", label: "Processing", color: "#06b6d4" },
+  { id: "canceled", label: "Canceled", color: "#ef4444" },
 ]
 
 const getStatusColor = (status) => {
@@ -24,7 +23,7 @@ const getStatusColor = (status) => {
       return "bg-yellow-100 text-yellow-800"
     case "in-progress":
     case "processing":
-      return "bg-blue-100 text-blue-800"
+      return `${THEME_COLORS.primary[100]} ${THEME_COLORS.text.primary700}`
     case "partial":
       return "bg-purple-100 text-purple-800"
     case "canceled":
@@ -34,111 +33,77 @@ const getStatusColor = (status) => {
   }
 }
 
-const sampleOrders = [
-  {
-    id: "ORD001",
-    date: "2024-01-15",
-    link: "https://instagram.com/example_user_profile",
-    charge: "₦2,500",
-    startCount: "1,250",
-    quantity: "1,000",
-    service: "Instagram Followers",
-    status: "Completed",
-    remains: "0",
-  },
-  {
-    id: "ORD002",
-    date: "2024-01-14",
-    link: "https://youtube.com/watch?v=example_video_id",
-    charge: "₦5,000",
-    startCount: "850",
-    quantity: "2,000",
-    service: "YouTube Views",
-    status: "In progress",
-    remains: "750",
-  },
-  {
-    id: "ORD003",
-    date: "2024-01-13",
-    link: "https://tiktok.com/@example_user",
-    charge: "₦1,200",
-    startCount: "500",
-    quantity: "500",
-    service: "TikTok Likes",
-    status: "Pending",
-    remains: "500",
-  },
-  {
-    id: "ORD004",
-    date: "2024-01-12",
-    link: "https://instagram.com/another_profile",
-    charge: "₦3,200",
-    startCount: "2,100",
-    quantity: "1,500",
-    service: "Instagram Likes",
-    status: "Processing",
-    remains: "200",
-  },
-  {
-    id: "ORD005",
-    date: "2024-01-11",
-    link: "https://youtube.com/watch?v=another_video",
-    charge: "₦800",
-    startCount: "150",
-    quantity: "300",
-    service: "YouTube Subscribers",
-    status: "Partial",
-    remains: "50",
-  },
-]
-
 const OrderHistory = () => {
-  const [user, setUser] = useState(null)
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-  const [orders] = useState(sampleOrders)
-  const [selectedService, setSelectedService] = useState("all-services")
-
-  // Fetch user data
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetchUserData()
-        setUser(response.data)
-      } catch (err) {
-        toast.error("Failed to fetch user info")
-      }
-    }
-    fetchUser()
-  }, [])
-
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.link.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesStatus = activeTab === "all" || order.status.toLowerCase().replace(" ", "-") === activeTab
-
-    const matchesService =
-      selectedService === "all-services" || order.service.toLowerCase().includes(selectedService.toLowerCase())
-
-    return matchesSearch && matchesStatus && matchesService
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [statusCounts, setStatusCounts] = useState({})
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    total: 0,
+    perPage: 10,
+    lastPage: 1
   })
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchOrders(1) // Reset to first page when search changes
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Fetch orders when tab changes
+  useEffect(() => {
+    fetchOrders(1) // Reset to first page when tab changes
+  }, [activeTab])
+
+  const fetchOrders = async (page = 1) => {
+    try {
+      setLoading(true)
+      const response = await fetchOrderHistory({
+        status: activeTab === "all" ? null : activeTab,
+        search: searchQuery,
+        page: page
+      })
+      
+      setOrders(response.data)
+      setStatusCounts(response.status_counts)
+      setPagination({
+        currentPage: response.meta.current_page,
+        total: response.meta.total,
+        perPage: response.meta.per_page,
+        lastPage: response.meta.last_page
+      })
+    } catch (error) {
+      toast.error(error.message || "Failed to fetch orders")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRefresh = () => {
+    fetchOrders(pagination.currentPage)
+    toast.success("Orders refreshed!")
+  }
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= pagination.lastPage) {
+      fetchOrders(page)
+    }
+  }
 
   const handleExport = () => {
     toast.success("Export functionality coming soon!")
   }
 
-  const handleRefresh = () => {
-    toast.success("Orders refreshed!")
-  }
-
   return (
-    <div className="w-full" style={{ backgroundColor: "transparent" }}>
+    <div className="w-full min-h-screen" style={{ background: CSS_COLORS.background.primary }}>
       {/* Mobile Layout */}
-      <div className="lg:hidden">
-        <div className="w-full p-4 space-y-4">
+      <div className="block lg:hidden">
+        <div className="w-full p-3 sm:p-4 space-y-4">
           {/* Status Filter Pills */}
           <div className="overflow-x-auto">
             <div className="flex space-x-2 pb-2" style={{ minWidth: "max-content" }}>
@@ -146,78 +111,75 @@ const OrderHistory = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap text-sm ${
                     activeTab === tab.id
-                      ? "text-white shadow-lg"
-                      : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                      ? `${THEME_COLORS.primary[500]} text-white shadow-lg`
+                      : `${THEME_COLORS.background.card} text-gray-700 ${THEME_COLORS.border.primary200} border ${THEME_COLORS.hover.primary100}`
                   }`}
-                  style={{
-                    backgroundColor: activeTab === tab.id ? CSS_COLORS.primary : undefined,
-                  }}
                 >
                   {tab.color && activeTab !== tab.id && (
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tab.color }}></div>
                   )}
                   <span>{tab.label}</span>
-                  {tab.count > 0 && activeTab !== tab.id && (
-                    <span className="text-xs text-gray-500">({tab.count})</span>
+                  {statusCounts[tab.id] > 0 && activeTab !== tab.id && (
+                    <span className="text-xs text-gray-500">({statusCounts[tab.id]})</span>
                   )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Search */}
+          {/* Search and Actions */}
           <div className="flex gap-2">
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Search"
+                placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                style={{ backgroundColor: CSS_COLORS.background.muted }}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 ${THEME_COLORS.border.primary200} border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base ${THEME_COLORS.background.muted}`}
               />
             </div>
             <button
-              onClick={() => {}}
-              className="px-6 py-3 text-white font-medium rounded-xl shadow-lg hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: CSS_COLORS.primary }}
+              onClick={handleRefresh}
+              className={`p-2.5 ${THEME_COLORS.background.card} rounded-xl ${THEME_COLORS.border.primary200} border ${THEME_COLORS.hover.primary100}`}
             >
-              Search
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
 
           {/* Orders List */}
           <div className="space-y-3">
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => (
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : orders.length > 0 ? (
+              orders.map((order) => (
                 <div
                   key={order.id}
-                  className="rounded-2xl p-4 shadow-sm border border-white/50 backdrop-blur-sm"
-                  style={{ backgroundColor: CSS_COLORS.background.card }}
+                  className={`rounded-2xl p-4 shadow-sm ${THEME_COLORS.border.primary200} border backdrop-blur-sm ${THEME_COLORS.background.card}`}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="font-semibold text-gray-800">{order.id}</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                    <span className={`font-semibold text-gray-800 text-sm sm:text-base`}>{order.order_id}</span>
+                    <span
+                      className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
+                    >
                       {order.status}
                     </span>
                   </div>
-
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs sm:text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-500">Date:</span>
                       <span className="text-gray-800">{order.date}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Service:</span>
-                      <span className="text-gray-800">{order.service}</span>
+                      <span className="text-gray-800 text-right max-w-[60%] truncate">{order.service}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Charge:</span>
-                      <span className="font-semibold" style={{ color: CSS_COLORS.primary }}>
-                        {order.charge}
-                      </span>
+                      <span className={`font-semibold ${THEME_COLORS.text.primary600}`}>{order.charge}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Quantity:</span>
@@ -227,12 +189,12 @@ const OrderHistory = () => {
                       <span className="text-gray-500">Remains:</span>
                       <span className="text-gray-800">{order.remains}</span>
                     </div>
-                    <div className="pt-2 border-t border-gray-100">
+                    <div className={`pt-2 ${THEME_COLORS.border.primary200} border-t`}>
                       <a
                         href={order.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-xs"
+                        className={`flex items-center space-x-1 ${THEME_COLORS.text.primary600} hover:text-blue-800 text-xs`}
                       >
                         <span className="truncate">{order.link}</span>
                         <ExternalLink className="w-3 h-3 flex-shrink-0" />
@@ -243,7 +205,9 @@ const OrderHistory = () => {
               ))
             ) : (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div
+                  className={`w-16 h-16 ${THEME_COLORS.background.muted} rounded-full flex items-center justify-center mx-auto mb-4`}
+                >
                   <Search className="w-8 h-8 text-gray-400" />
                 </div>
                 <p className="text-gray-500 font-medium">No orders found</p>
@@ -254,13 +218,28 @@ const OrderHistory = () => {
             )}
           </div>
 
-          {/* Footer */}
-          <div
-            className="text-center py-4 rounded-2xl text-white text-sm"
-            style={{ background: `linear-gradient(135deg, ${CSS_COLORS.primary}, ${CSS_COLORS.primaryDark})` }}
-          >
-            © Copyright 2025 All Rights Reserved.
-          </div>
+          {/* Pagination */}
+          {orders.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1 || loading}
+                className={`px-3 py-1.5 ${THEME_COLORS.border.primary200} border rounded-lg text-sm font-medium disabled:opacity-50 ${THEME_COLORS.hover.primary100} transition-colors`}
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {pagination.currentPage} of {pagination.lastPage}
+              </span>
+              <button
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === pagination.lastPage || loading}
+                className={`px-3 py-1.5 ${THEME_COLORS.border.primary200} border rounded-lg text-sm font-medium disabled:opacity-50 ${THEME_COLORS.hover.primary100} transition-colors`}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -269,71 +248,70 @@ const OrderHistory = () => {
         <div className="w-full p-4 xl:p-6 space-y-6">
           {/* Status Filter Pills */}
           <div
-            className="rounded-2xl p-4 shadow-sm border border-white/50 backdrop-blur-sm"
-            style={{ backgroundColor: CSS_COLORS.background.card }}
+            className={`rounded-2xl p-4 xl:p-6 shadow-sm ${THEME_COLORS.border.primary200} border backdrop-blur-sm ${THEME_COLORS.background.card}`}
           >
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {statusTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 px-6 py-3 rounded-full font-medium transition-all ${
                     activeTab === tab.id
-                      ? "text-white shadow-lg"
-                      : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                      ? `${THEME_COLORS.primary[500]} text-white shadow-lg`
+                      : `${THEME_COLORS.background.card} text-gray-700 ${THEME_COLORS.border.primary200} border ${THEME_COLORS.hover.primary100}`
                   }`}
-                  style={{
-                    backgroundColor: activeTab === tab.id ? CSS_COLORS.primary : undefined,
-                  }}
                 >
                   {tab.color && activeTab !== tab.id && (
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tab.color }}></div>
                   )}
                   <span>{tab.label}</span>
-                  {tab.count > 0 && activeTab !== tab.id && (
-                    <span className="text-xs text-gray-500">({tab.count})</span>
+                  {statusCounts[tab.id] > 0 && activeTab !== tab.id && (
+                    <span className="text-xs text-gray-500">({statusCounts[tab.id]})</span>
                   )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Search and Filters */}
+          {/* Search and Actions */}
           <div
-            className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
-            style={{ backgroundColor: CSS_COLORS.background.card }}
+            className={`rounded-2xl p-6 shadow-sm ${THEME_COLORS.border.primary200} border backdrop-blur-sm ${THEME_COLORS.background.card}`}
           >
             <div className="flex gap-4">
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Search orders, services, or links..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
-                  style={{ backgroundColor: CSS_COLORS.background.muted }}
+                  className={`w-full px-4 py-3 ${THEME_COLORS.border.primary200} border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base ${THEME_COLORS.background.muted}`}
                 />
               </div>
-              <button
-                onClick={() => {}}
-                className="px-8 py-3 text-white font-medium rounded-xl shadow-lg hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: CSS_COLORS.primary }}
-              >
-                Search
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRefresh}
+                  className={`p-3 ${THEME_COLORS.background.card} rounded-xl ${THEME_COLORS.border.primary200} border ${THEME_COLORS.hover.primary100} flex items-center`}
+                  title="Refresh"
+                >
+                  <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                </button>
+                <button
+                  onClick={handleExport}
+                  className={`p-3 ${THEME_COLORS.background.card} rounded-xl ${THEME_COLORS.border.primary200} border ${THEME_COLORS.hover.primary100} flex items-center`}
+                  title="Export"
+                >
+                  <Download className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Orders Table */}
           <div
-            className="rounded-2xl shadow-sm border border-white/50 backdrop-blur-sm overflow-hidden"
-            style={{ backgroundColor: CSS_COLORS.background.card }}
+            className={`rounded-2xl shadow-sm ${THEME_COLORS.border.primary200} border backdrop-blur-sm overflow-hidden ${THEME_COLORS.background.card}`}
           >
             {/* Table Header */}
-            <div
-              className="px-6 py-4 text-white font-semibold"
-              style={{ background: `linear-gradient(135deg, ${CSS_COLORS.primary}, ${CSS_COLORS.primaryDark})` }}
-            >
+            <div className="px-6 py-4 text-white font-semibold" style={{ background: CSS_COLORS.background.sidebar }}>
               <div className="grid grid-cols-9 gap-4 text-sm">
                 <div>ID</div>
                 <div>Date</div>
@@ -349,25 +327,27 @@ const OrderHistory = () => {
 
             {/* Table Body */}
             <div className="divide-y divide-gray-100">
-              {filteredOrders.length > 0 ? (
-                filteredOrders.map((order, index) => (
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              ) : orders.length > 0 ? (
+                orders.map((order, index) => (
                   <div
                     key={order.id}
-                    className={`px-6 py-4 hover:bg-gray-50 transition-colors ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                    className={`px-6 py-4 ${THEME_COLORS.hover.primary100} transition-colors ${
+                      index % 2 === 0 ? "bg-white" : `${THEME_COLORS.background.muted}`
                     }`}
                   >
                     <div className="grid grid-cols-9 gap-4 items-center text-sm">
-                      <div className="font-medium" style={{ color: CSS_COLORS.primary }}>
-                        {order.id}
-                      </div>
+                      <div className={`font-medium ${THEME_COLORS.text.primary600}`}>{order.order_id}</div>
                       <div className="text-gray-600">{order.date}</div>
                       <div className="max-w-xs">
                         <a
                           href={order.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 hover:underline truncate block flex items-center space-x-1"
+                          className={`${THEME_COLORS.text.primary600} hover:text-blue-800 hover:underline truncate block flex items-center space-x-1`}
                           title={order.link}
                         >
                           <span className="truncate">
@@ -376,10 +356,8 @@ const OrderHistory = () => {
                           <ExternalLink className="w-3 h-3 flex-shrink-0" />
                         </a>
                       </div>
-                      <div className="font-semibold" style={{ color: CSS_COLORS.primary }}>
-                        {order.charge}
-                      </div>
-                      <div className="text-gray-600">{order.startCount}</div>
+                      <div className={`font-semibold ${THEME_COLORS.text.primary600}`}>{order.charge}</div>
+                      <div className="text-gray-600">{order.start_count}</div>
                       <div className="text-gray-600">{order.quantity}</div>
                       <div className="font-medium text-gray-800">{order.service}</div>
                       <div>
@@ -393,7 +371,9 @@ const OrderHistory = () => {
                 ))
               ) : (
                 <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div
+                    className={`w-16 h-16 ${THEME_COLORS.background.muted} rounded-full flex items-center justify-center mx-auto mb-4`}
+                  >
                     <Search className="w-8 h-8 text-gray-400" />
                   </div>
                   <p className="text-gray-500 font-medium">No orders found</p>
@@ -406,31 +386,29 @@ const OrderHistory = () => {
           </div>
 
           {/* Pagination */}
-          {filteredOrders.length > 0 && (
+          {orders.length > 0 && (
             <div
-              className="rounded-2xl p-4 shadow-sm border border-white/50 backdrop-blur-sm"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
+              className={`rounded-2xl p-4 shadow-sm ${THEME_COLORS.border.primary200} border backdrop-blur-sm ${THEME_COLORS.background.card}`}
             >
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-600">
-                  Showing {filteredOrders.length} of {orders.length} orders
+                  Showing {orders.length} of {pagination.total} orders
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 transition-colors"
-                    disabled
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1 || loading}
+                    className={`px-4 py-2 ${THEME_COLORS.border.primary200} border rounded-lg text-sm font-medium disabled:opacity-50 ${THEME_COLORS.hover.primary100} transition-colors`}
                   >
                     Previous
                   </button>
+                  <span className="px-4 py-2 text-sm text-gray-600">
+                    Page {pagination.currentPage} of {pagination.lastPage}
+                  </span>
                   <button
-                    className="px-4 py-2 text-white rounded-lg text-sm font-medium shadow-sm"
-                    style={{ backgroundColor: CSS_COLORS.primary }}
-                  >
-                    1
-                  </button>
-                  <button
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 transition-colors"
-                    disabled
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.lastPage || loading}
+                    className={`px-4 py-2 ${THEME_COLORS.border.primary200} border rounded-lg text-sm font-medium disabled:opacity-50 ${THEME_COLORS.hover.primary100} transition-colors`}
                   >
                     Next
                   </button>
@@ -438,14 +416,6 @@ const OrderHistory = () => {
               </div>
             </div>
           )}
-
-          {/* Footer */}
-          <div
-            className="text-center py-6 rounded-2xl text-white"
-            style={{ background: `linear-gradient(135deg, ${CSS_COLORS.primary}, ${CSS_COLORS.primaryDark})` }}
-          >
-            © Copyright 2025 All Rights Reserved.
-          </div>
         </div>
       </div>
     </div>

@@ -14,7 +14,7 @@ import {
   Mail,
   Lock
 } from "lucide-react"
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; 
 
 const UserActions = ({ user, onActionSelect, onEdit, onToggleStatus }) => {
     const navigate = useNavigate();

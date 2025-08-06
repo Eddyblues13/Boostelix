@@ -1,119 +1,168 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CreditCard, Bitcoin, ChevronDown, Plus, History, Clock } from "lucide-react"
+import { CreditCard, Bitcoin, ChevronDown, Plus, History, Clock, Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
-import { fetchUserData } from "../../services/userService"
+import { useNavigate } from "react-router-dom";
+import { fetchUserData, initiatePayment, paymentHistory } from "../../services/userService"
 import { CSS_COLORS } from "../../components/constant/colors"
 
 const AddFunds = () => {
+ const navigate = useNavigate();
   const [user, setUser] = useState(null)
   const [selectedCurrency, setSelectedCurrency] = useState({ symbol: "₦", code: "NGN" })
-  const [selectedMethod, setSelectedMethod] = useState("korapay")
+  const [selectedMethod, setSelectedMethod] = useState("flutterwave")
   const [amount, setAmount] = useState("")
   const [activeTab, setActiveTab] = useState("add-funds")
-  const [expandedFaq, setExpandedFaq] = useState("payment-methods")
+  const [expandedFaq, setExpandedFaq] = useState(null)
   const [transactionHistory, setTransactionHistory] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isFetchingData, setIsFetchingData] = useState(true)
 
   const paymentMethods = [
     {
-      id: "korapay",
-      name: "Korapay",
-      bonus: "5% Bonus On Every Deposit",
-      description: "Korapay allows Nigerian users to deposit using Card, Bank and Transfer. Minimum 100 NGN, max ∞.",
+      id: "flutterwave",
+      name: "Flutterwave",
+      description: "Secure payments via cards, bank transfers, and mobile money. Minimum 100 NGN.",
       icon: <CreditCard className="w-5 h-5" style={{ color: CSS_COLORS.primary }} />,
       minAmount: 100,
-      currency: "NGN",
+      supportedCurrencies: ["NGN", "USD", "GHS", "KES"],
     },
     {
-      id: "transactpay",
-      name: "TransactPay",
-      description: "Fast and secure payment processing. Minimum 200 NGN, max ∞.",
+      id: "paystack",
+      name: "Paystack",
+      bonus: "Instant Deposits",
+      description: "Deposit using Card, Bank Transfer. Minimum 100 NGN.",
       icon: <CreditCard className="w-5 h-5" style={{ color: CSS_COLORS.primary }} />,
-      minAmount: 200,
-      currency: "NGN",
-    },
-    {
-      id: "heleket",
-      name: "Heleket",
-      description: "Multiple payment options available. Minimum 150 NGN, max ∞.",
-      icon: <CreditCard className="w-5 h-5" style={{ color: CSS_COLORS.primary }} />,
-      minAmount: 150,
-      currency: "NGN",
+      minAmount: 100,
+      supportedCurrencies: ["NGN", "USD", "GHS"],
     },
     {
       id: "coinbase",
       name: "Coinbase Commerce",
-      description: "Deposit with crypto worldwide. Supports BTC, ETH, LTC, etc. Minimum 500 NGN, max ∞.",
+      description: "Deposit with crypto worldwide. Supports BTC, ETH, LTC. Minimum 500 NGN.",
       icon: <Bitcoin className="w-5 h-5 text-orange-500" />,
       minAmount: 500,
-      currency: "NGN",
+      supportedCurrencies: ["NGN", "USD"],
     },
   ]
 
+  const currencies = [
+    { code: "NGN", symbol: "₦", name: "Naira" },
+    { code: "USD", symbol: "$", name: "US Dollar" },
+    { code: "GHS", symbol: "₵", name: "Ghana Cedi" },
+    { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+  ]
+
   const currentMethod = paymentMethods.find((method) => method.id === selectedMethod)
+  const supportedCurrencies = currencies.filter(currency => 
+    currentMethod?.supportedCurrencies?.includes(currency.code)
+  )
 
   const faqItems = [
     {
       id: "payment-methods",
-      title: "What Are Payment Methods ?",
-      content:
-        "We support various payment methods to make funding easy and convenient. These include bank transfers, card payments, and cryptocurrency, depending on the payment provider you choose.",
+      title: "What payment methods are available?",
+      content: "We support various payment methods including Flutterwave (cards, bank transfers), Paystack, and cryptocurrency options through Coinbase Commerce.",
     },
     {
-      id: "korapay-deposit",
-      title: "How To Deposit With Korapay",
-      content:
-        "Select Korapay as your payment method, enter the amount you want to deposit, and click Pay. You will be redirected to Korapay's secure payment page where you can complete your transaction using your preferred method.",
+      id: "deposit-time",
+      title: "How long do deposits take?",
+      content: "Card payments are instant. Bank transfers may take a few minutes. Cryptocurrency deposits require network confirmations and typically take 5-30 minutes.",
     },
     {
-      id: "transactpay-deposit",
-      title: "How To Deposit With TransactPay",
-      content:
-        "Choose TransactPay from the payment methods, specify your deposit amount, and proceed to payment. TransactPay offers multiple secure payment options for your convenience.",
-    },
-    {
-      id: "heleket-deposit",
-      title: "How To Deposit With Heleket",
-      content:
-        "Select Heleket as your payment provider, enter the desired amount, and complete the payment process through their secure platform.",
+      id: "failed-payments",
+      title: "What if my payment fails?",
+      content: "Check your payment details and try again. If issues persist, contact support with your transaction reference. Funds from failed transactions are typically refunded within 24 hours.",
     },
   ]
 
-  // Fetch user data
+  // Fetch user data and transaction history
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetchUserData()
-        setUser(response.data)
+        setIsFetchingData(true)
+        const [userResponse, historyResponse] = await Promise.all([
+          fetchUserData(), 
+          paymentHistory(),
+        ])
+        
+        setUser(userResponse.data)
+        setTransactionHistory(historyResponse.data || [])
       } catch (err) {
-        toast.error("Failed to fetch user info")
+        toast.error("Failed to fetch data. Please refresh the page.")
+      } finally {
+        setIsFetchingData(false)
       }
     }
-    fetchUser()
+    fetchData()
   }, [])
 
-  // Mock transaction history
-  useEffect(() => {
-    // Simulate API call
-    const mockTransactions = [
-      { id: "TXN001", date: "2025-01-20", method: "Korapay", amount: "₦5,000", status: "Completed" },
-      { id: "TXN002", date: "2025-01-18", method: "TransactPay", amount: "₦2,500", status: "Completed" },
-      { id: "TXN003", date: "2025-01-15", method: "Heleket", amount: "₦1,000", status: "Pending" },
-    ]
-    setTransactionHistory(mockTransactions)
-  }, [])
-
-  const handlePayment = () => {
-    if (!amount || Number(amount) < currentMethod?.minAmount) {
-      toast.error(`Minimum amount is ${currentMethod?.minAmount} ${currentMethod?.currency}`)
+  const handlePayment = async () => {
+    if (!amount || isNaN(amount)) {
+      toast.error("Please enter a valid amount")
       return
     }
-    toast.success("Redirecting to payment gateway...")
+
+    const numericAmount = Number(amount)
+    if (numericAmount < currentMethod?.minAmount) {
+      toast.error(`Minimum amount is ${currentMethod?.minAmount} ${selectedCurrency.code}`)
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const paymentData = {
+        amount: numericAmount,
+        currency: selectedCurrency.code,
+        payment_method: selectedMethod,
+        email: user?.email || '',
+        name: user?.name || 'User'
+      }
+
+      const response = await initiatePayment(paymentData)
+
+      if (response.data?.payment_url) {
+        // Store transaction details for callback handling
+        localStorage.setItem('pendingTransaction', JSON.stringify({
+          transactionRef: response.data.transaction_ref,
+          amount: numericAmount,
+          currency: selectedCurrency.code,
+          method: selectedMethod
+        }))
+        
+        window.location.href = response.data.payment_url
+      } else {
+        throw new Error(response.data?.message || 'Payment gateway error')
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+      toast.error(
+        error?.response?.data?.message || 
+        error?.message || 
+        "Payment initiation failed. Please try again."
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+    return new Date(dateString).toLocaleDateString(undefined, options)
+  }
+
+  const formatCurrency = (amount, currency = 'NGN') => {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2,
+    }).format(amount)
   }
 
   return (
-    <div className="w-full" style={{ backgroundColor: "transparent" }}>
+    <div className="w-full min-h-screen" style={{ backgroundColor: "transparent" }}>
       {/* Mobile Layout */}
       <div className="lg:hidden">
         <div className="w-full p-4 space-y-6">
@@ -155,24 +204,54 @@ const AddFunds = () => {
                 <h2 className="text-xl font-semibold text-gray-800 mb-6">Deposit Funds</h2>
 
                 <div className="space-y-4">
+                  {/* Currency Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Currency</label>
+                    <div className="relative">
+                      <select
+                        value={selectedCurrency.code}
+                        onChange={(e) => {
+                          const currency = currencies.find(c => c.code === e.target.value)
+                          setSelectedCurrency(currency || selectedCurrency)
+                        }}
+                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
+                        style={{ backgroundColor: CSS_COLORS.background.muted }}
+                        disabled={isLoading}
+                      >
+                        {supportedCurrencies.map((currency) => (
+                          <option key={currency.code} value={currency.code}>
+                            {currency.name} ({currency.symbol})
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+
                   {/* Method Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Method</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
                     <div className="relative">
                       <select
                         value={selectedMethod}
                         onChange={(e) => setSelectedMethod(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none bg-white"
+                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
                         style={{ backgroundColor: CSS_COLORS.background.muted }}
+                        disabled={isLoading}
                       >
                         {paymentMethods.map((method) => (
-                          <option key={method.id} value={method.id}>
+                          <option 
+                            key={method.id} 
+                            value={method.id}
+                            disabled={!method.supportedCurrencies.includes(selectedCurrency.code)}
+                          >
                             {method.name} {method.bonus ? `(${method.bonus})` : ""}
                           </option>
                         ))}
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
                     </div>
+                    <p className="text-sm text-gray-500 mt-2">{currentMethod?.description}</p>
                   </div>
 
                   {/* Amount Input */}
@@ -181,26 +260,39 @@ const AddFunds = () => {
                     <div className="relative">
                       <input
                         type="number"
-                        placeholder={`Minimum ${currentMethod?.minAmount}`}
+                        placeholder={`Enter amount (min ${currentMethod?.minAmount} ${selectedCurrency.code})`}
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         style={{ backgroundColor: CSS_COLORS.background.muted }}
+                        disabled={isLoading}
+                        min={currentMethod?.minAmount}
+                        step="any"
                       />
+                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        {selectedCurrency.symbol}
+                      </span>
                     </div>
                     <p className="text-sm text-gray-500 mt-2">
-                      Minimum: {currentMethod?.minAmount} {currentMethod?.currency}
+                      Minimum: {formatCurrency(currentMethod?.minAmount, selectedCurrency.code)}
                     </p>
                   </div>
 
                   {/* Pay Button */}
                   <button
                     onClick={handlePayment}
-                    disabled={!amount || Number(amount) < currentMethod?.minAmount}
-                    className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!amount || Number(amount) < currentMethod?.minAmount || isLoading}
+                    className="w-full flex items-center justify-center text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: CSS_COLORS.primary }}
                   >
-                    Pay
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      `Pay ${amount ? formatCurrency(amount, selectedCurrency.code) : ''}`
+                    )}
                   </button>
                 </div>
               </div>
@@ -210,7 +302,7 @@ const AddFunds = () => {
                 className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
                 style={{ backgroundColor: CSS_COLORS.background.card }}
               >
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">How to deposit funds</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Deposit Help</h3>
 
                 <div className="space-y-3">
                   {faqItems.map((item) => (
@@ -245,23 +337,35 @@ const AddFunds = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Transactions</h3>
 
               <div className="space-y-3">
-                {transactionHistory.length > 0 ? (
+                {isFetchingData ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                ) : transactionHistory.length > 0 ? (
                   transactionHistory.map((tx) => (
                     <div
                       key={tx.id}
                       className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
                     >
                       <div>
-                        <p className="font-medium text-gray-800">{tx.id}</p>
+                        <p className="font-medium text-gray-800 capitalize">{tx.payment_method}</p>
                         <p className="text-sm text-gray-500">
-                          {tx.date} • {tx.method}
+                          {formatDate(tx.created_at)}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold" style={{ color: CSS_COLORS.primary }}>
-                          {tx.amount}
+                          {formatCurrency(tx.amount, tx.currency)}
                         </p>
-                        <p className="text-sm text-gray-500">{tx.status}</p>
+                        <p className="text-sm text-gray-500">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            tx.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {tx.status}
+                          </span>
+                        </p>
                       </div>
                     </div>
                   ))
@@ -320,24 +424,54 @@ const AddFunds = () => {
                   <h2 className="text-2xl font-semibold text-gray-800 mb-8">Deposit Funds</h2>
 
                   <div className="space-y-6">
+                    {/* Currency Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">Currency</label>
+                      <div className="relative">
+                        <select
+                          value={selectedCurrency.code}
+                          onChange={(e) => {
+                            const currency = currencies.find(c => c.code === e.target.value)
+                            setSelectedCurrency(currency || selectedCurrency)
+                          }}
+                          className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none text-base"
+                          style={{ backgroundColor: CSS_COLORS.background.muted }}
+                          disabled={isLoading}
+                        >
+                          {supportedCurrencies.map((currency) => (
+                            <option key={currency.code} value={currency.code}>
+                              {currency.name} ({currency.symbol})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                      </div>
+                    </div>
+
                     {/* Method Selection */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">Method</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
                       <div className="relative">
                         <select
                           value={selectedMethod}
                           onChange={(e) => setSelectedMethod(e.target.value)}
-                          className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none bg-white text-base"
+                          className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none text-base"
                           style={{ backgroundColor: CSS_COLORS.background.muted }}
+                          disabled={isLoading}
                         >
                           {paymentMethods.map((method) => (
-                            <option key={method.id} value={method.id}>
+                            <option 
+                              key={method.id} 
+                              value={method.id}
+                              disabled={!method.supportedCurrencies.includes(selectedCurrency.code)}
+                            >
                               {method.name} {method.bonus ? `(${method.bonus})` : ""}
                             </option>
                           ))}
                         </select>
                         <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
                       </div>
+                      <p className="text-sm text-gray-500 mt-2">{currentMethod?.description}</p>
                     </div>
 
                     {/* Amount Input */}
@@ -346,26 +480,39 @@ const AddFunds = () => {
                       <div className="relative">
                         <input
                           type="number"
-                          placeholder={`Minimum ${currentMethod?.minAmount}`}
+                          placeholder={`Enter amount (min ${currentMethod?.minAmount} ${selectedCurrency.code})`}
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
                           className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
                           style={{ backgroundColor: CSS_COLORS.background.muted }}
+                          disabled={isLoading}
+                          min={currentMethod?.minAmount}
+                          step="any"
                         />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500">
+                          {selectedCurrency.symbol}
+                        </span>
                       </div>
                       <p className="text-sm text-gray-500 mt-2">
-                        Minimum: {currentMethod?.minAmount} {currentMethod?.currency}
+                        Minimum: {formatCurrency(currentMethod?.minAmount, selectedCurrency.code)}
                       </p>
                     </div>
 
                     {/* Pay Button */}
                     <button
                       onClick={handlePayment}
-                      disabled={!amount || Number(amount) < currentMethod?.minAmount}
-                      className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                      disabled={!amount || Number(amount) < currentMethod?.minAmount || isLoading}
+                      className="w-full flex items-center justify-center text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                       style={{ backgroundColor: CSS_COLORS.primary }}
                     >
-                      Pay
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        `Pay ${amount ? formatCurrency(amount, selectedCurrency.code) : ''}`
+                      )}
                     </button>
                   </div>
                 </div>
@@ -375,38 +522,42 @@ const AddFunds = () => {
                   className="rounded-2xl p-8 shadow-sm border border-white/50 backdrop-blur-sm"
                   style={{ backgroundColor: CSS_COLORS.background.card }}
                 >
-                  <h3 className="text-2xl font-semibold text-gray-800 mb-6">Recent Transactions</h3>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-6">Transaction History</h3>
 
                   <div className="overflow-hidden border border-gray-200 rounded-xl">
                     <table className="w-full">
                       <thead style={{ backgroundColor: CSS_COLORS.background.muted }}>
                         <tr>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-700">ID</th>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-700">Date</th>
                           <th className="text-left py-4 px-6 font-semibold text-gray-700">Method</th>
+                          <th className="text-left py-4 px-6 font-semibold text-gray-700">Date</th>
                           <th className="text-right py-4 px-6 font-semibold text-gray-700">Amount</th>
                           <th className="text-center py-4 px-6 font-semibold text-gray-700">Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {transactionHistory.length > 0 ? (
-                          transactionHistory.map((tx, index) => (
+                        {isFetchingData ? (
+                          <tr>
+                            <td colSpan={4} className="text-center py-8">
+                              <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+                            </td>
+                          </tr>
+                        ) : transactionHistory.length > 0 ? (
+                          transactionHistory.map((tx) => (
                             <tr
                               key={tx.id}
-                              className={`border-t border-gray-200 hover:bg-gray-50 ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
+                              className="border-t border-gray-200 hover:bg-gray-50"
                             >
-                              <td className="py-4 px-6 font-medium text-gray-800">{tx.id}</td>
-                              <td className="py-4 px-6 text-gray-600">{tx.date}</td>
-                              <td className="py-4 px-6 text-gray-600">{tx.method}</td>
+                              <td className="py-4 px-6 font-medium text-gray-800 capitalize">{tx.payment_method}</td>
+                              <td className="py-4 px-6 text-gray-600">{formatDate(tx.created_at)}</td>
                               <td className="py-4 px-6 text-right font-semibold" style={{ color: CSS_COLORS.primary }}>
-                                {tx.amount}
+                                {formatCurrency(tx.amount, tx.currency)}
                               </td>
                               <td className="py-4 px-6 text-center">
                                 <span
                                   className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                    tx.status === "Completed"
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-yellow-100 text-yellow-800"
+                                    tx.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
                                   }`}
                                 >
                                   {tx.status}
@@ -416,7 +567,7 @@ const AddFunds = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={5} className="text-center py-12">
+                            <td colSpan={4} className="text-center py-12">
                               <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                               <p className="text-gray-500">No transactions found</p>
                             </td>
@@ -435,7 +586,7 @@ const AddFunds = () => {
                 className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm sticky top-24"
                 style={{ backgroundColor: CSS_COLORS.background.card }}
               >
-                <h3 className="text-lg font-semibold text-gray-800 mb-6">How to deposit funds</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-6">Deposit Information</h3>
 
                 <div className="space-y-3">
                   {faqItems.map((item) => (

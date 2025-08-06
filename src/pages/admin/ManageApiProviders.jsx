@@ -33,7 +33,7 @@ import {
   deleteApiProvider,
   toggleApiProviderStatus,
   syncApiProviderServices,
-} from "../../services//adminService"
+} from "../../services/adminService"
 
 const ManageApiProviders = () => {
   const [showAddForm, setShowAddForm] = useState(false)
