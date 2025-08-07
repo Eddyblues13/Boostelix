@@ -112,41 +112,49 @@ const AddFunds = () => {
 
     setIsLoading(true)
 
-    try {
-      const paymentData = {
+       try {
+    const paymentData = {
+      amount: numericAmount,
+      currency: selectedCurrency.code,
+      payment_method: selectedMethod,
+      email: user?.email || '',
+      name: user?.name || 'User'
+    };
+
+    console.log("Sending:", paymentData);
+    const response = await initiatePayment(paymentData);
+    console.log("Full response:", response);
+
+    // CHANGE THIS PART - response.data -> response
+    if (response.payment_url) {  // Changed from response.data.payment_url
+      console.log("Redirecting to:", response.payment_url);
+      localStorage.setItem('pendingTransaction', JSON.stringify({
+        transactionRef: response.transaction_id,  // Changed from transaction_ref
         amount: numericAmount,
         currency: selectedCurrency.code,
-        payment_method: selectedMethod,
-        email: user?.email || '',
-        name: user?.name || 'User'
-      }
-
-      const response = await initiatePayment(paymentData)
-
-      if (response.data?.payment_url) {
-        // Store transaction details for callback handling
-        localStorage.setItem('pendingTransaction', JSON.stringify({
-          transactionRef: response.data.transaction_ref,
-          amount: numericAmount,
-          currency: selectedCurrency.code,
-          method: selectedMethod
-        }))
-        
-        window.location.href = response.data.payment_url
-      } else {
-        throw new Error(response.data?.message || 'Payment gateway error')
-      }
-    } catch (error) {
-      console.error('Payment error:', error)
-      toast.error(
-        error?.response?.data?.message || 
-        error?.message || 
-        "Payment initiation failed. Please try again."
-      )
-    } finally {
-      setIsLoading(false)
+        method: selectedMethod
+      }));
+      
+      // Use replace instead of href
+      window.location.replace(response.payment_url);
+    } else {
+      throw new Error(response.message || 'Payment gateway error');
     }
+  } catch (error) {
+    console.error('Full error details:', {
+      error: error,
+      response: error.response,
+      message: error.message
+    });
+    toast.error(
+      error?.response?.message ||  // Changed from error?.response?.data?.message
+      error?.message || 
+      "Payment initiation failed. Please try again."
+    );
+  } finally {
+    setIsLoading(false);
   }
+};
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
