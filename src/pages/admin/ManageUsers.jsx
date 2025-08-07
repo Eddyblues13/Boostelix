@@ -22,7 +22,7 @@ const ManageUsers = () => {
   const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [activeUserAction, setActiveUserAction] = useState(null)
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState({ data: [] });
   const [activeDropdownUserId, setActiveDropdownUserId] = useState(null);
 
 
@@ -30,16 +30,15 @@ useEffect(() => {
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-
-      const data = await fetchUsers(); 
-      setUsers(data);  
+      const response = await fetchUsers(); 
+      setUsers(response); // Directly set array
     } catch (error) {
       console.error("Failed to fetch users:", error);
+      setUsers([]); // Reset to empty array
     } finally {
       setIsLoading(false);
     }
   };
-
   loadUsers();
 }, []);
 
@@ -176,11 +175,15 @@ useEffect(() => {
     setSelectedUser(null)
   }
 
-  const toggleUserStatus = (id) => {
-    setUsers(prev =>
-      prev.map(user => (user.id === id ? { ...user, status: user.status === "active" ? "banned" : "active" } : user))
+ const toggleUserStatus = (id) => {
+  setUsers(prev =>
+    prev.map(user => 
+      user.id === id 
+        ? { ...user, status: user.status === "active" ? "banned" : "active" } 
+        : user
     )
-  }
+  );
+};
 
   const handleSyncServices = (id) => {
     setIsLoading(true)
@@ -217,7 +220,7 @@ useEffect(() => {
         alert(`Balance ${data.action === "add" ? "added" : "subtracted"} successfully!`)
         break
       case "custom_rate":
-        // Handle custom rate setting
+         // Handle custom rate setting
         alert(`Custom rate set for ${data.service}: ${data.rate}${data.type === "percentage" ? "%" : ""}`)
         break
       default:
@@ -227,20 +230,20 @@ useEffect(() => {
   }
 
 
-const filteredUsers = (users?.data || []).filter(user => {
-  const matchesSearch =
-    user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredUsers = users.data.filter(user => {
+    const matchesSearch =
+     user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     user.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
   const matchesStatus =
     statusFilter === "All Status" ||
     (statusFilter === "Active" && user.status === "active") ||
     (statusFilter === "Banned" && user.status === "banned");
 
-  return matchesSearch && matchesStatus;
-});
+   return matchesSearch && matchesStatus;
+   });
 
 
   return (
