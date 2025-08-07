@@ -36,13 +36,10 @@ import Account from './pages/dashboard/Account';
 
 import AddServicesPage from './pages/admin/AddServicesPage';
 import ShowServices from './pages/admin/ShowServices';
-<<<<<<< HEAD
 import AdminTickets from './pages/admin/Tickets';
-=======
 import ShowOrders from "./pages/admin/ShowOrders";
 
 
->>>>>>> ff6550724aa41cc5744a4cc2dd21ba1ee213bd23
 
 
 

@@ -153,7 +153,6 @@ export const sendEmailToAllUsers = async (subject, message) => {
   return response.data;
 }
 
-<<<<<<< HEAD
 
 // Fetch all support tickets for admin
 
@@ -161,10 +160,8 @@ export const fetchAdminTickets = async () => {
   const response = await api.get(`/admin/tickets`);
   return response.data.tickets;
 };
-=======
 export const fetchAllOrders = async () => {
   const response = await api.get(`/admin/orders`);
   return response;
 };
 
->>>>>>> ff6550724aa41cc5744a4cc2dd21ba1ee213bd23
