@@ -45,6 +45,7 @@ const ManageApiProviders = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
   const [apiProviders, setApiProviders] = useState([])
 
   // Fetch providers on component mount
@@ -65,13 +66,19 @@ const ManageApiProviders = () => {
     loadProviders()
   }, [])
 
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (error) setError(null)
+      if (success) setSuccess(null)
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [error, success])
+
   const [formData, setFormData] = useState({
     api_name: "",
     url: "",
     api_key: "",
-    balance: "",
-    currency: "USD",
-    convention_rate: "1650.00",
     status: 1,
     description: "",
   })
@@ -117,30 +124,27 @@ const ManageApiProviders = () => {
     e.preventDefault()
     try {
       setIsLoading(true)
+      let response
+      
       if (editingProvider) {
-        const updatedProvider = await updateApiProvider(editingProvider.id, formData)
+        response = await updateApiProvider(editingProvider.id, formData)
         setApiProviders((prev) =>
           prev.map((provider) =>
-            provider.id === editingProvider.id ? updatedProvider : provider
+            provider.id === editingProvider.id ? response : provider
           )
         )
         setEditingProvider(null)
+        setSuccess('API provider updated successfully!')
       } else {
-        const newProvider = await createApiProvider({
-          ...formData,
-          balance: Number.parseFloat(formData.balance) || 0,
-          convention_rate: Number.parseFloat(formData.convention_rate) || 0,
-        })
-        setApiProviders((prev) => [...prev, newProvider])
+        response = await createApiProvider(formData)
+        setApiProviders((prev) => [...prev, response])
+        setSuccess('API provider created successfully!')
       }
       
       setFormData({
         api_name: "",
         url: "",
         api_key: "",
-        balance: "",
-        currency: "USD",
-        convention_rate: "1650.00",
         status: 1,
         description: "",
       })
@@ -148,6 +152,7 @@ const ManageApiProviders = () => {
       setError(null)
     } catch (err) {
       setError(err.message || "Failed to save API provider")
+      setSuccess(null)
     } finally {
       setIsLoading(false)
     }
@@ -158,9 +163,6 @@ const ManageApiProviders = () => {
       api_name: provider.api_name,
       url: provider.url,
       api_key: provider.api_key,
-      balance: provider.balance.toString(),
-      currency: provider.currency,
-      convention_rate: provider.convention_rate.toString(),
       status: provider.status,
       description: provider.description,
     })
@@ -178,8 +180,10 @@ const ManageApiProviders = () => {
       setActiveDropdown(null)
       setSelectedProvider(null)
       setError(null)
+      setSuccess('API provider deleted successfully!')
     } catch (err) {
       setError(err.message || "Failed to delete API provider")
+      setSuccess(null)
     } finally {
       setIsLoading(false)
     }
@@ -196,8 +200,10 @@ const ManageApiProviders = () => {
       )
       setActiveDropdown(null)
       setError(null)
+      setSuccess(`Provider ${updatedProvider.status === 1 ? 'activated' : 'deactivated'} successfully!`)
     } catch (err) {
       setError(err.message || "Failed to toggle provider status")
+      setSuccess(null)
     } finally {
       setIsLoading(false)
     }
@@ -225,106 +231,97 @@ const ManageApiProviders = () => {
       const updatedProviders = await fetchApiProviders()
       setApiProviders(updatedProviders)
       setError(null)
+      setSuccess('Services synchronized successfully!')
     } catch (err) {
       setError(err.message || "Failed to sync services")
+      setSuccess(null)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const filteredProviders = apiProviders.filter((provider) => {
-    const matchesSearch =
-      provider.api_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (provider.description && provider.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    const matchesStatus =
-      statusFilter === "All Status" ||
-      (statusFilter === "Active" && provider.status === 1) ||
-      (statusFilter === "Inactive" && provider.status === 0)
-    return matchesSearch && matchesStatus
-  })
-
-const ActionDropdown = ({ provider, isOpen, onToggle }) => (
-  <div className="relative">
-    <button
-      onClick={onToggle}
-      className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      disabled={isLoading}
-    >
-      <MoreVertical className="w-4 h-4 text-gray-600" />
-    </button>
-
-    {isOpen && (
-      <div 
-        className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lg border border-gray-100 py-2 px-1 z-50"
-        style={{ width: 'auto', minWidth: 'max-content' }}
+  const ActionDropdown = ({ provider, isOpen, onToggle }) => (
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        disabled={isLoading}
       >
-        <div className="flex flex-row gap-1"> {/* Changed to flex-row */}
-          <button
-            onClick={() => {
-              handleViewDetails(provider)
-              setActiveDropdown(null)
-            }}
-            className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
-            style={{ minWidth: '100px' }}
-          >
-            <Eye className="w-4 h-4 text-green-600" />
-            <span>View</span>
-          </button>
+        <MoreVertical className="w-4 h-4 text-gray-600" />
+      </button>
 
-          <button
-            onClick={() => {
-              handleEdit(provider)
-              setActiveDropdown(null)
-            }}
-            className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
-            style={{ minWidth: '100px' }}
-          >
-            <Edit3 className="w-4 h-4 text-blue-600" />
-            <span>Edit</span>
-          </button>
+      {isOpen && (
+        <div 
+          className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lg border border-gray-100 py-2 px-1 z-50"
+          style={{ width: 'auto', minWidth: 'max-content' }}
+        >
+          <div className="flex flex-row gap-1">
+            <button
+              onClick={() => {
+                handleViewDetails(provider)
+                setActiveDropdown(null)
+              }}
+              className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
+              style={{ minWidth: '100px' }}
+            >
+              <Eye className="w-4 h-4 text-green-600" />
+              <span>View</span>
+            </button>
 
-          <button
-            onClick={() => {
-              toggleStatus(provider.id)
-              setActiveDropdown(null)
-            }}
-            className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
-            style={{ minWidth: '100px' }}
-          >
-            <Power className={`w-4 h-4 ${provider.status === 1 ? "text-red-600" : "text-green-600"}`} />
-            <span>{provider.status === 1 ? "Deactivate" : "Activate"}</span>
-          </button>
+            <button
+              onClick={() => {
+                handleEdit(provider)
+                setActiveDropdown(null)
+              }}
+              className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
+              style={{ minWidth: '100px' }}
+            >
+              <Edit3 className="w-4 h-4 text-blue-600" />
+              <span>Edit</span>
+            </button>
 
-          <button
-            onClick={() => {
-              handleSyncServices(provider.id)
-              setActiveDropdown(null)
-            }}
-            className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
-            style={{ minWidth: '100px' }}
-          >
-            <RefreshCw className="w-4 h-4 text-orange-600" />
-            <span>Sync</span>
-          </button>
+            <button
+              onClick={() => {
+                toggleStatus(provider.id)
+                setActiveDropdown(null)
+              }}
+              className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
+              style={{ minWidth: '100px' }}
+            >
+              <Power className={`w-4 h-4 ${provider.status === 1 ? "text-red-600" : "text-green-600"}`} />
+              <span>{provider.status === 1 ? "Deactivate" : "Activate"}</span>
+            </button>
 
-          <div className="border-l border-gray-100 mx-1"></div>
+            <button
+              onClick={() => {
+                handleSyncServices(provider.id)
+                setActiveDropdown(null)
+              }}
+              className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
+              style={{ minWidth: '100px' }}
+            >
+              <RefreshCw className="w-4 h-4 text-orange-600" />
+              <span>Sync</span>
+            </button>
 
-          <button
-            onClick={() => {
-              handleDelete(provider.id)
-              setActiveDropdown(null)
-            }}
-            className="px-3 py-2 hover:bg-red-50 flex flex-col items-center gap-1 text-sm font-medium text-red-600 transition-colors duration-200 rounded-lg"
-            style={{ minWidth: '100px' }}
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>Delete</span>
-          </button>
+            <div className="border-l border-gray-100 mx-1"></div>
+
+            <button
+              onClick={() => {
+                handleDelete(provider.id)
+                setActiveDropdown(null)
+              }}
+              className="px-3 py-2 hover:bg-red-50 flex flex-col items-center gap-1 text-sm font-medium text-red-600 transition-colors duration-200 rounded-lg"
+              style={{ minWidth: '100px' }}
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
-      </div>
-    )}
-  </div>
-)
+      )}
+    </div>
+  )
 
   const ProviderDetailsCard = ({ provider }) => (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl border border-blue-200 p-4 sm:p-6 mb-6">
@@ -467,6 +464,22 @@ const ActionDropdown = ({ provider, isOpen, onToggle }) => (
     </div>
   )
 
+  // Filter out invalid providers first
+  const validProviders = apiProviders.filter(provider => 
+    provider && typeof provider.api_name === 'string'
+  )
+
+  const filteredProviders = validProviders.filter((provider) => {
+    const matchesSearch =
+      provider.api_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (provider.description && provider.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    const matchesStatus =
+      statusFilter === "All Status" ||
+      (statusFilter === "Active" && provider.status === 1) ||
+      (statusFilter === "Inactive" && provider.status === 0)
+    return matchesSearch && matchesStatus
+  })
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
@@ -496,6 +509,26 @@ const ActionDropdown = ({ provider, isOpen, onToggle }) => (
               <button
                 onClick={() => setError(null)}
                 className="ml-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg p-1.5 hover:bg-red-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Check className="h-5 w-5 text-green-500" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700">{success}</p>
+              </div>
+              <button
+                onClick={() => setSuccess(null)}
+                className="ml-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg p-1.5 hover:bg-green-100"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -564,9 +597,6 @@ const ActionDropdown = ({ provider, isOpen, onToggle }) => (
                       api_name: "",
                       url: "",
                       api_key: "",
-                      balance: "",
-                      currency: "USD",
-                      convention_rate: "1650.00",
                       status: 1,
                       description: "",
                     })
@@ -665,59 +695,6 @@ const ActionDropdown = ({ provider, isOpen, onToggle }) => (
                     required
                     disabled={isLoading}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <DollarSign className="w-4 h-4 inline mr-2" />
-                    Initial Balance
-                  </label>
-                  <input
-                    type="number"
-                    name="balance"
-                    value={formData.balance}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                    step="0.0000001"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
-                  <select
-                    name="currency"
-                    value={formData.currency}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 text-sm"
-                    disabled={isLoading}
-                  >
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="NGN">NGN</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Convention Rate</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 whitespace-nowrap">1 NGN =</span>
-                    <input
-                      type="number"
-                      name="convention_rate"
-                      value={formData.convention_rate}
-                      onChange={handleInputChange}
-                      placeholder="1650.00"
-                      step="0.01"
-                      className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                      disabled={isLoading}
-                    />
-                    <span className="text-sm text-gray-600 whitespace-nowrap hidden sm:inline">
-                      provider's currency
-                    </span>
-                  </div>
                 </div>
               </div>
 

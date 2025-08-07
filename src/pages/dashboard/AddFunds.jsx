@@ -112,41 +112,49 @@ const AddFunds = () => {
 
     setIsLoading(true)
 
-    try {
-      const paymentData = {
+       try {
+    const paymentData = {
+      amount: numericAmount,
+      currency: selectedCurrency.code,
+      payment_method: selectedMethod,
+      email: user?.email || '',
+      name: user?.name || 'User'
+    };
+
+    console.log("Sending:", paymentData);
+    const response = await initiatePayment(paymentData);
+    console.log("Full response:", response);
+
+    // CHANGE THIS PART - response.data -> response
+    if (response.payment_url) {  // Changed from response.data.payment_url
+      console.log("Redirecting to:", response.payment_url);
+      localStorage.setItem('pendingTransaction', JSON.stringify({
+        transactionRef: response.transaction_id,  // Changed from transaction_ref
         amount: numericAmount,
         currency: selectedCurrency.code,
-        payment_method: selectedMethod,
-        email: user?.email || '',
-        name: user?.name || 'User'
-      }
-
-      const response = await initiatePayment(paymentData)
-
-      if (response.data?.payment_url) {
-        // Store transaction details for callback handling
-        localStorage.setItem('pendingTransaction', JSON.stringify({
-          transactionRef: response.data.transaction_ref,
-          amount: numericAmount,
-          currency: selectedCurrency.code,
-          method: selectedMethod
-        }))
-        
-        window.location.href = response.data.payment_url
-      } else {
-        throw new Error(response.data?.message || 'Payment gateway error')
-      }
-    } catch (error) {
-      console.error('Payment error:', error)
-      toast.error(
-        error?.response?.data?.message || 
-        error?.message || 
-        "Payment initiation failed. Please try again."
-      )
-    } finally {
-      setIsLoading(false)
+        method: selectedMethod
+      }));
+      
+      // Use replace instead of href
+      window.location.replace(response.payment_url);
+    } else {
+      throw new Error(response.message || 'Payment gateway error');
     }
+  } catch (error) {
+    console.error('Full error details:', {
+      error: error,
+      response: error.response,
+      message: error.message
+    });
+    toast.error(
+      error?.response?.message ||  // Changed from error?.response?.data?.message
+      error?.message || 
+      "Payment initiation failed. Please try again."
+    );
+  } finally {
+    setIsLoading(false);
   }
+};
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
@@ -343,31 +351,46 @@ const AddFunds = () => {
                   </div>
                 ) : transactionHistory.length > 0 ? (
                   transactionHistory.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-800 capitalize">{tx.payment_method}</p>
-                        <p className="text-sm text-gray-500">
-                          {formatDate(tx.created_at)}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold" style={{ color: CSS_COLORS.primary }}>
-                          {formatCurrency(tx.amount, tx.currency)}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            tx.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {tx.status}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
+                 <div
+  key={tx.id}
+  className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
+>
+  <div>
+   <p className="font-medium text-gray-800 capitalize">
+      {tx.transaction_id} {/* example: deposit, withdrawal */}
+    </p>
+    <p className="font-medium text-gray-800 capitalize">
+      {tx.transaction_type} {/* example: deposit, withdrawal */}
+    </p>
+    <p className="text-sm text-gray-500">
+      {formatDate(tx.created_at)}
+    </p>
+    <p className="text-sm text-gray-400">
+      {tx.description || 'No description'}
+    </p>
+  </div>
+
+  <div className="text-right">
+    <p className="font-semibold" style={{ color: CSS_COLORS.primary }}>
+      {formatCurrency(tx.amount)} {/* Use formatCurrency helper */}
+    </p>
+    <p className="text-sm text-gray-500">
+      <span className={`px-2 py-1 rounded-full text-xs ${
+        tx.status === 'completed'
+          ? 'bg-green-100 text-green-800'
+          : tx.status === 'pending'
+          ? 'bg-yellow-100 text-yellow-800'
+          : 'bg-red-100 text-red-800'
+      }`}>
+        {tx.status}
+      </span>
+    </p>
+    <p className="text-xs text-gray-400 mt-1">
+      Fee: {formatCurrency(tx.charge)}
+    </p>
+  </div>
+</div>
+
                   ))
                 ) : (
                   <div className="text-center py-8">
@@ -527,12 +550,14 @@ const AddFunds = () => {
                   <div className="overflow-hidden border border-gray-200 rounded-xl">
                     <table className="w-full">
                       <thead style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                        <tr>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-700">Method</th>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-700">Date</th>
-                          <th className="text-right py-4 px-6 font-semibold text-gray-700">Amount</th>
-                          <th className="text-center py-4 px-6 font-semibold text-gray-700">Status</th>
-                        </tr>
+                       <tr>
+  <th className="text-left py-4 px-6 font-semibold text-gray-700">Transaction ID</th>
+  <th className="text-left py-4 px-6 font-semibold text-gray-700">Type</th>
+  <th className="text-left py-4 px-6 font-semibold text-gray-700">Date</th>
+  <th className="text-right py-4 px-6 font-semibold text-gray-700">Amount</th>
+  <th className="text-right py-4 px-6 font-semibold text-gray-700">Charge</th>
+  <th className="text-center py-4 px-6 font-semibold text-gray-700">Status</th>
+                       </tr>
                       </thead>
                       <tbody>
                         {isFetchingData ? (
@@ -543,27 +568,34 @@ const AddFunds = () => {
                           </tr>
                         ) : transactionHistory.length > 0 ? (
                           transactionHistory.map((tx) => (
-                            <tr
-                              key={tx.id}
-                              className="border-t border-gray-200 hover:bg-gray-50"
-                            >
-                              <td className="py-4 px-6 font-medium text-gray-800 capitalize">{tx.payment_method}</td>
-                              <td className="py-4 px-6 text-gray-600">{formatDate(tx.created_at)}</td>
-                              <td className="py-4 px-6 text-right font-semibold" style={{ color: CSS_COLORS.primary }}>
-                                {formatCurrency(tx.amount, tx.currency)}
-                              </td>
-                              <td className="py-4 px-6 text-center">
-                                <span
-                                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                    tx.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                  }`}
-                                >
-                                  {tx.status}
-                                </span>
-                              </td>
-                            </tr>
+<tr
+  key={tx.id}
+  className="border-t border-gray-200 hover:bg-gray-50"
+>
+  <td className="py-4 px-6 font-medium text-gray-800 capitalize">
+    {tx.transaction_id}
+  </td>
+  <td className="py-4 px-6 font-medium text-gray-800 capitalize">
+    {tx.transaction_type}
+  </td>
+  <td className="py-4 px-6 text-gray-600">
+    {formatDate(tx.created_at)}
+  </td>
+  <td className="py-4 px-6 text-right font-semibold" style={{ color: CSS_COLORS.primary }}>
+    {formatCurrency(tx.amount, tx.currency || 'USD')}
+  </td>
+  <td className="py-4 px-6 text-center">
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium ${
+        tx.status === 'completed' ? 'bg-green-100 text-green-800' :
+        tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+        'bg-red-100 text-red-800'
+      }`}
+    >
+      {tx.status}
+    </span>
+  </td>
+</tr>
                           ))
                         ) : (
                           <tr>

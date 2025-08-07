@@ -84,9 +84,7 @@ export const fetchAllSmmServices = async () => {
 export const fetchNewServices = async () => {
   try {
     const response = await api.get('/all-smm-services', {
-      params: {
-        is_new: true
-      }
+    
     });
     return response;
   } catch (error) {
@@ -98,9 +96,7 @@ export const fetchNewServices = async () => {
 export const fetchRecommendedServices = async () => {
   try {
     const response = await api.get('/all-smm-services', {
-      params: {
-        is_recommended: true
-      }
+  
     });
     return response;
   } catch (error) {

@@ -78,26 +78,7 @@ const UserTable = ({
                             {user.status === "active" ? "Active" : "Banned"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          {user.email_verified && (
-                            <span className="flex items-center gap-1 text-green-600">
-                              <CheckCircle className="w-3 h-3" />
-                              Email
-                            </span>
-                          )}
-                          {user.sms_verified && (
-                            <span className="flex items-center gap-1 text-blue-600">
-                              <Smartphone className="w-3 h-3" />
-                              SMS
-                            </span>
-                          )}
-                          {user.two_factor_enabled && (
-                            <span className="flex items-center gap-1 text-purple-600">
-                              <Shield className="w-3 h-3" />
-                              2FA
-                            </span>
-                          )}
-                        </div>
+                    
                       </div>
                     </div>
                   </div>
@@ -108,7 +89,7 @@ const UserTable = ({
                     onViewDetails={() => onViewDetails(user)}
                     onEdit={onEdit}
                     onToggleStatus={onToggleStatus}
-                    onSyncServices={onSyncServices}
+                 
                     onDelete={onDelete}
                     isLoading={isLoading}
                   />
@@ -132,7 +113,6 @@ const UserTable = ({
               <th className="px-4 py-4 text-left text-sm font-semibold">Contact</th>
               <th className="px-4 py-4 text-left text-sm font-semibold">Balance</th>
               <th className="px-4 py-4 text-left text-sm font-semibold">Status</th>
-              <th className="px-4 py-4 text-left text-sm font-semibold">Verification</th>
               <th className="px-4 py-4 text-left text-sm font-semibold">Action</th>
             </tr>
           </thead>
@@ -190,28 +170,7 @@ const UserTable = ({
                       {user.status === "active" ? "Active" : "Banned"}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-1">
-                      {user.email_verified && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                          <Mail className="w-3 h-3 mr-1" />
-                          Email
-                        </span>
-                      )}
-                      {user.sms_verified && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                          <Smartphone className="w-3 h-3 mr-1" />
-                          SMS
-                        </span>
-                      )}
-                      {user.two_factor_enabled && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                          <Shield className="w-3 h-3 mr-1" />
-                          2FA
-                        </span>
-                      )}
-                    </div>
-                  </td>
+               
                   <td className="px-4 py-4">
                     <ActionDropdown
                       user={user}
@@ -220,7 +179,6 @@ const UserTable = ({
                       onViewDetails={() => onViewDetails(user)}
                       onEdit={onEdit}
                       onToggleStatus={onToggleStatus}
-                      onSyncServices={onSyncServices}
                       onDelete={onDelete}
                       isLoading={isLoading}
                     />

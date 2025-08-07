@@ -36,7 +36,13 @@ import Account from './pages/dashboard/Account';
 
 import AddServicesPage from './pages/admin/AddServicesPage';
 import ShowServices from './pages/admin/ShowServices';
+<<<<<<< HEAD
 import AdminTickets from './pages/admin/Tickets';
+=======
+import ShowOrders from "./pages/admin/ShowOrders";
+
+
+>>>>>>> ff6550724aa41cc5744a4cc2dd21ba1ee213bd23
 
 
 
@@ -96,6 +102,7 @@ const App = () => {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="add-services" element={<AddServicesPage />} />
             <Route path="show-services" element={<ShowServices />} />
+            <Route path="orders" element={<ShowOrders />} />
             <Route path="api-providers" element={<ManageApiProviders />} />
             <Route path="manage-users" element={<ManageUsers />} />
             <Route path="tickets" element={<AdminTickets />} />

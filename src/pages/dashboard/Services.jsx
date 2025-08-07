@@ -16,7 +16,7 @@ import {
   fetchSmmCategories, 
   fetchNewServices, 
   fetchRecommendedServices 
-} from "../../services/services"
+} from "../../services/userService"
 
 const Services = () => {
   const [searchQuery, setSearchQuery] = useState("")
