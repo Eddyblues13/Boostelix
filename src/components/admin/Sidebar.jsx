@@ -19,7 +19,7 @@ const Sidebar = ({
 }) => {
 
   const sidebarItems = [
-    { icon: BarChart3, label: 'Dashboard', to: '/admin' },
+    { icon: BarChart3, label: 'Dashboard', to: '/admin/dashboard' },
     { icon: Plus, label: 'Add Services', to: '/admin/add-services' },
     { icon: List, label: 'Show Services', to: '/admin/show-services' },
     { icon: Zap, label: 'Manage API Providers', to: '/admin/api-providers' }, 
@@ -38,6 +38,7 @@ const Sidebar = ({
       overflow-y-auto
     `}>
       <div className="flex flex-col h-full">
+        {/* Header */}
         <div className="p-4 border-b border-gray-200 flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
             <Shield className="w-5 h-5 text-white" />
@@ -54,11 +55,13 @@ const Sidebar = ({
           </button>
         </div>
 
+        {/* Menu */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           {sidebarItems.map((item, index) => (
             <NavLink
               key={index}
               to={item.to}
+              end={item.to === '/admin'} // exact match for dashboard
               className={({ isActive }) =>
                 `w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
                   isActive
@@ -69,7 +72,13 @@ const Sidebar = ({
             >
               {({ isActive }) => (
                 <>
-                  <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-purple-600'}`} />
+                  <item.icon
+                    className={`w-5 h-5 ${
+                      isActive
+                        ? 'text-white'
+                        : 'text-gray-400 group-hover:text-purple-600'
+                    }`}
+                  />
                   <span className="font-medium">{item.label}</span>
                 </>
               )}
@@ -77,6 +86,7 @@ const Sidebar = ({
           ))}
         </nav>
 
+        {/* Footer */}
         <div className="p-4 border-t border-gray-200">
           <div className="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl p-4">
             <div className="flex items-center space-x-3">

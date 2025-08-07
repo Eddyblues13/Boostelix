@@ -27,7 +27,7 @@ const ShowServices = () => {
   }, []);
 
   const TableHeader = () => (
-    <div className="grid min-w-[1000px] grid-cols-8 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-700 px-4 py-2">
+    <div className="grid grid-cols-[0.5fr_2fr_1.5fr_0.7fr_0.6fr_0.6fr_0.8fr_1fr] gap-x-4 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-700 px-4 py-2">
       <div>ID</div>
       <div>Title</div>
       <div>Category</div>
@@ -44,16 +44,25 @@ const ShowServices = () => {
     return (
       <div
         style={style}
-        className="grid min-w-[1000px] grid-cols-8 px-4 py-3 items-center text-sm even:bg-gray-50"
+        className="grid grid-cols-[0.5fr_2fr_1.5fr_0.7fr_0.6fr_0.6fr_0.8fr_1fr] gap-x-4 px-4 py-3 items-start text-sm even:bg-gray-50"
       >
         <div>{s.api_service_id}</div>
-        <div className="truncate">{s.service_title}</div>
-        <div>{s.category.category_title || '-'}</div>
+
+        {/* Title */}
+        <div className="whitespace-normal break-words pr-4">
+          {s.service_title}
+        </div>
+
+        {/* Category */}
+        <div className="whitespace-normal break-words pr-4">
+          {s.category?.category_title || '-'}
+        </div>
+
         <div>${s.rate_per_1000}</div>
         <div>{s.min_amount}</div>
         <div>{s.max_amount}</div>
         <div>{s.service_type}</div>
-        <div>{s.provider.api_name || '-'}</div>
+        <div>{s.provider?.api_name || '-'}</div>
       </div>
     );
   };
@@ -68,13 +77,14 @@ const ShowServices = () => {
         <div className="text-gray-600">No services found.</div>
       ) : (
         <div className="bg-white rounded-2xl shadow overflow-hidden">
-          <div className="max-h-[600px] overflow-auto">
-            <div className="w-full overflow-x-auto">
+          <div className="max-h-[600px] sm:overflow-x-visible overflow-x-auto">
+            {/* Horizontal scroll on mobile */}
+            <div className="min-w-[800px]">
               <TableHeader />
               <List
                 height={500}
                 itemCount={services.length}
-                itemSize={50}
+                itemSize={70}
                 width="100%"
               >
                 {Row}
