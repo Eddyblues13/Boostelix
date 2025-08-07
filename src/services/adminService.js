@@ -20,7 +20,7 @@ export const fetchApiProviderDetails = async (id) => {
 };
 
 export const createApiProvider = async (providerData) => {
-  const response = await api.post('/admin/providers', providerData);
+  const response = await api.post('/admin/providers/', providerData);
   return response.data;
 };
 

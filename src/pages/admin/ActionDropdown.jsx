@@ -97,18 +97,7 @@ const ActionDropdown = ({
                 />
                 <span>{user.status === "active" ? "Ban" : "Activate"}</span>
               </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSyncServices(user.id);
-                  onToggle();
-                }}
-                className="px-3 py-2 hover:bg-gray-50 flex flex-col items-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 rounded-lg"
-                style={{ minWidth: "100px" }}
-              >
-                <RefreshCw className="w-4 h-4 text-orange-600" />
-                <span>Sync</span>
-              </button>
+          
               <div className="border-l border-gray-100 mx-1"></div>
               <button
                 onClick={(e) => {
