@@ -1,23 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, DollarSign, ShoppingBag, TrendingUp, Calendar, UserPlus, Clock, BarChart3 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import {AdminDashboard} from "../../services/adminService"
 
 const Dashboard = () => {
-  // Mock data - in real app, this would come from your API
-  const dashboardData = {
-    totalUsers: 12543,
-    totalBalance: 245678.90,
-    totalOrders: 8921,
-    fundsCollected: 892156.45,
-    todayProfit: 2847.32,
-    todayOrders: 156,
-    todayJoinedUsers: 23,
-    last30Days: {
-      revenue: 156789.23,
-      orders: 2847,
-      newUsers: 689,
-      avgOrderValue: 55.12
-    }
-  };
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await AdminDashboard();
+        setDashboardData(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to fetch dashboard data');
+        toast.error(err.response?.data?.message || 'Failed to fetch dashboard data');
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -25,11 +30,11 @@ const Dashboard = () => {
       currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const formatNumber = (num) => {
-    return new Intl.NumberFormat('en-US').format(num);
+    return new Intl.NumberFormat('en-US').format(num || 0);
   };
 
   const StatCard = ({ title, value, icon: Icon, iconColor, trend, subtitle }) => (
@@ -68,23 +73,58 @@ const Dashboard = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-100">
           <p className="text-sm text-gray-500 mb-2">Revenue</p>
-          <p className="text-lg font-bold text-gray-900 break-words">{formatCurrency(data.revenue)}</p>
+          <p className="text-lg font-bold text-gray-900 break-words">{formatCurrency(data?.transactionProfit?.profit_30_days)}</p>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-100">
           <p className="text-sm text-gray-500 mb-2">Orders</p>
-          <p className="text-lg font-bold text-gray-900 break-words">{formatNumber(data.orders)}</p>
+          <p className="text-lg font-bold text-gray-900 break-words">{formatNumber(data?.orders?.records?.totalOrder)}</p>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-100">
           <p className="text-sm text-gray-500 mb-2">New Users</p>
-          <p className="text-lg font-bold text-gray-900 break-words">{formatNumber(data.newUsers)}</p>
+          <p className="text-lg font-bold text-gray-900 break-words">{formatNumber(data?.userRecord?.totalUser)}</p>
         </div>
         <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-100">
           <p className="text-sm text-gray-500 mb-2">Avg Order Value</p>
-          <p className="text-lg font-bold text-gray-900 break-words">{formatCurrency(data.avgOrderValue)}</p>
+          <p className="text-lg font-bold text-gray-900 break-words">
+            {formatCurrency(data?.totalAmountReceived / (data?.orders?.records?.totalOrder || 1))}
+          </p>
         </div>
       </div>
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 flex items-center justify-center">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 max-w-md text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading dashboard</h3>
+          <p className="text-gray-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
@@ -99,7 +139,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <StatCard
             title="Total Users"
-            value={formatNumber(dashboardData.totalUsers)}
+            value={formatNumber(dashboardData?.userRecord?.totalUser)}
             icon={Users}
             iconColor="#3B82F6"
             trend="+12% from last month"
@@ -107,7 +147,7 @@ const Dashboard = () => {
           
           <StatCard
             title="Total Balance"
-            value={formatCurrency(dashboardData.totalBalance)}
+            value={formatCurrency(dashboardData?.userRecord?.totalUserBalance)}
             icon={DollarSign}
             iconColor="#10B981"
             trend="+8% from last month"
@@ -115,7 +155,7 @@ const Dashboard = () => {
           
           <StatCard
             title="Total Orders"
-            value={formatNumber(dashboardData.totalOrders)}
+            value={formatNumber(dashboardData?.totalOrder)}
             icon={ShoppingBag}
             iconColor="#8B5CF6"
             trend="+15% from last month"
@@ -123,7 +163,7 @@ const Dashboard = () => {
           
           <StatCard
             title="Funds Collected"
-            value={formatCurrency(dashboardData.fundsCollected)}
+            value={formatCurrency(dashboardData?.totalAmountReceived)}
             icon={TrendingUp}
             iconColor="#F59E0B"
             trend="+22% from last month"
@@ -139,7 +179,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <StatCard
               title="Today's Profit"
-              value={formatCurrency(dashboardData.todayProfit)}
+              value={formatCurrency(dashboardData?.transactionProfit?.profit_today)}
               icon={DollarSign}
               iconColor="#DC2626"
               subtitle="Real-time earnings"
@@ -147,7 +187,7 @@ const Dashboard = () => {
             
             <StatCard
               title="Today's Orders"
-              value={formatNumber(dashboardData.todayOrders)}
+              value={formatNumber(dashboardData?.orders?.records?.todaysOrder)}
               icon={ShoppingBag}
               iconColor="#7C3AED"
               subtitle="Orders placed today"
@@ -155,7 +195,7 @@ const Dashboard = () => {
             
             <StatCard
               title="New Users Today"
-              value={formatNumber(dashboardData.todayJoinedUsers)}
+              value={formatNumber(dashboardData?.userRecord?.todayJoin)}
               icon={UserPlus}
               iconColor="#059669"
               subtitle="Fresh registrations"
@@ -165,7 +205,7 @@ const Dashboard = () => {
 
         {/* Last 30 Days Overview */}
         <div className="mb-8">
-          <Last30DaysCard data={dashboardData.last30Days} />
+          <Last30DaysCard data={dashboardData} />
         </div>
 
         {/* Quick Actions */}

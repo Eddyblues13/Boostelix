@@ -22,8 +22,11 @@ const TransactionCallback = () => {
 
         console.log("Payment callback received:", { status, txRef, transactionId });
 
+        // Handle all statuses in a case-insensitive way
+        const normalizedStatus = status ? status.toLowerCase() : '';
+
         // Handle cancelled payments immediately
-        if (status === "cancelled") {
+        if (normalizedStatus === "cancelled") {
           setStatus("cancelled");
           localStorage.removeItem('pendingTransaction');
           setIsLoading(false);
@@ -31,7 +34,7 @@ const TransactionCallback = () => {
         }
 
         // Handle failed payments
-        if (status === "failed") {
+        if (normalizedStatus === "failed") {
           setStatus("failed");
           localStorage.removeItem('pendingTransaction');
           setIsLoading(false);
@@ -42,10 +45,11 @@ const TransactionCallback = () => {
           throw new Error("Missing transaction reference");
         }
 
-        if (status === "successful" || status === "completed") {
+        // Handle successful payments (both 'successful' and 'completed')
+        if (normalizedStatus === "successful" || normalizedStatus === "completed") {
           const response = await verifyPayment({ 
             transaction_id: transactionId || txRef,
-            status
+            status: normalizedStatus
           });
           
           if (!response.success) {
@@ -123,7 +127,7 @@ const TransactionCallback = () => {
             onClick={() => navigate("/dashboard")}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
-            Return to Dashboard
+            Return to your Dashboard
           </button>
         </div>
       </div>
