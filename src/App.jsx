@@ -27,6 +27,7 @@ import AdminUserEdit from "./pages/admin/AdminUserEdit";
 import AddSubtractBalance from "./pages/admin/AddSubtractBalance";
 import ManageUserOrders from "./pages/admin/ManageUserOrders";
 import ManageUserTransactions from "./pages/admin/ManageUserTransactions";
+import ManageTransactions from "./pages/admin/ManageTransactions";
 import SendMailAll from "./pages/admin/SendMailAll";
 import SendEmailForm from './pages/admin/SendEmailForm';
 import API from './pages/dashboard/Api';
@@ -38,6 +39,7 @@ import TransactionCallback from './pages/dashboard/TransactionCallback';
 import AddServicesPage from './pages/admin/AddServicesPage';
 import ShowServices from './pages/admin/ShowServices';
 import ShowOrders from "./pages/admin/ShowOrders";
+import AdminSettings from './pages/admin/AdminSettings';
 
 
 
@@ -103,7 +105,9 @@ const App = () => {
             <Route path="show-services" element={<ShowServices />} />
             <Route path="orders" element={<ShowOrders />} />
             <Route path="api-providers" element={<ManageApiProviders />} />
+            <Route path="transactions" element={<ManageTransactions />} />
             <Route path="manage-users" element={<ManageUsers />} />
+            <Route path="settings" element={<AdminSettings />} />
             <Route path="users/:id/View" element={<AdminUserView />} />
             <Route path="users/:id/Edit" element={<AdminUserEdit />} />
             <Route path="users/:id/balance" element={<AddSubtractBalance />} />

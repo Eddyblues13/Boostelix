@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   Users,
   Mail,
+  DollarSign,
   BarChart3,
   Settings,
   Database,
@@ -23,10 +24,11 @@ const Sidebar = ({
     { icon: Plus, label: 'Add Services', to: '/admin/add-services' },
     { icon: List, label: 'Show Services', to: '/admin/show-services' },
     { icon: Zap, label: 'Manage API Providers', to: '/admin/api-providers' }, 
+    { icon: DollarSign, label: 'Transactions', to: '/admin/transactions' },
     { icon: ShoppingBag, label: 'Orders', to: '/admin/orders' },
     { icon: Users, label: 'All Users', to: '/admin/manage-users' },
     { icon: Mail, label: 'Send Mail', to: '/admin/send-mail' },
-    { icon: Database, label: 'System Logs', to: '/admin/system-logs' },
+    { icon: Database, label: 'System Logs', to: '/admin/system-logs' }, 
     { icon: Settings, label: 'Settings', to: '/admin/settings' },
   ];
 
