@@ -109,11 +109,8 @@ const App = () => {
             <Route path="api-providers" element={<ManageApiProviders />} />
             <Route path="transactions" element={<ManageTransactions />} />
             <Route path="manage-users" element={<ManageUsers />} />
-<<<<<<< HEAD
             <Route path="tickets" element={<AdminTickets />} />
-=======
             <Route path="settings" element={<AdminSettings />} />
->>>>>>> a55809f1fb071e806124fa7a4565eef55303697a
             <Route path="users/:id/View" element={<AdminUserView />} />
             <Route path="users/:id/Edit" element={<AdminUserEdit />} />
             <Route path="users/:id/balance" element={<AddSubtractBalance />} />
