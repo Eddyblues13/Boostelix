@@ -8,6 +8,11 @@ export const adminLogin = async (email, password) => {
   return response.data;
 };
 
+export const AdminDashboard = async () => {
+  const response = await api.get('/admin/dashboard');
+  return response.data;
+};
+
 
 export const fetchApiProviders = async () => {
   const response = await api.get('/admin/providers');
@@ -156,5 +161,95 @@ export const sendEmailToAllUsers = async (subject, message) => {
 export const fetchAllOrders = async () => {
   const response = await api.get(`/admin/orders`);
   return response;
+};
+
+
+
+
+// Transactions
+export const fetchTransactions = async (params = {}) => {
+  try {
+    // Clean up params
+    const cleanedParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== '' && params[key] !== null) {
+        cleanedParams[key] = params[key];
+      }
+    });
+
+    const response = await api.get('/admin/transactions', { 
+      params: cleanedParams,
+      validateStatus: (status) => status < 500
+    });
+    
+    // Ensure consistent response structure
+    return {
+      data: response.data?.data || [],
+      current_page: response.data?.current_page || 1,
+      last_page: response.data?.last_page || 1,
+      per_page: response.data?.per_page || 15,
+      total: response.data?.total || 0
+    };
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    return {
+      data: [],
+      current_page: 1,
+      last_page: 1,
+      per_page: 15,
+      total: 0
+    };
+  }
+};
+
+export const fetchTransactionDetails = async (id) => {
+  const response = await api.get(`/admin/transactions/${id}`);
+  return response.data;
+};
+
+export const createTransaction = async (transactionData) => {
+  const response = await api.post('/admin/transactions', transactionData);
+  return response.data;
+};
+
+export const updateTransaction = async (id, transactionData) => {
+  const response = await api.put(`/admin/transactions/${id}`, transactionData);
+  return response.data;
+};
+
+export const deleteTransaction = async (id) => {
+  const response = await api.delete(`/admin/transactions/${id}`);
+  return response.data;
+};
+
+export const changeTransactionStatus = async (id, status) => {
+  const response = await api.patch(`/admin/transactions/${id}/status`, { status });
+  return response.data;
+};
+
+export const fetchTransactionStats = async () => {
+  const response = await api.get('/admin/transactions/stats');
+  return response.data;
+};
+
+
+export const getAdminSettings = async () => {
+  const response = await api.get('/admin/settings');
+  return response.data;
+};
+
+export const updateAdminProfile = async (profileData) => {
+  const response = await api.put('/admin/settings/profile', profileData);
+  return response.data;
+};
+
+export const updateAdminSecurity = async (securityData) => {
+  const response = await api.put('/admin/settings/security', securityData);
+  return response.data;
+};
+
+export const getAdminActivityLogs = async () => {
+  const response = await api.get('/admin/settings/activity');
+  return response.data;
 };
 
