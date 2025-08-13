@@ -38,6 +38,7 @@ import TransactionCallback from './pages/dashboard/TransactionCallback';
 
 import AddServicesPage from './pages/admin/AddServicesPage';
 import ShowServices from './pages/admin/ShowServices';
+import AdminTickets from './pages/admin/Tickets';
 import ShowOrders from "./pages/admin/ShowOrders";
 import AdminSettings from './pages/admin/AdminSettings';
 
@@ -69,6 +70,7 @@ const App = () => {
           <Route path="/signup" element={<SignUpPage />} />
            <Route path="/services" element={<ServicesPage />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/payment/callback" element={<TransactionCallback />} />
           <Route path="/dashboard" element={
@@ -107,6 +109,7 @@ const App = () => {
             <Route path="api-providers" element={<ManageApiProviders />} />
             <Route path="transactions" element={<ManageTransactions />} />
             <Route path="manage-users" element={<ManageUsers />} />
+            <Route path="tickets" element={<AdminTickets />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="users/:id/View" element={<AdminUserView />} />
             <Route path="users/:id/Edit" element={<AdminUserEdit />} />

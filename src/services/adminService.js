@@ -158,6 +158,13 @@ export const sendEmailToAllUsers = async (subject, message) => {
   return response.data;
 }
 
+
+// Fetch all support tickets for admin
+
+export const fetchAdminTickets = async () => {
+  const response = await api.get(`/admin/tickets`);
+  return response.data.tickets;
+};
 export const fetchAllOrders = async () => {
   const response = await api.get(`/admin/orders`);
   return response;
