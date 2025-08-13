@@ -63,7 +63,7 @@ const AddFunds = () => {
     {
       id: "payment-methods",
       title: "What payment methods are available?",
-      content: "We support various payment methods including Flutterwave (cards, bank transfers), Paystack, and cryptocurrency options through Coinbase Commerce.",
+      content: "We support various payment methods including Flutterwave (cards, bank transfers), Paystackkk, and cryptocurrency options through Coinbase Commerce.",
     },
     {
       id: "deposit-time",
