@@ -260,3 +260,20 @@ export const getAdminActivityLogs = async () => {
   return response.data;
 };
 
+
+//service update
+export const createServiceUpdate = async (updateData) => {
+  const response = await api.post('/admin/service-updates', updateData)
+  return response.data
+}
+
+
+
+
+export const ServiceUpdateHistory = async () => {
+  const response = await api.get('/admin/service-updates-history')
+  return response.data
+}
+
+
+
