@@ -132,6 +132,21 @@ export const requestAffiliatePayout = async () => {
   }
 };
 
+// services/adminService.js
+export const fetchServiceUpdates = async () => {
+  try {
+    const response = await api.get('/user-service-updates'); // your endpoint
+    return response.data; // returns { status, updates }
+  } catch (error) {
+    console.error(
+      'Service updates fetch error:',
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+
 
 
 
