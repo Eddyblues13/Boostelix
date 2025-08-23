@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Bell, LogOut, Globe, ChevronDown, Settings, Menu } from "lucide-react"
-import { THEME_COLORS, CSS_COLORS } from "../constant/colors"
+import { CSS_COLORS } from "../constant/colors"
 import { useNavigate } from "react-router-dom"
+
 const Header = ({
   sidebarOpen,
   setSidebarOpen,
@@ -17,12 +18,23 @@ const Header = ({
   const currencyRef = useRef(null)
   const navigate = useNavigate()
 
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (currencyRef.current && !currencyRef.current.contains(event.target)) {
+        setCurrencyDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30 mx-4 mt-4 rounded-2xl shadow-sm">
       <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4">
         {/* Left side */}
         <div className="flex items-center space-x-3">
-          {/* Hamburger Menu - Visible on mobile only */}
+          {/* Hamburger Menu - Mobile only */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="block lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -30,9 +42,7 @@ const Header = ({
             <Menu className="w-5 h-5 text-gray-600" />
           </button>
 
-        
-
-          {/* Page Title - Desktop only */}
+          {/* Page Title - Desktop */}
           <div className="hidden lg:flex items-center space-x-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -41,8 +51,7 @@ const Header = ({
               <Menu className="w-5 h-5 text-gray-600" />
             </button>
             <span className="text-gray-600 text-sm">
-              Currently on{" "}
-              <strong className="text-gray-800">New order</strong>
+              Currently on <strong className="text-gray-800">New order</strong>
             </span>
           </div>
         </div>
@@ -63,18 +72,19 @@ const Header = ({
                 className="font-semibold"
                 style={{ color: CSS_COLORS.primaryDark }}
               >
-                {selectedCurrency.symbol} 0
+                {selectedCurrency.symbol} {selectedCurrency.code}
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  currencyDropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 transition-transform ${currencyDropdownOpen ? "rotate-180" : ""}`}
                 style={{ color: CSS_COLORS.primary }}
               />
             </button>
 
             {currencyDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-2xl shadow-lg z-50">
+              <div
+                className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-y-auto transition-all duration-150 z-50"
+                style={{ maxHeight: "70vh" }}
+              >
                 {currencies.map((currency) => (
                   <button
                     key={currency.code}
@@ -85,11 +95,8 @@ const Header = ({
                     className="w-full flex items-center space-x-3 px-4 py-3 text-left border-b last:border-b-0 hover:bg-gray-50"
                   >
                     <Globe className="w-4 h-4 text-gray-400" />
-                    <div>
-                      <div className="font-medium text-gray-700">
-                        {currency.symbol} {currency.code}
-                      </div>
-                      <div className="text-xs text-gray-500">{currency.name}</div>
+                    <div className="font-medium text-gray-700">
+                      {currency.symbol} {currency.code}
                     </div>
                   </button>
                 ))}
@@ -107,8 +114,10 @@ const Header = ({
           </button>
 
           {/* Settings */}
-          <button  
-          onClick={() => navigate(`/dashboard/account`)} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <button
+            onClick={() => navigate(`/dashboard/account`)}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
             <Settings className="w-5 h-5 text-gray-600" />
           </button>
 

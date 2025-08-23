@@ -37,10 +37,18 @@ import toast from "react-hot-toast"
 import { fetchUserData } from "../../services/userService"
 import { fetchSmmCategories, fetchSmmServices, createOrder } from "../../services/services"
 import { CSS_COLORS } from "../../components/constant/colors"
+import { useOutletContext } from "react-router-dom"
 
 const NewOrder = () => {
-  const [user, setUser] = useState(null)
-  const [selectedCurrency, setSelectedCurrency] = useState({ symbol: "₦", code: "NGN" })
+  // Get currency context from DashboardLayout
+  const { 
+    selectedCurrency, 
+    convertToSelectedCurrency, 
+    formatCurrency,
+    user: contextUser
+  } = useOutletContext();
+
+  const [user, setUser] = useState(contextUser || null)
   const [categories, setCategories] = useState([])
   const [services, setServices] = useState([])
   const [selectedCategory, setSelectedCategory] = useState(null)
@@ -53,7 +61,13 @@ const NewOrder = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderStatus, setOrderStatus] = useState(null)
 
-  const totalCost = selectedService && quantity ? (quantity * selectedService.price).toFixed(2) : "0.00"
+  // Calculate converted amounts
+  const convertedBalance = user?.balance ? convertToSelectedCurrency(user.balance, "NGN") : 0;
+  const formattedBalance = formatCurrency(convertedBalance, selectedCurrency);
+  
+  const totalCost = selectedService && quantity ? 
+    convertToSelectedCurrency(quantity * selectedService.price, "NGN") : 0;
+  const formattedTotalCost = formatCurrency(totalCost, selectedCurrency);
 
   const getPlatformIcon = (categoryTitle) => {
     if (!categoryTitle) return <Globe className="w-5 h-5 text-gray-500 flex-shrink-0" />
@@ -105,7 +119,6 @@ const NewOrder = () => {
 
       const response = await createOrder(orderData)
       
-      // Updated response handling
       const orderId = response.order_id || response.data?.order_id
       
       if (!orderId) {
@@ -136,18 +149,20 @@ const NewOrder = () => {
     }
   }
 
-  // Fetch user
+  // Fetch user if not available from context
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetchUserData()
-        setUser(response.data)
-      } catch (err) {
-        toast.error("Failed to fetch user info")
+    if (!contextUser) {
+      const fetchUser = async () => {
+        try {
+          const response = await fetchUserData()
+          setUser(response.data)
+        } catch (err) {
+          toast.error("Failed to fetch user info")
+        }
       }
+      fetchUser()
     }
-    fetchUser()
-  }, [])
+  }, [contextUser])
 
   // Fetch categories
   useEffect(() => {
@@ -269,7 +284,7 @@ const NewOrder = () => {
                 <div className="text-4xl">💰</div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Account Balance</p>
-                  <h3 className="text-2xl font-bold text-gray-800">{user?.balance || "0"}</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">{formattedBalance}</h3>
                 </div>
               </div>
               <div
@@ -451,7 +466,10 @@ const NewOrder = () => {
                     {services.length > 0 ? (
                       services.map((service) => (
                         <option key={service.id} value={service.id.toString()}>
-                          {service.service_title} - Min {service.min_amount} | Max {service.max_amount}
+                          {service.service_title} - {formatCurrency(
+                            convertToSelectedCurrency(service.price, "NGN"),
+                            selectedCurrency
+                          )} | Min {service.min_amount} | Max {service.max_amount}
                         </option>
                       ))
                     ) : (
@@ -498,7 +516,7 @@ const NewOrder = () => {
 
               {/* Average Time */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center space-x-1">
+                <label className="text-sm font-medium text-gray-700 mb-3 flex items-center space-x-1">
                   <span>Average time</span>
                   <Info className="w-4 h-4 text-gray-400" />
                 </label>
@@ -516,7 +534,7 @@ const NewOrder = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-3">Charge</label>
                 <input
                   type="text"
-                  value={`${selectedCurrency.symbol} ${totalCost}`}
+                  value={formattedTotalCost}
                   readOnly
                   className="w-full px-4 py-4 border border-gray-200 rounded-xl"
                   style={{ backgroundColor: CSS_COLORS.background.muted }}
@@ -643,7 +661,7 @@ const NewOrder = () => {
               <div className="flex flex-col items-center justify-center text-center space-y-2">
                 <div className="text-5xl">💰</div>
                 <p className="text-sm text-gray-500">Account Balance</p>
-                <h3 className="text-xl font-bold text-gray-800">₦{user?.balance || "0"}</h3>
+                <h3 className="text-xl font-bold text-gray-800">{formattedBalance}</h3>
               </div>
             </div>
             {/* Total Order */}
@@ -817,7 +835,7 @@ const NewOrder = () => {
 
                   {/* Average Time */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center space-x-1">
+                    <label className="text-sm font-medium text-gray-700 mb-3 flex items-center space-x-1">
                       <span>Average time</span>
                       <Info className="w-4 h-4 text-gray-400" />
                     </label>
@@ -841,7 +859,7 @@ const NewOrder = () => {
                     >
                       <div className="text-center">
                         <span className="text-2xl lg:text-3xl font-bold text-gray-800">
-                          {selectedCurrency.symbol} {totalCost}
+                          {formattedTotalCost}
                         </span>
                         <p className="text-sm text-gray-500 mt-1">Total Cost</p>
                       </div>

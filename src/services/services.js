@@ -107,7 +107,7 @@ export const fetchRecommendedServices = async () => {
 
 
 export const fetchApiProviders = async () => {
-     return await api.get("/admin/providers/api-providers");
+     return await api.get("/admin/providers");
 }
 
 export const fetchServicesFromProvider = async (provider) => {
@@ -122,4 +122,10 @@ export const importSelectedServices = (providerId, selectedServices) => {
     services: selectedServices,
   });
 };
+
+export const fetchCurrencies = async () => {
+  return await api.get("/currencies");
+};
+
+
 
