@@ -49,9 +49,9 @@ const AddFunds = () => {
 
   const currencies = [
     { code: "NGN", symbol: "₦", name: "Naira" },
-    { code: "USD", symbol: "$", name: "US Dollar" },
-    { code: "GHS", symbol: "₵", name: "Ghana Cedi" },
-    { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+    // { code: "USD", symbol: "$", name: "US Dollar" },
+    // { code: "GHS", symbol: "₵", name: "Ghana Cedi" },
+    // { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
   ]
 
   const currentMethod = paymentMethods.find((method) => method.id === selectedMethod)
