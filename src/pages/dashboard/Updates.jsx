@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Search, Info, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Info, ChevronLeft, ChevronRight } from "lucide-react"
 import { fetchAllUpdates } from "../../services/userService"
 
 // UI Components
@@ -11,13 +11,7 @@ const Card = ({ className = "", children }) => (
   </div>
 )
 
-const Input = ({ 
-  type = "text", 
-  placeholder = "", 
-  value = "", 
-  onChange, 
-  className = "" 
-}) => (
+const Input = ({ type = "text", placeholder = "", value = "", onChange, className = "" }) => (
   <input
     type={type}
     placeholder={placeholder}
@@ -27,17 +21,12 @@ const Input = ({
   />
 )
 
-const Button = ({ 
-  onClick, 
-  className = "", 
-  children, 
-  disabled = false, 
-  variant = "default" 
-}) => {
+const Button = ({ onClick, className = "", children, disabled = false, variant = "default" }) => {
   const baseClasses = "font-medium rounded-xl transition-all text-sm md:text-base"
-  const variantClasses = variant === "outline" 
-    ? "bg-transparent border border-blue-500 text-blue-500 hover:bg-blue-50" 
-    : "text-white bg-blue-500 hover:bg-blue-600"
+  const variantClasses =
+    variant === "outline"
+      ? "bg-transparent border border-blue-500 text-blue-500 hover:bg-blue-50"
+      : "text-white bg-blue-500 hover:bg-blue-600"
 
   return (
     <button
@@ -50,60 +39,31 @@ const Button = ({
   )
 }
 
-const Select = ({ value, onValueChange, children }) => {
-  const [open, setOpen] = useState(false)
-  
-  return (
-    <div className="relative">
-      {React.Children.map(children, child => {
-        if (child.type === SelectTrigger) {
-          return React.cloneElement(child, {
-            onClick: () => setOpen(!open),
-            "aria-expanded": open
-          })
-        }
-        if (child.type === SelectContent && open) {
-          return React.cloneElement(child, {
-            onClose: () => setOpen(false),
-            onValueChange: (val) => {
-              onValueChange(val)
-              setOpen(false)
-            }
-          })
-        }
-        return child
-      })}
-    </div>
-  )
+// New normal select dropdown
+const SelectInput = ({ value, onChange, options }) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    className="w-full md:w-48 border border-gray-200 rounded-xl px-4 py-3 text-sm md:text-base bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+  >
+    {options.map((opt) => (
+      <option key={opt.value} value={opt.value}>
+        {opt.label}
+      </option>
+    ))}
+  </select>
+)
+
+// Helper: map category to color
+const categoryColors = {
+  TikTok: "bg-pink-100 text-pink-600",
+  Twitter: "bg-blue-100 text-blue-600",
+  YouTube: "bg-red-100 text-red-600",
+  Instagram: "bg-purple-100 text-purple-600",
+  Facebook: "bg-blue-50 text-blue-700",
+  Spotify: "bg-green-100 text-green-700",
+  all: "bg-gray-100 text-gray-700",
 }
-
-const SelectTrigger = ({ className = "", children, ...props }) => (
-  <div 
-    className={`flex items-center justify-between px-3 py-2 md:px-4 md:py-3 border border-gray-200 rounded-xl cursor-pointer text-sm md:text-base ${className}`}
-    {...props}
-  >
-    {children}
-    <ChevronDown className="w-4 h-4 ml-2" />
-  </div>
-)
-
-const SelectContent = ({ className = "", children, onClose }) => (
-  <div 
-    className={`absolute top-full left-0 z-50 min-w-full mt-1 rounded-xl bg-white shadow-lg border border-gray-200 ${className}`}
-    onClick={(e) => e.stopPropagation()}
-  >
-    {children}
-  </div>
-)
-
-const SelectItem = ({ value, children, onClick }) => (
-  <div 
-    className="px-4 py-2 hover:bg-blue-50 hover:text-blue-600 cursor-pointer text-sm md:text-base"
-    onClick={onClick}
-  >
-    {children}
-  </div>
-)
 
 // Main Updates Component
 function Updates() {
@@ -115,24 +75,21 @@ function Updates() {
   const [error, setError] = useState(null)
   const itemsPerPage = 5
 
-useEffect(() => { 
-  const fetchUpdates = async () => {
-    try {
-      setLoading(true);
-
-      const response = await fetchAllUpdates();
-      setUpdates(response.data); 
-
-    } catch (err) {
-      setError(err.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const fetchUpdates = async () => {
+      try {
+        setLoading(true)
+        const response = await fetchAllUpdates()
+        setUpdates(response.data)
+      } catch (err) {
+        setError(err.message || "Something went wrong")
+      } finally {
+        setLoading(false)
+      }
     }
-  };
 
-  fetchUpdates();
-}, []);
-
+    fetchUpdates()
+  }, [])
 
   const filterOptions = [
     { value: "all", label: "All" },
@@ -153,14 +110,13 @@ useEffect(() => {
     return matchesSearch && matchesFilter
   })
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredUpdates.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const currentUpdates = filteredUpdates.slice(startIndex, startIndex + itemsPerPage)
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   if (loading) {
@@ -176,8 +132,8 @@ useEffect(() => {
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-red-500 text-center p-4 bg-red-50 rounded-xl">
           <p>Error loading updates: {error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg"
           >
             Try Again
@@ -196,25 +152,14 @@ useEffect(() => {
             <div className="flex flex-col md:flex-row items-center gap-3">
               {/* Filter Dropdown */}
               <div className="w-full md:w-48">
-                <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-                  <SelectTrigger>
-                    {filterOptions.find(opt => opt.value === selectedFilter)?.label || "All"}
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filterOptions.map(option => (
-                      <SelectItem 
-                        key={option.value} 
-                        value={option.value}
-                        onClick={() => {
-                          setSelectedFilter(option.value)
-                          setCurrentPage(1)
-                        }}
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SelectInput
+                  value={selectedFilter}
+                  onChange={(val) => {
+                    setSelectedFilter(val)
+                    setCurrentPage(1)
+                  }}
+                  options={filterOptions}
+                />
               </div>
 
               {/* Search Bar */}
@@ -261,6 +206,13 @@ useEffect(() => {
                   >
                     <div className="space-y-1">
                       <h3 className="font-medium text-gray-900">{update.service}</h3>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          categoryColors[update.category] || "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {update.category}
+                      </span>
                       <p className="text-xs md:text-sm text-gray-500">{update.details}</p>
                     </div>
                     <div className="text-sm text-gray-500 md:self-center">{update.date}</div>
@@ -338,35 +290,6 @@ useEffect(() => {
             </Button>
           </div>
         )}
-
-        {/* Footer Notice */}
-        <Card>
-          <div className="p-4 lg:p-6 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-white/20 rounded-2xl flex-shrink-0">
-                <Info className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg lg:text-xl font-bold mb-2">
-                  Service <span className="text-yellow-300">Updates</span>
-                </h3>
-                <div className="bg-white/10 rounded-2xl p-4">
-                  <h4 className="font-semibold mb-2 text-yellow-300">🚨 Important Notice</h4>
-                  <p className="text-sm lg:text-base text-white/90">
-                    For any non-delivered orders, please contact our support team for immediate assistance and refund processing.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Footer Copyright */}
-        <div className="text-center py-6">
-          <p className="text-xs md:text-sm text-gray-500">
-            © Copyright {new Date().getFullYear()} All Rights Reserved.
-          </p>
-        </div>
       </div>
     </div>
   )
