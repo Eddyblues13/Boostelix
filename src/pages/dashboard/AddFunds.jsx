@@ -49,9 +49,9 @@ const AddFunds = () => {
 
   const currencies = [
     { code: "NGN", symbol: "₦", name: "Naira" },
-    { code: "USD", symbol: "$", name: "US Dollar" },
-    { code: "GHS", symbol: "₵", name: "Ghana Cedi" },
-    { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+    // { code: "USD", symbol: "$", name: "US Dollar" },
+    // { code: "GHS", symbol: "₵", name: "Ghana Cedi" },
+    // { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
   ]
 
   const currentMethod = paymentMethods.find((method) => method.id === selectedMethod)
@@ -63,7 +63,7 @@ const AddFunds = () => {
     {
       id: "payment-methods",
       title: "What payment methods are available?",
-      content: "We support various payment methods including Flutterwave (cards, bank transfers), Paystack, and cryptocurrency options through Coinbase Commerce.",
+      content: "We support various payment methods including Flutterwave (cards, bank transfers), Paystackkk, and cryptocurrency options through Coinbase Commerce.",
     },
     {
       id: "deposit-time",
