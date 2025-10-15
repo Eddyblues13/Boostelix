@@ -63,7 +63,7 @@ const AddFunds = () => {
     {
       id: "payment-methods",
       title: "What payment methods are available?",
-      content: "We support various payment methods including Flutterwave (cards, bank transfers), Paystackkk, and cryptocurrency options through Coinbase Commerce.",
+      content: "We support various payment methods including Flutterwave (cards, bank transfers), Paystack, and cryptocurrency options through Coinbase Commerce.",
     },
     {
       id: "deposit-time",
@@ -123,20 +123,13 @@ const AddFunds = () => {
     try {
       const paymentData = {
         amount: numericAmount,
-        currency: selectedCurrency.code,
         payment_method: selectedMethod,
       }
 
       const response = await initiatePayment(paymentData)
       
-      if (response.payment_url) {
-        localStorage.setItem('pendingTransaction', JSON.stringify({
-          transactionRef: response.transaction_id,
-          amount: numericAmount,
-          currency: selectedCurrency.code,
-          method: selectedMethod
-        }))
-        
+      if (response.success && response.payment_url) {
+        // Simply redirect to payment URL - no localStorage needed
         window.location.href = response.payment_url
       } else {
         throw new Error(response.message || 'Payment gateway error')
@@ -582,7 +575,7 @@ const AddFunds = () => {
                                 {formatDate(tx.created_at)}
                               </td>
                               <td className="py-4 px-6 text-right font-semibold" style={{ color: CSS_COLORS.primary }}>
-                                {formatCurrency(tx.amount, tx.currency || 'USD')}
+                                {formatCurrency(tx.amount, tx.currency || 'NGN')}
                               </td>
                               <td className="py-4 px-6 text-right text-gray-600">
                                 {formatCurrency(tx.charge)}

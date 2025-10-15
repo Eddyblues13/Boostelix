@@ -40,6 +40,7 @@ import AdminTickets from './pages/admin/Tickets';
 import AdminUpdates from './pages/admin/Updates';
 import ShowOrders from "./pages/admin/ShowOrders";
 import AdminSettings from './pages/admin/AdminSettings';
+import PaymentCallback from './pages/dashboard/PaymentCallback';
 
 
 
@@ -81,6 +82,7 @@ const App = () => {
             <Route index element={<NewOrder />} />
             <Route path="updates" element={<Updates />} />
             <Route path="add-funds" element={<AddFunds />} />
+            <Route path="payment/callback" element={<PaymentCallback />} />
             <Route path="orders" element={<OrderHistory />} />
             <Route path="mass-order" element={<MassOrder />} />
             <Route path="child-panel" element={<ChildPanel />} />
