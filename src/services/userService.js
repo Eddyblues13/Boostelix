@@ -19,10 +19,7 @@ export const initiatePayment = async (paymentData) => {
   }
 }
 
-// export const verifyPayment = async (data) => {
-//   const response = await api.post('/payment/callback', data)
-//   return response.data
-// } 
+
 
 
 export const verifyPayment = async (paymentData) => {
