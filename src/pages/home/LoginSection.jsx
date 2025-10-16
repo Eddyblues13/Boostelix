@@ -49,7 +49,7 @@ const LoginSection = () => {
   }
 
   return (
-    <div className="bg-[#f0f9ff] flex items-start justify-center pt-4 p-2">
+    <div id="login-section" className="bg-[#f0f9ff] flex items-start justify-center pt-4 p-2">
       <div className="bg-white rounded-3xl p-6 w-full max-w-md lg:max-w-6xl">
         <h1 className="text-2xl font-bold text-blue-900 mb-4 text-left">
           Login to your account

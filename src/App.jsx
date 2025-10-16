@@ -10,6 +10,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import AdminRoutes from './routes/AdminRoutes';
 import NewOrder from './pages/dashboard/NewOrder';
 import Updates from './pages/dashboard/Updates';
+import GeneralNotification from './pages/dashboard/GeneralNotification';
 import AddFunds from './pages/dashboard/AddFunds';
 import OrderHistory from './pages/dashboard/OrderHistory';
 import MassOrder from './pages/dashboard/MassOrder';
@@ -92,7 +93,9 @@ const App = () => {
             <Route path="services" element={<Services />} />
             <Route path="api" element={<API />} />
             <Route path="tutorials" element={<Tutorials />} />
+            <Route path="notifications" element={<GeneralNotification />} />
             <Route path="account" element={<Account />} />
+
            
             
 
