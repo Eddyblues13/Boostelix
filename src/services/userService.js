@@ -19,15 +19,24 @@ export const initiatePayment = async (paymentData) => {
   }
 }
 
-export const verifyPayment = async (data) => {
-  const response = await api.post('/payment/verify', data)
-  return response.data
+
+
+
+export const verifyPayment = async (paymentData) => {
+  try {
+    const response = await api.post('/payment/verify', paymentData)
+    return response.data
+  } catch (error) {
+    throw error
+  }
 }
 
 export const paymentHistory = async () => {
     const response = await api.get("/payment/history");
      return response;
 }
+
+
 
 
 
@@ -131,6 +140,21 @@ export const requestAffiliatePayout = async () => {
     throw error;
   }
 };
+
+// services/adminService.js
+export const fetchServiceUpdates = async () => {
+  try {
+    const response = await api.get('/user-service-updates'); // your endpoint
+    return response.data; // returns { status, updates }
+  } catch (error) {
+    console.error(
+      'Service updates fetch error:',
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
 
 
 

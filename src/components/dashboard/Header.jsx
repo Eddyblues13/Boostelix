@@ -1,5 +1,5 @@
 "use client"
-
+import NotificationButton from "./NotificationButton"
 import { useState, useRef, useEffect } from "react"
 import { Bell, LogOut, Globe, ChevronDown, Settings, Menu } from "lucide-react"
 import { CSS_COLORS } from "../constant/colors"
@@ -105,7 +105,7 @@ const Header = ({
           </div>
 
           {/* 🔔 Notification Button */}
-          <button
+          {/* <button
             onClick={() => navigate("/dashboard/notifications")}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
           >
@@ -114,7 +114,9 @@ const Header = ({
               className="absolute -top-1 -right-1 w-3 h-3 rounded-full"
               style={{ backgroundColor: CSS_COLORS.primary }}
             />
-          </button>
+          </button> */}
+
+           <NotificationButton />
 
           {/* ⚙️ Settings */}
           <button

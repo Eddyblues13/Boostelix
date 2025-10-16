@@ -35,13 +35,13 @@ import API from './pages/dashboard/Api';
 import Tutorials from './pages/dashboard/Tutorials';
 import Account from './pages/dashboard/Account';
 import TransactionCallback from './pages/dashboard/TransactionCallback';
-
-
 import AddServicesPage from './pages/admin/AddServicesPage';
 import ShowServices from './pages/admin/ShowServices';
 import AdminTickets from './pages/admin/Tickets';
+import AdminUpdates from './pages/admin/Updates';
 import ShowOrders from "./pages/admin/ShowOrders";
 import AdminSettings from './pages/admin/AdminSettings';
+import PaymentCallback from './pages/dashboard/PaymentCallback';
 
 
 
@@ -83,6 +83,7 @@ const App = () => {
             <Route index element={<NewOrder />} />
             <Route path="updates" element={<Updates />} />
             <Route path="add-funds" element={<AddFunds />} />
+            <Route path="payment/callback" element={<PaymentCallback />} />
             <Route path="orders" element={<OrderHistory />} />
             <Route path="mass-order" element={<MassOrder />} />
             <Route path="child-panel" element={<ChildPanel />} />
@@ -113,6 +114,7 @@ const App = () => {
             <Route path="transactions" element={<ManageTransactions />} />
             <Route path="manage-users" element={<ManageUsers />} />
             <Route path="tickets" element={<AdminTickets />} />
+            <Route path="updates" element={<AdminUpdates />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="users/:id/View" element={<AdminUserView />} />
             <Route path="users/:id/Edit" element={<AdminUserEdit />} />

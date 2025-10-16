@@ -49,9 +49,9 @@ const AddFunds = () => {
 
   const currencies = [
     { code: "NGN", symbol: "₦", name: "Naira" },
-    { code: "USD", symbol: "$", name: "US Dollar" },
-    { code: "GHS", symbol: "₵", name: "Ghana Cedi" },
-    { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+    // { code: "USD", symbol: "$", name: "US Dollar" },
+    // { code: "GHS", symbol: "₵", name: "Ghana Cedi" },
+    // { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
   ]
 
   const currentMethod = paymentMethods.find((method) => method.id === selectedMethod)
@@ -123,20 +123,13 @@ const AddFunds = () => {
     try {
       const paymentData = {
         amount: numericAmount,
-        currency: selectedCurrency.code,
         payment_method: selectedMethod,
       }
 
       const response = await initiatePayment(paymentData)
       
-      if (response.payment_url) {
-        localStorage.setItem('pendingTransaction', JSON.stringify({
-          transactionRef: response.transaction_id,
-          amount: numericAmount,
-          currency: selectedCurrency.code,
-          method: selectedMethod
-        }))
-        
+      if (response.success && response.payment_url) {
+        // Simply redirect to payment URL - no localStorage needed
         window.location.href = response.payment_url
       } else {
         throw new Error(response.message || 'Payment gateway error')
@@ -582,7 +575,7 @@ const AddFunds = () => {
                                 {formatDate(tx.created_at)}
                               </td>
                               <td className="py-4 px-6 text-right font-semibold" style={{ color: CSS_COLORS.primary }}>
-                                {formatCurrency(tx.amount, tx.currency || 'USD')}
+                                {formatCurrency(tx.amount, tx.currency || 'NGN')}
                               </td>
                               <td className="py-4 px-6 text-right text-gray-600">
                                 {formatCurrency(tx.charge)}
