@@ -10,6 +10,7 @@ import {
   DollarSign,
   Server,
   RefreshCw,
+  Bell,
   BookOpen,
   Menu
 } from "lucide-react"
@@ -34,6 +35,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, user }) => {
     { icon: Settings, label: "Services", to: "/dashboard/services" },
     { icon: DollarSign, label: "Make money", to: "/dashboard/affiliate" },
     { icon: Server, label: "API", to: "/dashboard/api" },
+    { icon: Bell, label: "Notifications", to: "/dashboard/notifications" },
     { icon: RefreshCw, label: "Updates", to: "/dashboard/updates" },
     { icon: BookOpen, label: "Tutorials", to: "/dashboard/tutorials" }
   ]

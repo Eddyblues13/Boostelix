@@ -104,8 +104,11 @@ const Header = ({
             )}
           </div>
 
-          {/* Notification */}
-          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors relative">
+          {/* 🔔 Notification Button */}
+          <button
+            onClick={() => navigate("/dashboard/notifications")}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
+          >
             <Bell className="w-5 h-5 text-gray-600" />
             <span
               className="absolute -top-1 -right-1 w-3 h-3 rounded-full"
@@ -113,7 +116,7 @@ const Header = ({
             />
           </button>
 
-          {/* Settings */}
+          {/* ⚙️ Settings */}
           <button
             onClick={() => navigate(`/dashboard/account`)}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -121,7 +124,7 @@ const Header = ({
             <Settings className="w-5 h-5 text-gray-600" />
           </button>
 
-          {/* Logout */}
+          {/* 🚪 Logout */}
           <button
             onClick={onLogout}
             className="text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors flex items-center space-x-2"
