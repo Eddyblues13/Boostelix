@@ -48,7 +48,7 @@ const TransactionCallback = () => {
         // Handle successful payments (both 'successful' and 'completed')
         if (normalizedStatus === "successful" || normalizedStatus === "completed") {
           const response = await verifyPayment({ 
-            transaction_id: transactionId || txRef,
+            transaction_id: txRef,
             status: normalizedStatus
           });
           
