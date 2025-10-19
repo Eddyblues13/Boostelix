@@ -51,6 +51,7 @@ const NewOrder = () => {
   const [user, setUser] = useState(contextUser || null)
   const [categories, setCategories] = useState([])
   const [services, setServices] = useState([])
+  const [allServices, setAllServices] = useState([]) // Store all services for searching
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedService, setSelectedService] = useState(null)
   const [quantity, setQuantity] = useState("")
@@ -60,6 +61,9 @@ const NewOrder = () => {
   const [showServiceDescription, setShowServiceDescription] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderStatus, setOrderStatus] = useState(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [isLoadingAllServices, setIsLoadingAllServices] = useState(false)
 
   // Calculate converted amounts
   const convertedBalance = user?.balance ? convertToSelectedCurrency(user.balance, "NGN") : 0;
@@ -93,6 +97,120 @@ const NewOrder = () => {
 
     return <Globe className="w-5 h-5 text-gray-500 flex-shrink-0" />
   }
+
+  const handleServiceSelect = async (service) => {
+    console.log("Selected service:", service)
+    
+    // Find the category that matches this service
+    const serviceCategory = categories.find(cat => cat.id === service.categoryId)
+    console.log("Found category:", serviceCategory)
+    
+    if (serviceCategory) {
+      // Set the selected category immediately to update the dropdown
+      setSelectedCategory(serviceCategory)
+      
+      // Wait for category to update, then fetch services for that category
+      try {
+        setLoadingServices(true)
+        const response = await fetchSmmServices(serviceCategory.id.toString())
+        const categoryServices = response.data.data
+        setServices(categoryServices)
+        
+        // Find and set the exact service from the category services
+        const exactService = categoryServices.find(s => s.id === service.id)
+        if (exactService) {
+          setSelectedService(exactService)
+          console.log("Set selected service:", exactService)
+        } else {
+          // If exact match not found, set the first service from the category
+          setSelectedService(categoryServices.length > 0 ? categoryServices[0] : null)
+        }
+      } catch (err) {
+        console.error("Error fetching services for selected category:", err)
+        toast.error("Failed to load services for selected category")
+      } finally {
+        setLoadingServices(false)
+      }
+    }
+    
+    setSearchQuery("")
+    setShowSearchResults(false)
+  }
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value
+    setSearchQuery(query)
+    
+    if (query.length > 0) {
+      setShowSearchResults(true)
+    } else {
+      setShowSearchResults(false)
+    }
+  }
+
+  const handleSearchFocus = () => {
+    if (searchQuery.length > 0 && allServices.length > 0) {
+      setShowSearchResults(true)
+    }
+  }
+
+  const handleSearchBlur = () => {
+    // Delay hiding to allow for item selection
+    setTimeout(() => {
+      setShowSearchResults(false)
+    }, 200)
+  }
+
+  const loadAllServices = async () => {
+    if (allServices.length > 0 || isLoadingAllServices) return
+    
+    setIsLoadingAllServices(true)
+    try {
+      console.log("Loading all services...")
+      const allServicesData = []
+      
+      // Fetch services for all categories
+      for (const category of categories) {
+        try {
+          console.log(`Fetching services for category: ${category.category_title}`)
+          const response = await fetchSmmServices(category.id.toString())
+          const servicesData = response.data.data
+          console.log(`Found ${servicesData.length} services for ${category.category_title}`)
+          
+          // Add category information to each service
+          const servicesWithCategory = servicesData.map(service => ({
+            ...service,
+            categoryName: category.category_title,
+            categoryId: category.id
+          }))
+          
+          allServicesData.push(...servicesWithCategory)
+        } catch (err) {
+          console.error(`Error fetching services for category ${category.id}:`, err)
+        }
+      }
+      
+      console.log("Total services loaded:", allServicesData.length)
+      setAllServices(allServicesData)
+    } catch (err) {
+      console.error("Error loading all services:", err)
+      toast.error("Failed to load services for search")
+    } finally {
+      setIsLoadingAllServices(false)
+    }
+  }
+
+  // Filter services based on search query
+  const searchResults = searchQuery && allServices.length > 0
+    ? allServices.filter(service => {
+        const searchLower = searchQuery.toLowerCase()
+        return (
+          service.service_title?.toLowerCase().includes(searchLower) ||
+          service.description?.toLowerCase().includes(searchLower) ||
+          service.categoryName?.toLowerCase().includes(searchLower)
+        )
+      })
+    : [];
 
   const handleSubmitOrder = async () => {
     if (!selectedCategory || !selectedService || !quantity || !link) {
@@ -192,7 +310,10 @@ const NewOrder = () => {
         const response = await fetchSmmServices(selectedCategory.id.toString())
         const srv = response.data.data
         setServices(srv)
-        setSelectedService(srv.length > 0 ? srv[0] : null)
+        // Only set selected service if it's not already set or if it doesn't belong to current category
+        if (!selectedService || selectedService.category !== selectedCategory.id) {
+          setSelectedService(srv.length > 0 ? srv[0] : null)
+        }
       } catch (err) {
         console.error("Error fetching services:", err)
         toast.error("Failed to fetch services")
@@ -204,6 +325,13 @@ const NewOrder = () => {
     }
     fetchServices()
   }, [selectedCategory])
+
+  // Load all services when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && allServices.length === 0) {
+      loadAllServices()
+    }
+  }, [categories])
 
   const socialPlatforms = [
     { name: "Instagram", icon: Instagram, bgColor: "#e4405f" },
@@ -244,6 +372,84 @@ const NewOrder = () => {
   }
 
   const metrics = getServiceMetrics()
+
+  // Search Results Dropdown Component
+  const SearchResultsDropdown = () => {
+    if (!showSearchResults || !searchQuery) return null
+
+    if (isLoadingAllServices) {
+      return (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
+          <div className="p-4 text-center">
+            <Loader2 className="w-5 h-5 animate-spin mx-auto text-blue-500" />
+            <p className="text-sm text-gray-500 mt-2">Loading services...</p>
+          </div>
+        </div>
+      )
+    }
+
+    if (searchResults.length === 0 && searchQuery.length > 0) {
+      return (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
+          <div className="p-4 text-center">
+            <p className="text-sm text-gray-500">No services found for "{searchQuery}"</p>
+            <p className="text-xs text-gray-400 mt-1">Try different keywords</p>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-80 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg">
+        <div className="p-2">
+          <div className="px-3 py-2 border-b border-gray-100">
+            <p className="text-xs font-medium text-gray-500">
+              Found {searchResults.length} service{searchResults.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          {searchResults.slice(0, 20).map((service) => (
+            <div
+              key={service.id}
+              onClick={() => handleServiceSelect(service)}
+              className="p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-1">
+                    {getPlatformIcon(service.categoryName)}
+                    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {service.categoryName}
+                    </span>
+                  </div>
+                  <h4 className="font-medium text-gray-800 text-sm mb-1">
+                    {service.service_title}
+                  </h4>
+                  <p className="text-xs text-gray-600 line-clamp-2">
+                    {service.description || "No description available"}
+                  </p>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <span className="text-xs text-green-600 font-medium">
+                      {formatCurrency(convertToSelectedCurrency(service.price, "NGN"), selectedCurrency)}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Min: {service.min_amount} | Max: {service.max_amount}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {searchResults.length > 20 && (
+            <div className="px-3 py-2 border-t border-gray-100">
+              <p className="text-xs text-gray-500 text-center">
+                Showing first 20 of {searchResults.length} services
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "transparent" }}>
@@ -395,10 +601,15 @@ const NewOrder = () => {
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Search services..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={handleSearchFocus}
+                  onBlur={handleSearchBlur}
                   className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   style={{ backgroundColor: CSS_COLORS.background.muted }}
                 />
+                <SearchResultsDropdown />
               </div>
 
               {/* Category */}
@@ -421,6 +632,8 @@ const NewOrder = () => {
                       onChange={(e) => {
                         const cat = categories.find((c) => c.id.toString() === e.target.value)
                         setSelectedCategory(cat)
+                        setSearchQuery("") // Clear search when category changes
+                        setShowSearchResults(false)
                       }}
                       className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl text-sm appearance-none"
                       style={{ backgroundColor: CSS_COLORS.background.muted }}
@@ -457,7 +670,9 @@ const NewOrder = () => {
                     value={selectedService?.id || ""}
                     onChange={(e) => {
                       const srv = services.find((s) => s.id.toString() === e.target.value)
-                      setSelectedService(srv)
+                      if (srv) {
+                        setSelectedService(srv)
+                      }
                     }}
                     className="w-full px-4 py-4 border border-gray-200 rounded-xl text-sm appearance-none"
                     style={{ backgroundColor: CSS_COLORS.background.muted }}
@@ -719,10 +934,15 @@ const NewOrder = () => {
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="text"
-                      placeholder="Search"
+                      placeholder="Search services..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      onFocus={handleSearchFocus}
+                      onBlur={handleSearchBlur}
                       className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       style={{ backgroundColor: CSS_COLORS.background.muted }}
                     />
+                    <SearchResultsDropdown />
                   </div>
 
                   {/* Category */}
@@ -743,6 +963,8 @@ const NewOrder = () => {
                           onChange={(e) => {
                             const cat = categories.find((c) => c.id.toString() === e.target.value)
                             setSelectedCategory(cat)
+                            setSearchQuery("") // Clear search when category changes
+                            setShowSearchResults(false)
                           }}
                           className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl text-sm lg:text-base appearance-none"
                           style={{ backgroundColor: CSS_COLORS.background.muted }}
@@ -779,7 +1001,9 @@ const NewOrder = () => {
                         value={selectedService?.id || ""}
                         onChange={(e) => {
                           const srv = services.find((s) => s.id.toString() === e.target.value)
-                          setSelectedService(srv)
+                          if (srv) {
+                            setSelectedService(srv)
+                          }
                         }}
                         className="w-full px-4 py-4 border border-gray-200 rounded-xl text-sm lg:text-base appearance-none"
                         style={{ backgroundColor: CSS_COLORS.background.muted }}
