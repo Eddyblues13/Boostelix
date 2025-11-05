@@ -695,7 +695,7 @@ const ManageTransactions = () => {
                   <th className="px-4 py-4 text-left text-sm font-semibold">Type</th>
                   <th className="px-4 py-4 text-left text-sm font-semibold">Status</th>
                   <th className="px-4 py-4 text-left text-sm font-semibold">Date</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold">Action</th>
+                  {/* <th className="px-4 py-4 text-left text-sm font-semibold">Action</th> */}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

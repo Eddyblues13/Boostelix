@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IoMenu, IoClose } from "react-icons/io5";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import logo from "../assets/images/logo.png";
 
 const navLinks = [
   { name: "Sign In", path: "/signin" },
@@ -72,12 +73,18 @@ const Navbar = () => {
     >
       <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo */}
-        <Link
-          to="/"
-          className="text-3xl font-extrabold text-blue-900 tracking-tight"
-        >
-          Boostelix
-        </Link>
+
+<Link to="/" className="flex items-center">
+  <img
+    src={logo}
+    alt="Boostelix Logo"
+    className="w-auto"
+    style={{
+      height: "40px", // adjust as needed — try 100px if you want it bolder
+     
+    }}
+  />
+</Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6 ml-auto">

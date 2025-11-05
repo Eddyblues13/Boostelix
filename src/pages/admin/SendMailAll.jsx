@@ -8,30 +8,12 @@ import { Color } from "@tiptap/extension-color"
 import TextAlign from "@tiptap/extension-text-align"
 import { Highlight } from "@tiptap/extension-highlight"
 import CodeBlock from "@tiptap/extension-code-block"
-import Image from "@tiptap/extension-image"
-import { Mail, Send, AlertCircle, X, Check, Loader2, ChevronDown, ChevronUp, Bold, Italic, Underline as UnderlineIcon, Strikethrough, List, ListOrdered, Code, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon } from "lucide-react"
+import { Send, AlertCircle, X, Check, Loader2, ChevronDown, ChevronUp, Bold, Italic, Underline as UnderlineIcon, Strikethrough, List, ListOrdered, Code, AlignLeft, AlignCenter, AlignRight } from "lucide-react"
 import { sendEmailToAllUsers } from "../../services/adminService"
 
+// Toolbar for text formatting
 const MenuBar = ({ editor }) => {
   if (!editor) return null
-
-  const insertImage = () => {
-    const input = document.createElement("input")
-    input.type = "file"
-    input.accept = "image/*"
-    input.onchange = async () => {
-      const file = input.files?.[0]
-      if (file) {
-        const reader = new FileReader()
-        reader.onload = () => {
-          const base64 = reader.result
-          editor.chain().focus().setImage({ src: base64 }).run()
-        }
-        reader.readAsDataURL(file)
-      }
-    }
-    input.click()
-  }
 
   return (
     <div className="flex flex-wrap gap-1 mb-2 border-b border-gray-200 pb-2 px-4">
@@ -105,13 +87,6 @@ const MenuBar = ({ editor }) => {
       >
         <AlignRight className="w-4 h-4" />
       </button>
-      <button
-        onClick={insertImage}
-        className="p-2 rounded hover:bg-gray-100 text-gray-600"
-        title="Insert Image"
-      >
-        <ImageIcon className="w-4 h-4" />
-      </button>
     </div>
   )
 }
@@ -132,10 +107,6 @@ export default function SendMailAll() {
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Highlight.configure({ multicolor: true }),
       CodeBlock,
-      Image.configure({
-        inline: true,
-        allowBase64: true,
-      }),
     ],
     content: "<p>Write your message here...</p>",
     editable: !isSending,
@@ -144,11 +115,11 @@ export default function SendMailAll() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!editor || !subject) return
-    
+
     setIsSending(true)
     setSendSuccess(null)
     setSendError(null)
-    
+
     try {
       const message = editor.getHTML()
       const response = await sendEmailToAllUsers(subject, message)
@@ -156,7 +127,7 @@ export default function SendMailAll() {
       setSubject("")
       editor.commands.setContent("<p></p>")
     } catch (err) {
-      setSendError(err.message || "Failed to send email")
+      setSendError(err.response?.data?.message || "Failed to send email")
     } finally {
       setIsSending(false)
     }
@@ -165,7 +136,7 @@ export default function SendMailAll() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Send Email To All User's</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Send Email To All Users</h1>
       </div>
 
       {/* Status Alerts */}
@@ -178,7 +149,7 @@ export default function SendMailAll() {
           </button>
         </div>
       )}
-      
+
       {sendError && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg flex items-center">
           <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
@@ -191,7 +162,7 @@ export default function SendMailAll() {
 
       {/* Email Form */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div 
+        <div
           className="flex items-center justify-between p-4 border-b border-gray-200 cursor-pointer"
           onClick={() => setIsExpanded(!isExpanded)}
         >
@@ -202,7 +173,7 @@ export default function SendMailAll() {
             <ChevronDown className="w-5 h-5 text-gray-500" />
           )}
         </div>
-        
+
         {isExpanded && (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div>
@@ -220,20 +191,20 @@ export default function SendMailAll() {
                 disabled={isSending}
               />
             </div>
-            
+
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                 Message
               </label>
               <div className="border border-gray-300 rounded-lg overflow-hidden">
                 <MenuBar editor={editor} />
-                <EditorContent 
-                  editor={editor} 
-                  className="min-h-[300px] p-4 prose prose-sm focus:outline-none" 
+                <EditorContent
+                  editor={editor}
+                  className="min-h-[300px] p-4 prose prose-sm focus:outline-none"
                 />
               </div>
             </div>
-            
+
             <div className="pt-4 border-t border-gray-200">
               <button
                 type="submit"

@@ -32,7 +32,7 @@ const Sidebar = ({
     { icon: Users, label: 'All Users', to: '/admin/manage-users' },
      { icon: Bell, label: 'Updates', to: '/admin/updates' },
     { icon: Mail, label: 'Send Mail', to: '/admin/send-mail' },
-    { icon: Database, label: 'System Logs', to: '/admin/system-logs' }, 
+    // { icon: Database, label: 'System Logs', to: '/admin/system-logs' }, 
     { icon: Settings, label: 'Settings', to: '/admin/settings' },
   ];
 
