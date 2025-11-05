@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
+import ReCAPTCHA from 'react-google-recaptcha';   // ✅ Add this line
 import Button from "../../components/Button";
 import { signupSchema } from '../../utils/validation';
 
@@ -15,63 +16,63 @@ const SignUpPage = () => {
   const [lastname, setLastname] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [captchaToken, setCaptchaToken] = useState(null); // ✅ new state for captcha
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
   const APP_URL = import.meta.env.VITE_APP_BASE_URL;
+  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY; // ✅ from .env
 
   const registerUser = async (e) => {
     e.preventDefault();
 
     try {
-      // Validate form inputs
-      await signupSchema.validate({ 
-        username, 
-        email, 
-        firstname, 
-        lastname, 
-        password, 
-        confirmPassword 
-      }, { abortEarly: false });
+      // ✅ Validate form inputs
+      await signupSchema.validate(
+        { username, email, firstname, lastname, password, confirmPassword },
+        { abortEarly: false }
+      );
+
+      // ✅ Ensure reCAPTCHA completed
+      if (!captchaToken) {
+        toast.error("Please complete the reCAPTCHA before submitting.");
+        return;
+      }
 
       setIsLoading(true);
 
-      // API request using Axios
+      // ✅ Send data + reCAPTCHA token to backend
       const response = await axios.post(`${APP_URL}/register`, {
         username: username.trim(),
         email: email.trim(),
         first_name: firstname.trim(),
         last_name: lastname.trim(),
         password,
-        password_confirmation: confirmPassword // Laravel expects this naming
+        password_confirmation: confirmPassword,
+        token: captchaToken, // ✅ send captcha token to Laravel
       });
-      
-      // Handle successful registration
+
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('userData', JSON.stringify(response.data.user));
 
       toast.success('Account created successfully!');
-      navigate('/dashboard'); // Redirect to protected route
-
+      navigate('/dashboard');
     } catch (err) {
-      // Handle validation errors
       if (err.name === "ValidationError") {
         toast.error(err.inner[0].message);
-      } 
-      // Handle API errors
-      else if (err.response) {
+      } else if (err.response) {
         const errorData = err.response.data;
-        const errorMsg = errorData.message || 
-                         (errorData.errors ? Object.values(errorData.errors).flat().join(' ') : 'Registration failed');
+        const errorMsg =
+          errorData.message ||
+          (errorData.errors ? Object.values(errorData.errors).flat().join(' ') : 'Registration failed');
         toast.error(errorMsg);
-      } 
-      // Handle network errors
-      else {
+      } else {
         toast.error(err.message || "Network error. Please try again.");
       }
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto my-12">
@@ -203,6 +204,15 @@ const SignUpPage = () => {
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+          </div>
+
+          {/* ✅ reCAPTCHA */}
+          <div className="flex justify-center mt-4">
+            <ReCAPTCHA
+              sitekey={RECAPTCHA_SITE_KEY}
+              onChange={(token) => setCaptchaToken(token)}
+              onExpired={() => setCaptchaToken(null)}
+            />
           </div>
 
           {/* Sign Up Button */}

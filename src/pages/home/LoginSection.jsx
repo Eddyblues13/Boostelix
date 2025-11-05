@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import axios from 'axios';
 import { loginSchema } from '../../utils/validation';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const LoginSection = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,19 +12,32 @@ const LoginSection = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
+
   const navigate = useNavigate();
   const APP_URL = import.meta.env.VITE_APP_BASE_URL;
+  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
   const loginUser = async (e) => {
     e.preventDefault();
 
     try {
+      // 1️⃣ Validate fields
       await loginSchema.validate({ login, password }, { abortEarly: false });
+
+      // 2️⃣ Check captcha
+      if (!captchaToken) {
+        toast.error("Please complete the reCAPTCHA verification.");
+        return;
+      }
+
       setIsLoading(true);
 
+      // 3️⃣ Send login + captcha token to Laravel backend
       const response = await axios.post(`${APP_URL}/login`, {
         login: login.trim(),
-        password
+        password,
+        "g-recaptcha-response": captchaToken,
       });
 
       localStorage.setItem('authToken', response.data.token);
@@ -31,13 +45,13 @@ const LoginSection = () => {
 
       toast.success('Login successful!');
       navigate('/dashboard');
-
     } catch (err) {
       if (err.name === "ValidationError") {
         toast.error(err.inner[0].message);
       } else if (err.response) {
         const errorData = err.response.data;
-        const errorMsg = errorData.message ||
+        const errorMsg =
+          errorData.message ||
           (errorData.errors ? Object.values(errorData.errors).flat().join(' ') : 'Login failed');
         toast.error(errorMsg);
       } else {
@@ -46,7 +60,7 @@ const LoginSection = () => {
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div id="login-section" className="bg-[#f0f9ff] flex items-start justify-center pt-4 p-2">
@@ -103,10 +117,22 @@ const LoginSection = () => {
             </div>
           </div>
 
+          {/* ✅ ReCAPTCHA here */}
+          <div className="flex justify-center mt-4">
+            <ReCAPTCHA
+              sitekey={RECAPTCHA_SITE_KEY}
+              onChange={setCaptchaToken}
+              onExpired={() => setCaptchaToken(null)}
+            />
+          </div>
+
           {/* Remember Me + Forgot Password + Sign In */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-4 space-y-4 lg:space-y-0">
             <div className="flex items-center justify-between text-sm lg:flex-1">
-              <div className="flex items-center cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
+              <div
+                className="flex items-center cursor-pointer"
+                onClick={() => setRememberMe(!rememberMe)}
+              >
                 <input
                   type="checkbox"
                   checked={rememberMe}
@@ -146,10 +172,9 @@ const LoginSection = () => {
           {/* Sign Up */}
           <div className="text-center text-sm">
             <span className="text-gray-600">Do not have an account? </span>
-
-               <Link to="/signup" className="text-blue-900 hover:text-blue-950 font-semibold">
-            Sign up
-          </Link>
+            <Link to="/signup" className="text-blue-900 hover:text-blue-950 font-semibold">
+              Sign up
+            </Link>
           </div>
         </form>
       </div>
