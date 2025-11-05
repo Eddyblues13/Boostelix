@@ -51,7 +51,7 @@ const NewOrder = () => {
   const [user, setUser] = useState(contextUser || null)
   const [categories, setCategories] = useState([])
   const [services, setServices] = useState([])
-  const [allServices, setAllServices] = useState([]) // Store all services for searching
+  const [allServices, setAllServices] = useState([])
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedService, setSelectedService] = useState(null)
   const [quantity, setQuantity] = useState("")
@@ -69,8 +69,9 @@ const NewOrder = () => {
   const convertedBalance = user?.balance ? convertToSelectedCurrency(user.balance, "NGN") : 0;
   const formattedBalance = formatCurrency(convertedBalance, selectedCurrency);
   
+  // Fixed total cost calculation
   const totalCost = selectedService && quantity ? 
-    convertToSelectedCurrency(quantity * selectedService.price, "NGN") : 0;
+    convertToSelectedCurrency((quantity * selectedService.price) / 1000, "NGN") : 0;
   const formattedTotalCost = formatCurrency(totalCost, selectedCurrency);
 
   const getPlatformIcon = (categoryTitle) => {
@@ -429,7 +430,7 @@ const NewOrder = () => {
                   </p>
                   <div className="flex items-center space-x-4 mt-2">
                     <span className="text-xs text-green-600 font-medium">
-                      {formatCurrency(convertToSelectedCurrency(service.price, "NGN"), selectedCurrency)}
+                      {formatCurrency(convertToSelectedCurrency(service.price / 1000, "NGN"), selectedCurrency)} per 1k
                     </span>
                     <span className="text-xs text-gray-500">
                       Min: {service.min_amount} | Max: {service.max_amount}
@@ -452,7 +453,7 @@ const NewOrder = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "transparent" }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Order Status Alert */}
       {orderStatus && (
         <div
@@ -479,126 +480,95 @@ const NewOrder = () => {
 
       {/* Mobile Layout */}
       <div className="lg:hidden">
-        <div className="max-w-md mx-auto p-4 space-y-4">
-          {/* Stats Cards */}
-          <div className="space-y-4">
-            <div
-              className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm relative overflow-hidden"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
-            >
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">💰</div>
+        <div className="container mx-auto p-4 space-y-6">
+          {/* Stats Cards - Mobile */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="text-3xl">💰</div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Account Balance</p>
-                  <h3 className="text-2xl font-bold text-gray-800">{formattedBalance}</h3>
+                  <p className="text-xs text-gray-500">Balance</p>
+                  <h3 className="text-lg font-bold text-gray-800 truncate">{formattedBalance}</h3>
                 </div>
               </div>
-              <div
-                className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl"
-                style={{ backgroundColor: CSS_COLORS.primary }}
-              ></div>
             </div>
-            <div
-              className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm relative overflow-hidden"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
-            >
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">👑</div>
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="text-3xl">👑</div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Account Status</p>
-                  <h3 className="text-xl font-bold text-gray-800">{user?.status || "NEW"}</h3>
+                  <p className="text-xs text-gray-500">Status</p>
+                  <h3 className="text-lg font-bold text-gray-800 truncate">{user?.status || "NEW"}</h3>
                 </div>
               </div>
-              <div
-                className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl"
-                style={{ backgroundColor: CSS_COLORS.primary }}
-              ></div>
             </div>
-            <div
-              className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm relative overflow-hidden"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
-            >
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">👤</div>
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="text-3xl">👤</div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Username</p>
-                  <h3 className="text-xl font-bold text-gray-800">{user?.username || "loading.."}</h3>
+                  <p className="text-xs text-gray-500">Username</p>
+                  <h3 className="text-lg font-bold text-gray-800 truncate">{user?.username || "loading.."}</h3>
                 </div>
               </div>
-              <div
-                className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl"
-                style={{ backgroundColor: CSS_COLORS.primary }}
-              ></div>
             </div>
-            <div
-              className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm relative overflow-hidden"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
-            >
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">📦</div>
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="text-3xl">📦</div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Total Order</p>
-                  <h3 className="text-2xl font-bold text-gray-800">{user?.total_orders || "0"}</h3>
+                  <p className="text-xs text-gray-500">Orders</p>
+                  <h3 className="text-lg font-bold text-gray-800">{user?.total_orders || "0"}</h3>
                 </div>
               </div>
-              <div
-                className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl"
-                style={{ backgroundColor: CSS_COLORS.primary }}
-              ></div>
             </div>
           </div>
 
-          {/* Social Media Platforms */}
-          <div className="grid grid-cols-2 gap-4">
-            {socialPlatforms.slice(0, 6).map((platform, index) => {
-              const IconComponent = platform.icon
-              return (
-                <div
-                  key={index}
-                  className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:scale-105 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="flex items-center space-x-3">
+          {/* Quick Platforms - Mobile */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Popular Platforms</h2>
+            <div className="grid grid-cols-3 gap-3">
+              {socialPlatforms.slice(0, 6).map((platform, index) => {
+                const IconComponent = platform.icon
+                return (
+                  <div
+                    key={index}
+                    className="bg-gray-50 rounded-xl p-3 text-center hover:scale-105 transition-all duration-200 cursor-pointer border border-gray-100"
+                  >
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                      className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center text-white"
                       style={{ backgroundColor: platform.bgColor }}
                     >
-                      <IconComponent className="w-5 h-5" />
+                      <IconComponent className="w-4 h-4" />
                     </div>
-                    <span className="font-medium text-gray-700">{platform.name}</span>
+                    <p className="text-xs font-medium text-gray-700 truncate">{platform.name}</p>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Mobile */}
           <div className="flex gap-3">
             <button
-              className="flex-1 text-white py-4 rounded-full font-medium flex items-center justify-center space-x-2 shadow-lg"
+              className="flex-1 text-white py-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg"
               style={{ backgroundColor: CSS_COLORS.primary }}
             >
               <ShoppingCart className="w-5 h-5" />
               <span>New order</span>
             </button>
             <button
-              className="flex-1 py-4 rounded-full font-medium flex items-center justify-center space-x-2 border border-gray-200"
-              style={{ backgroundColor: CSS_COLORS.background.muted, color: "#374151" }}
+              className="flex-1 py-4 rounded-xl font-medium flex items-center justify-center space-x-2 border border-gray-200 bg-white text-gray-700"
             >
               <ShoppingCart className="w-5 h-5" />
               <span>Mass order</span>
             </button>
           </div>
 
-          {/* Order Form */}
-          <div
-            className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
-            style={{ backgroundColor: CSS_COLORS.background.card }}
-          >
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Place your order</h2>
+          {/* Order Form - Mobile */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Place Your Order</h2>
             <div className="space-y-4">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search services..."
@@ -606,161 +576,133 @@ const NewOrder = () => {
                   onChange={handleSearchChange}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
-                  className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  style={{ backgroundColor: CSS_COLORS.background.muted }}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
                 />
                 <SearchResultsDropdown />
               </div>
 
-              {/* Category */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Category</label>
-                {loadingCategories ? (
-                  <div
-                    className="p-4 border border-gray-200 rounded-xl"
-                    style={{ backgroundColor: CSS_COLORS.background.muted }}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-gray-300 rounded-full animate-pulse"></div>
-                      <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
+              {/* Category & Service Row */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  {loadingCategories ? (
+                    <div className="p-3 border border-gray-200 rounded-xl bg-gray-50 animate-pulse">
+                      <div className="h-4 bg-gray-300 rounded"></div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="relative">
+                  ) : (
+                    <div className="relative">
+                      <select
+                        value={selectedCategory?.id || ""}
+                        onChange={(e) => {
+                          const cat = categories.find((c) => c.id.toString() === e.target.value)
+                          setSelectedCategory(cat)
+                          setSearchQuery("")
+                          setShowSearchResults(false)
+                        }}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm appearance-none bg-gray-50"
+                      >
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id.toString()}>
+                            {category.category_title}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                        {selectedCategory ? (
+                          getPlatformIcon(selectedCategory.category_title)
+                        ) : (
+                          <Globe className="w-4 h-4 text-gray-500" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Service</label>
+                  {loadingServices ? (
+                    <div className="p-3 border border-gray-200 rounded-xl bg-gray-50 animate-pulse">
+                      <div className="h-4 bg-gray-300 rounded"></div>
+                    </div>
+                  ) : (
                     <select
-                      value={selectedCategory?.id || ""}
+                      value={selectedService?.id || ""}
                       onChange={(e) => {
-                        const cat = categories.find((c) => c.id.toString() === e.target.value)
-                        setSelectedCategory(cat)
-                        setSearchQuery("") // Clear search when category changes
-                        setShowSearchResults(false)
+                        const srv = services.find((s) => s.id.toString() === e.target.value)
+                        if (srv) {
+                          setSelectedService(srv)
+                        }
                       }}
-                      className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl text-sm appearance-none"
-                      style={{ backgroundColor: CSS_COLORS.background.muted }}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm appearance-none bg-gray-50"
+                      disabled={!selectedCategory || services.length === 0}
                     >
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id.toString()}>
-                          {category.category_title}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                      {selectedCategory ? (
-                        getPlatformIcon(selectedCategory.category_title)
+                      {services.length > 0 ? (
+                        services.map((service) => (
+                          <option key={service.id} value={service.id.toString()}>
+                            {service.service_title} - {formatCurrency(
+                              convertToSelectedCurrency(service.price / 1000, "NGN"),
+                              selectedCurrency
+                            )} per 1k
+                          </option>
+                        ))
                       ) : (
-                        <Globe className="w-5 h-5 text-gray-500" />
+                        <option value="">No services available</option>
                       )}
-                    </div>
-                  </div>
-                )}
+                    </select>
+                  )}
+                  {selectedService && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Min: {selectedService.min_amount} - Max: {selectedService.max_amount}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Service */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Service</label>
-                {loadingServices ? (
-                  <div
-                    className="p-4 border border-gray-200 rounded-xl"
-                    style={{ backgroundColor: CSS_COLORS.background.muted }}
-                  >
-                    <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
-                  </div>
-                ) : (
-                  <select
-                    value={selectedService?.id || ""}
-                    onChange={(e) => {
-                      const srv = services.find((s) => s.id.toString() === e.target.value)
-                      if (srv) {
-                        setSelectedService(srv)
-                      }
-                    }}
-                    className="w-full px-4 py-4 border border-gray-200 rounded-xl text-sm appearance-none"
-                    style={{ backgroundColor: CSS_COLORS.background.muted }}
-                    disabled={!selectedCategory || services.length === 0}
-                  >
-                    {services.length > 0 ? (
-                      services.map((service) => (
-                        <option key={service.id} value={service.id.toString()}>
-                          {service.service_title} - {formatCurrency(
-                            convertToSelectedCurrency(service.price, "NGN"),
-                            selectedCurrency
-                          )} | Min {service.min_amount} | Max {service.max_amount}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="">No services available</option>
-                    )}
-                  </select>
-                )}
-                {selectedService && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    Min: {selectedService.min_amount} - Max: {selectedService.max_amount}
+              {/* Link & Quantity */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Link</label>
+                  <input
+                    type="url"
+                    value={link}
+                    onChange={(e) => setLink(e.target.value)}
+                    placeholder="Enter your profile/post URL"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    min={selectedService?.min_amount || 0}
+                    max={selectedService?.max_amount || 1000000}
+                    placeholder="Enter quantity"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Cost Summary - Mobile */}
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-1">Total Cost</p>
+                  <p className="text-2xl font-bold text-gray-800">{formattedTotalCost}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price / 1000, "NGN"), selectedCurrency) : '0'} per 1k
                   </p>
-                )}
+                </div>
               </div>
 
-              {/* Link */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Link</label>
-                <input
-                  type="url"
-                  value={link}
-                  onChange={(e) => setLink(e.target.value)}
-                  placeholder="Enter your profile/post URL"
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  style={{ backgroundColor: CSS_COLORS.background.muted }}
-                  required
-                />
-              </div>
-
-              {/* Quantity */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Quantity</label>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  min={selectedService?.min_amount || 0}
-                  max={selectedService?.max_amount || 1000000}
-                  placeholder="Enter quantity"
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  style={{ backgroundColor: CSS_COLORS.background.muted }}
-                  required
-                />
-              </div>
-
-              {/* Average Time */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-3 flex items-center space-x-1">
-                  <span>Average time</span>
-                  <Info className="w-4 h-4 text-gray-400" />
-                </label>
-                <input
-                  type="text"
-                  value={metrics?.avgTime || "7 hours 51 minutes"}
-                  readOnly
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl"
-                  style={{ backgroundColor: CSS_COLORS.background.muted }}
-                />
-              </div>
-
-              {/* Charge */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Charge</label>
-                <input
-                  type="text"
-                  value={formattedTotalCost}
-                  readOnly
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl"
-                  style={{ backgroundColor: CSS_COLORS.background.muted }}
-                />
-              </div>
-
-              {/* Submit Button */}
+              {/* Submit Button - Mobile */}
               <button
                 onClick={handleSubmitOrder}
                 disabled={isSubmitting}
-                className="w-full text-white font-semibold py-5 px-6 rounded-full shadow-lg text-lg flex items-center justify-center"
+                className="w-full text-white font-semibold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center transition-all duration-200 hover:opacity-90"
                 style={{ backgroundColor: CSS_COLORS.primary }}
               >
                 {isSubmitting ? (
@@ -769,166 +711,156 @@ const NewOrder = () => {
                     Processing...
                   </>
                 ) : (
-                  "Submit"
+                  "Submit Order"
                 )}
               </button>
             </div>
           </div>
 
-          {/* Service Description */}
-          <div
-            className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
-            style={{ backgroundColor: CSS_COLORS.background.card }}
-          >
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Service Description</h3>
-            <div className="p-4 rounded-xl mb-4 text-white" style={{ backgroundColor: CSS_COLORS.primary }}>
-              <h4 className="font-medium mb-2">Service</h4>
-              <p className="text-sm opacity-90">{selectedService?.service_title || "--"}</p>
+          {/* Service Description - Mobile */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Service Details</h3>
+            
+            {/* Service Header */}
+            <div className="bg-blue-600 rounded-xl p-4 text-white mb-4">
+              <div className="flex items-center space-x-3 mb-2">
+                {selectedCategory && getPlatformIcon(selectedCategory.category_title)}
+                <h4 className="font-medium">Service</h4>
+              </div>
+              <p className="text-sm opacity-90">{selectedService?.service_title || "Select a service"}</p>
             </div>
+
+            {/* Service Metrics */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                <h5 className="text-sm font-medium text-gray-600 mb-1">Start Time</h5>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <h5 className="text-xs font-medium text-gray-600 mb-1">Start Time</h5>
                 <p className="text-sm text-gray-800">{metrics?.startTime || "--"}</p>
               </div>
-              <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                <h5 className="text-sm font-medium text-gray-600 mb-1">Speed</h5>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <h5 className="text-xs font-medium text-gray-600 mb-1">Speed</h5>
                 <p className="text-sm text-gray-800">{metrics?.speed || "--"}</p>
               </div>
-              <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                <h5 className="text-sm font-medium text-gray-600 mb-1">Avg. Time</h5>
-                <p className="text-sm text-gray-800 font-medium">{metrics?.avgTime || "7 hours 43 minutes"}</p>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <h5 className="text-xs font-medium text-gray-600 mb-1">Avg. Time</h5>
+                <p className="text-sm text-gray-800 font-medium">{metrics?.avgTime || "--"}</p>
               </div>
-              <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                <h5 className="text-sm font-medium text-gray-600 mb-1">Guarantee</h5>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <h5 className="text-xs font-medium text-gray-600 mb-1">Guarantee</h5>
                 <p className="text-sm text-gray-800">{metrics?.guarantee || "--"}</p>
               </div>
             </div>
+
+            {/* Service Description */}
             <div>
               <h5 className="text-sm font-medium text-gray-600 mb-3">Description</h5>
-              <div className="text-sm text-gray-700 space-y-3">
+              <div className="text-sm text-gray-700 space-y-2">
                 <p className="font-medium">
-                  {selectedService?.description || "Cheapest & fastest working service in the world!"}
+                  {selectedService?.description || "Select a service to view description"}
                 </p>
-                {selectedService?.description ? null : (
+                {!selectedService?.description && (
                   <>
-                    <p>⚡ Provider service</p>
-                    <p>
-                      🛡️ If order doesn't deliver, turn off flag for review and request refill to restart the order for
-                      free
-                    </p>
-                    <div
-                      className="mt-4 p-4 border border-yellow-200 rounded-xl"
-                      style={{ backgroundColor: "#fefce8" }}
-                    >
-                      <p className="font-medium text-gray-800 mb-2">IMPORTANT</p>
-                      <p className="text-sm mb-2">Turn off flag for review:</p>
-                      <ol className="list-decimal list-inside text-sm space-y-1">
-                        <li>Go to "Settings and activity"</li>
-                        <li>Select "Follow and invite friends"</li>
-                        <li>Disable "Flag for review" feature</li>
-                      </ol>
-                    </div>
+                    <p>⚡ High-quality service delivery</p>
+                    <p>🛡️ 30-day guarantee on all orders</p>
+                    <p>🚀 Fast and reliable results</p>
                   </>
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Footer */}
-          <div className="text-center py-6">
-            <p className="text-sm text-gray-500">© Copyright 2025 All Rights Reserved.</p>
           </div>
         </div>
       </div>
 
       {/* Desktop Layout */}
       <div className="hidden lg:block">
-        <div className="max-w-7xl mx-auto p-6">
-          {/* Top Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            {/* Account Status */}
-            <div
-              className="rounded-2xl p-6 drop-shadow-md border border-gray-200 bg-white transition duration-300 hover:scale-[1.02]"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
-            >
-              <div className="flex flex-col items-center justify-center text-center space-y-2">
-                <div className="text-5xl">👑</div>
-                <p className="text-sm text-gray-500">Account Status</p>
-                <h3 className="text-xl font-bold text-gray-800">{user?.status || "NEW"}</h3>
+        <div className="container mx-auto p-6">
+          {/* Top Stats Cards - Desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-4">
+                <div className="text-4xl">💰</div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Account Balance</p>
+                  <h3 className="text-2xl font-bold text-gray-800">{formattedBalance}</h3>
+                </div>
               </div>
             </div>
-            {/* Username */}
-            <div
-              className="rounded-2xl p-6 drop-shadow-md border border-gray-200 bg-white transition duration-300 hover:scale-[1.02]"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
-            >
-              <div className="flex flex-col items-center justify-center text-center space-y-2">
-                <div className="text-5xl">👤</div>
-                <p className="text-sm text-gray-500">Username</p>
-                <h3 className="text-xl font-bold text-gray-800">{user?.username || "loading.."}</h3>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-4">
+                <div className="text-4xl">👑</div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Account Status</p>
+                  <h3 className="text-xl font-bold text-gray-800">{user?.status || "NEW"}</h3>
+                </div>
               </div>
             </div>
-            {/* Account Balance */}
-            <div
-              className="rounded-2xl p-6 drop-shadow-md border border-gray-200 bg-white transition duration-300 hover:scale-[1.02]"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
-            >
-              <div className="flex flex-col items-center justify-center text-center space-y-2">
-                <div className="text-5xl">💰</div>
-                <p className="text-sm text-gray-500">Account Balance</p>
-                <h3 className="text-xl font-bold text-gray-800">{formattedBalance}</h3>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-4">
+                <div className="text-4xl">👤</div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Username</p>
+                  <h3 className="text-xl font-bold text-gray-800">{user?.username || "loading.."}</h3>
+                </div>
               </div>
             </div>
-            {/* Total Order */}
-            <div
-              className="rounded-2xl p-6 drop-shadow-md border border-gray-200 bg-white transition duration-300 hover:scale-[1.02]"
-              style={{ backgroundColor: CSS_COLORS.background.card }}
-            >
-              <div className="flex flex-col items-center justify-center text-center space-y-2">
-                <div className="text-5xl">📦</div>
-                <p className="text-sm text-gray-500">Total Order</p>
-                <h3 className="text-xl font-bold text-gray-800">{user?.total_orders || "0"}</h3>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-4">
+                <div className="text-4xl">📦</div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Total Orders</p>
+                  <h3 className="text-2xl font-bold text-gray-800">{user?.total_orders || "0"}</h3>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Social Media Platforms */}
-          <div
-            className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm mb-6"
-            style={{ backgroundColor: CSS_COLORS.background.card }}
-          >
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Choose Platform</h2>
-            <div className="grid grid-cols-6 gap-4">
+          {/* Social Platforms Section - Desktop (NOW ABOVE ORDER FORM) */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Social Media Platforms</h2>
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
               {socialPlatforms.map((platform, index) => {
                 const IconComponent = platform.icon
                 return (
                   <div
                     key={index}
-                    className="bg-white border border-gray-100 rounded-xl p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer"
+                    className="bg-gray-50 rounded-xl p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer border border-gray-100 hover:border-gray-200"
                   >
                     <div
-                      className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center text-white"
+                      className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center text-white"
                       style={{ backgroundColor: platform.bgColor }}
                     >
-                      <IconComponent className="w-4 h-4" />
+                      <IconComponent className="w-5 h-5" />
                     </div>
-                    <p className="text-sm font-medium text-gray-700">{platform.name}</p>
+                    <p className="text-sm font-medium text-gray-700 truncate">{platform.name}</p>
                   </div>
                 )
               })}
             </div>
           </div>
 
-          {/* Main Content Area */}
-          <div className="flex flex-col xl:flex-row gap-6">
-            {/* Order Form */}
-            <div className="flex-1">
-              <div
-                className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm"
-                style={{ backgroundColor: CSS_COLORS.background.card }}
-              >
-                <h2 className="text-xl font-semibold text-gray-800 mb-6">Place your order</h2>
-                <div className="space-y-4">
+          {/* Action Buttons - Desktop */}
+          <div className="flex gap-4 mb-8">
+            <button
+              className="flex-1 text-white py-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg transition-all duration-200 hover:opacity-90"
+              style={{ backgroundColor: CSS_COLORS.primary }}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="text-lg">New Order</span>
+            </button>
+            <button
+              className="flex-1 py-4 rounded-xl font-medium flex items-center justify-center space-x-2 border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="text-lg">Mass Order</span>
+            </button>
+          </div>
+
+          {/* Main Content Area - Order Form & Description */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* Order Form - Takes 2/3 of the space */}
+            <div className="xl:col-span-2">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Place Your Order</h2>
+                <div className="space-y-6">
                   {/* Search */}
                   <div className="relative">
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -939,267 +871,198 @@ const NewOrder = () => {
                       onChange={handleSearchChange}
                       onFocus={handleSearchFocus}
                       onBlur={handleSearchBlur}
-                      className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      style={{ backgroundColor: CSS_COLORS.background.muted }}
+                      className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 text-lg"
                     />
                     <SearchResultsDropdown />
                   </div>
 
-                  {/* Category */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Category</label>
-                    {loadingCategories ? (
-                      <div
-                        className="flex items-center space-x-2 p-4 border border-gray-200 rounded-xl"
-                        style={{ backgroundColor: CSS_COLORS.background.muted }}
-                      >
-                        <div className="w-5 h-5 bg-gray-300 rounded-full animate-pulse"></div>
-                        <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <select
-                          value={selectedCategory?.id || ""}
-                          onChange={(e) => {
-                            const cat = categories.find((c) => c.id.toString() === e.target.value)
-                            setSelectedCategory(cat)
-                            setSearchQuery("") // Clear search when category changes
-                            setShowSearchResults(false)
-                          }}
-                          className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl text-sm lg:text-base appearance-none"
-                          style={{ backgroundColor: CSS_COLORS.background.muted }}
-                        >
-                          {categories.map((category) => (
-                            <option key={category.id} value={category.id.toString()}>
-                              {category.category_title}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                          {selectedCategory ? (
-                            getPlatformIcon(selectedCategory.category_title)
-                          ) : (
-                            <Globe className="w-5 h-5 text-gray-500" />
-                          )}
+                  {/* Category & Service */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-lg font-medium text-gray-700 mb-3">Category</label>
+                      {loadingCategories ? (
+                        <div className="p-4 border border-gray-200 rounded-xl bg-gray-50 animate-pulse">
+                          <div className="h-4 bg-gray-300 rounded"></div>
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="relative">
+                          <select
+                            value={selectedCategory?.id || ""}
+                            onChange={(e) => {
+                              const cat = categories.find((c) => c.id.toString() === e.target.value)
+                              setSelectedCategory(cat)
+                              setSearchQuery("")
+                              setShowSearchResults(false)
+                            }}
+                            className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl appearance-none bg-gray-50 text-lg"
+                          >
+                            {categories.map((category) => (
+                              <option key={category.id} value={category.id.toString()}>
+                                {category.category_title}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                            {selectedCategory ? (
+                              getPlatformIcon(selectedCategory.category_title)
+                            ) : (
+                              <Globe className="w-5 h-5 text-gray-500" />
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-lg font-medium text-gray-700 mb-3">Service</label>
+                      {loadingServices ? (
+                        <div className="p-4 border border-gray-200 rounded-xl bg-gray-50 animate-pulse">
+                          <div className="h-4 bg-gray-300 rounded"></div>
+                        </div>
+                      ) : (
+                        <select
+                          value={selectedService?.id || ""}
+                          onChange={(e) => {
+                            const srv = services.find((s) => s.id.toString() === e.target.value)
+                            if (srv) {
+                              setSelectedService(srv)
+                            }
+                          }}
+                          className="w-full px-4 py-4 border border-gray-200 rounded-xl appearance-none bg-gray-50 text-lg"
+                          disabled={!selectedCategory || services.length === 0}
+                        >
+                          {services.length > 0 ? (
+                            services.map((service) => (
+                              <option key={service.id} value={service.id.toString()}>
+                                {service.service_title} - {formatCurrency(
+                                  convertToSelectedCurrency(service.price / 1000, "NGN"),
+                                  selectedCurrency
+                                )} per 1k
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">No services available</option>
+                          )}
+                        </select>
+                      )}
+                      {selectedService && (
+                        <p className="text-sm text-gray-500 mt-3">
+                          Min: {selectedService.min_amount} - Max: {selectedService.max_amount}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Service */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Service</label>
-                    {loadingServices ? (
-                      <div
-                        className="flex items-center space-x-2 p-4 border border-gray-200 rounded-xl"
-                        style={{ backgroundColor: CSS_COLORS.background.muted }}
-                      >
-                        <div className="h-4 bg-gray-300 rounded w-full animate-pulse"></div>
-                      </div>
-                    ) : (
-                      <select
-                        value={selectedService?.id || ""}
-                        onChange={(e) => {
-                          const srv = services.find((s) => s.id.toString() === e.target.value)
-                          if (srv) {
-                            setSelectedService(srv)
-                          }
-                        }}
-                        className="w-full px-4 py-4 border border-gray-200 rounded-xl text-sm lg:text-base appearance-none"
-                        style={{ backgroundColor: CSS_COLORS.background.muted }}
-                        disabled={!selectedCategory || services.length === 0}
-                      >
-                        {services.length > 0 ? (
-                          services.map((service) => (
-                            <option key={service.id} value={service.id.toString()}>
-                              {service.service_title} - Min {service.min_amount} | Max {service.max_amount}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="">No services available</option>
-                        )}
-                      </select>
-                    )}
-                    {selectedService && (
-                      <p className="text-sm text-gray-500 mt-2">
-                        Min: {selectedService.min_amount} - Max: {selectedService.max_amount}
+                  {/* Link & Quantity */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-lg font-medium text-gray-700 mb-3">Link</label>
+                      <input
+                        type="url"
+                        value={link}
+                        onChange={(e) => setLink(e.target.value)}
+                        placeholder="Enter your profile/post URL"
+                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 text-lg"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-lg font-medium text-gray-700 mb-3">Quantity</label>
+                      <input
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        min={selectedService?.min_amount || 0}
+                        max={selectedService?.max_amount || 1000000}
+                        placeholder="Enter quantity"
+                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 text-lg"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cost Summary - Desktop */}
+                  <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
+                    <div className="text-center">
+                      <p className="text-xl text-gray-600 mb-3">Total Cost</p>
+                      <p className="text-4xl font-bold text-gray-800 mb-3">{formattedTotalCost}</p>
+                      <p className="text-lg text-gray-500">
+                        {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price / 1000, "NGN"), selectedCurrency) : '0'} per 1k
                       </p>
-                    )}
-                  </div>
-
-                  {/* Link */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Link</label>
-                    <input
-                      type="url"
-                      value={link}
-                      onChange={(e) => setLink(e.target.value)}
-                      placeholder="Enter your profile/post URL"
-                      className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      style={{ backgroundColor: CSS_COLORS.background.muted }}
-                      required
-                    />
-                  </div>
-
-                  {/* Quantity */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Quantity</label>
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      min={selectedService?.min_amount || 0}
-                      max={selectedService?.max_amount || 1000000}
-                      placeholder="Enter quantity"
-                      className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      style={{ backgroundColor: CSS_COLORS.background.muted }}
-                      required
-                    />
-                  </div>
-
-                  {/* Average Time */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-3 flex items-center space-x-1">
-                      <span>Average time</span>
-                      <Info className="w-4 h-4 text-gray-400" />
-                    </label>
-                    <div
-                      className="flex items-center space-x-2 p-4 border border-gray-200 rounded-xl"
-                      style={{ backgroundColor: CSS_COLORS.background.muted }}
-                    >
-                      <Clock className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                      <span className="text-sm lg:text-base font-medium text-gray-800">
-                        {metrics?.avgTime || "7 hours 43 minutes"}
-                      </span>
                     </div>
                   </div>
 
-                  {/* Charge */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Charge</label>
-                    <div
-                      className="p-4 lg:p-6 border border-gray-200 rounded-xl"
-                      style={{ background: CSS_COLORS.background.secondary }}
-                    >
-                      <div className="text-center">
-                        <span className="text-2xl lg:text-3xl font-bold text-gray-800">
-                          {formattedTotalCost}
-                        </span>
-                        <p className="text-sm text-gray-500 mt-1">Total Cost</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
+                  {/* Submit Button - Desktop */}
                   <button
                     onClick={handleSubmitOrder}
                     disabled={isSubmitting}
-                    className="w-full text-white font-semibold py-4 lg:py-5 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity text-base lg:text-lg flex items-center justify-center"
+                    className="w-full text-white font-semibold py-5 rounded-xl shadow-lg text-xl flex items-center justify-center transition-all duration-200 hover:opacity-90"
                     style={{ backgroundColor: CSS_COLORS.primary }}
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Processing...
+                        <Loader2 className="w-6 h-6 mr-3 animate-spin" />
+                        Processing Order...
                       </>
                     ) : (
                       "Submit Order"
                     )}
                   </button>
-
-                  {/* Mobile Service Description Toggle */}
-                  <button
-                    onClick={() => setShowServiceDescription(!showServiceDescription)}
-                    className="xl:hidden w-full py-3 px-4 rounded-xl font-medium hover:opacity-90 transition-all border border-white/50 backdrop-blur-sm"
-                    style={{ backgroundColor: CSS_COLORS.background.muted, color: "#374151" }}
-                  >
-                    {showServiceDescription ? "Hide" : "Show"} Service Description
-                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Service Description Sidebar */}
-            <div className={`xl:block xl:w-80 ${showServiceDescription ? "block" : "hidden"}`}>
-              <div
-                className="rounded-2xl p-6 shadow-sm border border-white/50 backdrop-blur-sm sticky top-24"
-                style={{ backgroundColor: CSS_COLORS.background.card }}
-              >
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Service Description</h3>
-                <div className="p-4 rounded-xl mb-4 text-white" style={{ backgroundColor: CSS_COLORS.primary }}>
-                  <h4 className="font-medium mb-2">Service</h4>
-                  <p className="text-sm opacity-90">{selectedService?.service_title || "--"}</p>
+            {/* Service Description - Takes 1/3 of the space */}
+            <div className="xl:col-span-1">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 sticky top-6">
+                <h3 className="text-2xl font-semibold text-gray-800 mb-6">Service Details</h3>
+                
+                {/* Service Header */}
+                <div className="bg-blue-600 rounded-xl p-4 text-white mb-6">
+                  <div className="flex items-center space-x-3 mb-2">
+                    {selectedCategory && getPlatformIcon(selectedCategory.category_title)}
+                    <h4 className="font-medium text-lg">Service</h4>
+                  </div>
+                  <p className="text-base opacity-90">{selectedService?.service_title || "Select a service"}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                    <h5 className="text-sm font-medium text-gray-600 mb-1">Start Time</h5>
-                    <p className="text-sm text-gray-800">{metrics?.startTime || "--"}</p>
+
+                {/* Service Metrics */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">Start Time</h5>
+                    <p className="text-base text-gray-800">{metrics?.startTime || "--"}</p>
                   </div>
-                  <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                    <h5 className="text-sm font-medium text-gray-600 mb-1">Speed</h5>
-                    <p className="text-sm text-gray-800">{metrics?.speed || "--"}</p>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">Speed</h5>
+                    <p className="text-base text-gray-800">{metrics?.speed || "--"}</p>
                   </div>
-                  <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                    <h5 className="text-sm font-medium text-gray-600 mb-1">Avg. Time</h5>
-                    <p className="text-sm text-gray-800 font-medium">{metrics?.avgTime || "7 hours 43 minutes"}</p>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">Avg. Time</h5>
+                    <p className="text-base text-gray-800 font-medium">{metrics?.avgTime || "--"}</p>
                   </div>
-                  <div className="p-4 rounded-xl" style={{ backgroundColor: CSS_COLORS.background.muted }}>
-                    <h5 className="text-sm font-medium text-gray-600 mb-1">Guarantee</h5>
-                    <p className="text-sm text-gray-800">{metrics?.guarantee || "--"}</p>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">Guarantee</h5>
+                    <p className="text-base text-gray-800">{metrics?.guarantee || "--"}</p>
                   </div>
                 </div>
+
+                {/* Service Description */}
                 <div>
-                  <h5 className="text-sm font-medium text-gray-600 mb-3">Description</h5>
-                  <div className="text-sm text-gray-700 space-y-3">
+                  <h5 className="text-lg font-medium text-gray-600 mb-4">Description</h5>
+                  <div className="text-base text-gray-700 space-y-3">
                     <p className="font-medium">
-                      {selectedService?.description || "Cheapest & fastest working service in the world!"}
+                      {selectedService?.description || "Select a service to view detailed description and features."}
                     </p>
-                    {selectedService?.description ? null : (
+                    {!selectedService?.description && (
                       <>
-                        <p>⚡ Provider service</p>
-                        <p>
-                          🛡️ If order doesn't deliver, turn off flag for review and request refill to restart the order
-                          for free
-                        </p>
-                        <div
-                          className="mt-4 p-4 border border-yellow-200 rounded-xl"
-                          style={{ backgroundColor: "#fefce8" }}
-                        >
-                          <p className="font-medium text-gray-800 mb-2">IMPORTANT</p>
-                          <p className="text-sm mb-2">Turn off flag for review:</p>
-                          <ol className="list-decimal list-inside text-sm space-y-1">
-                            <li>Go to "Settings and activity"</li>
-                            <li>Select "Follow and invite friends"</li>
-                            <li>Disable "Flag for review" feature</li>
-                          </ol>
-                        </div>
+                        <p>⚡ High-quality service delivery with guaranteed results</p>
+                        <p>🛡️ 30-day guarantee on all orders with free refills</p>
+                        <p>🚀 Fast and reliable delivery with real-time updates</p>
+                        <p>💯 100% customer satisfaction guaranteed</p>
                       </>
                     )}
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Notice */}
-          <div
-            className="mt-8 p-4 lg:p-6 rounded-2xl lg:rounded-3xl text-white shadow-lg border border-white/20 backdrop-blur-sm"
-            style={{ background: `linear-gradient(135deg, ${CSS_COLORS.primary}, ${CSS_COLORS.primaryDark})` }}
-          >
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-white/20 rounded-2xl flex-shrink-0">
-                <Info className="w-5 h-5 lg:w-6 lg:h-6" />
-              </div>
-              <div>
-                <h3 className="text-lg lg:text-xl font-bold mb-2">
-                  Service <span className="text-yellow-300">Updates</span>
-                </h3>
-                <div className="bg-white/10 rounded-2xl p-4">
-                  <h4 className="font-semibold mb-2 text-yellow-300">🚨 Important Notice</h4>
-                  <p className="text-sm lg:text-base text-white/90">
-                    For any non-delivered orders, please contact our support team for immediate assistance and refund
-                    processing.
-                  </p>
                 </div>
               </div>
             </div>
