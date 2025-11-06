@@ -42,6 +42,7 @@ import AdminUpdates from './pages/admin/Updates';
 import ShowOrders from "./pages/admin/ShowOrders";
 import AdminSettings from './pages/admin/AdminSettings';
 import PaymentCallback from './pages/dashboard/PaymentCallback';
+import BulkPriceIncrease from './pages/admin/BulkPriceIncrease';
 
 
 
@@ -123,6 +124,7 @@ const App = () => {
             <Route path="users/:id/transactions" element={<ManageUserTransactions />} />
             <Route path="users/:id/send-email" element={<SendEmailForm />} />
             <Route path="send-mail" element={<SendMailAll />} />
+            <Route path="bulk-price-increase" element={<BulkPriceIncrease />} />
              
           </Route>
         

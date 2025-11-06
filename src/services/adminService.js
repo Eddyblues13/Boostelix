@@ -150,10 +150,12 @@ export const fetchUserTransactions = async (userId) => {
 };
 
 
-// send all user email
 export const sendEmailToAllUsers = async (subject, message) => {
-  const response = await api.post("/admin/send-email-all", { subject, message })
-  return response.data
+  const response = await api.post('/admin/send-email-all', {
+    subject,
+    message,
+  });
+  return response.data;
 }
 
 
@@ -186,8 +188,6 @@ export const fetchTransactions = async (params = {}) => {
       params: cleanedParams,
       validateStatus: (status) => status < 500
     });
-
-    console.log("Checking transactions: ", response);
     
     // Ensure consistent response structure
     return {
@@ -208,7 +208,6 @@ export const fetchTransactions = async (params = {}) => {
     };
   }
 };
-
 
 export const fetchTransactionDetails = async (id) => {
   const response = await api.get(`/admin/transactions/${id}`);
@@ -273,6 +272,18 @@ export const createServiceUpdate = async (updateData) => {
 
 export const ServiceUpdateHistory = async () => {
   const response = await api.get('/admin/service-updates-history')
+  return response.data
+}
+
+
+
+export const increaseServicePrices = async (payload) => {
+  const response = await api.post('/admin/services/increase-prices', payload)
+  return response.data
+}
+
+export const getServicePriceStats = async (params = {}) => {
+  const response = await api.get('/admin/services/price-stats', { params })
   return response.data
 }
 
