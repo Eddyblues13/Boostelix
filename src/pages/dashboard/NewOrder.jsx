@@ -71,7 +71,7 @@ const NewOrder = () => {
   
   // Fixed total cost calculation
   const totalCost = selectedService && quantity ? 
-    convertToSelectedCurrency((quantity * selectedService.price)  * 1000, "NGN") : 0;
+    convertToSelectedCurrency((quantity * selectedService.price)   / 1, "NGN") : 0;
   const formattedTotalCost = formatCurrency(totalCost, selectedCurrency);
 
   const getPlatformIcon = (categoryTitle) => {
@@ -430,7 +430,7 @@ const NewOrder = () => {
                   </p>
                   <div className="flex items-center space-x-4 mt-2">
                     <span className="text-xs text-green-600 font-medium">
-                      {formatCurrency(convertToSelectedCurrency(service.price  * 1000, "NGN"), selectedCurrency)} per 1k
+                      {formatCurrency(convertToSelectedCurrency(service.price   / 1, "NGN"), selectedCurrency)} per 1k
                     </span>
                     <span className="text-xs text-gray-500">
                       Min: {service.min_amount} | Max: {service.max_amount}
@@ -640,7 +640,7 @@ const NewOrder = () => {
                         services.map((service) => (
                           <option key={service.id} value={service.id.toString()}>
                             {service.service_title} - {formatCurrency(
-                              convertToSelectedCurrency(service.price  * 1000, "NGN"),
+                              convertToSelectedCurrency(service.price   / 1, "NGN"),
                               selectedCurrency
                             )} per 1k
                           </option>
@@ -693,7 +693,7 @@ const NewOrder = () => {
                   <p className="text-sm text-gray-600 mb-1">Total Cost</p>
                   <p className="text-2xl font-bold text-gray-800">{formattedTotalCost}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price  * 1000, "NGN"), selectedCurrency) : '0'} per 1k
+                    {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price   / 1, "NGN"), selectedCurrency) : '0'} per 1k
                   </p>
                 </div>
               </div>
@@ -935,7 +935,7 @@ const NewOrder = () => {
                             services.map((service) => (
                               <option key={service.id} value={service.id.toString()}>
                                 {service.service_title} - {formatCurrency(
-                                  convertToSelectedCurrency(service.price  * 1000, "NGN"),
+                                  convertToSelectedCurrency(service.price   / 1, "NGN"),
                                   selectedCurrency
                                 )} per 1k
                               </option>
@@ -988,7 +988,7 @@ const NewOrder = () => {
                       <p className="text-xl text-gray-600 mb-3">Total Cost</p>
                       <p className="text-4xl font-bold text-gray-800 mb-3">{formattedTotalCost}</p>
                       <p className="text-lg text-gray-500">
-                        {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price  * 1000, "NGN"), selectedCurrency) : '0'} per 1k
+                        {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price   / 1, "NGN"), selectedCurrency) : '0'} per 1k
                       </p>
                     </div>
                   </div>
