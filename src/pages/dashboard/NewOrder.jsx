@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   ShoppingCart,
   Search,
@@ -35,9 +35,32 @@ import {
 } from "lucide-react"
 import toast from "react-hot-toast"
 import { fetchUserData } from "../../services/userService"
-import { fetchSmmCategories, fetchSmmServices, createOrder } from "../../services/services"
+import { 
+  fetchSmmCategories, 
+  fetchSmmServices, 
+  createOrder, 
+  searchServicesFast,
+  debouncedSearch 
+} from "../../services/services"
 import { CSS_COLORS } from "../../components/constant/colors"
 import { useOutletContext } from "react-router-dom"
+
+// Custom debounce hook
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 const NewOrder = () => {
   // Get currency context from DashboardLayout
@@ -64,6 +87,10 @@ const NewOrder = () => {
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [isLoadingAllServices, setIsLoadingAllServices] = useState(false)
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Calculate converted amounts
   const convertedBalance = user?.balance ? convertToSelectedCurrency(user.balance, "NGN") : 0;
@@ -71,7 +98,7 @@ const NewOrder = () => {
   
   // Fixed total cost calculation
   const totalCost = selectedService && quantity ? 
-    convertToSelectedCurrency((quantity * selectedService.price)   / 1, "NGN") : 0;
+    convertToSelectedCurrency((quantity * selectedService.price) / 1, "NGN") : 0;
   const formattedTotalCost = formatCurrency(totalCost, selectedCurrency);
 
   const getPlatformIcon = (categoryTitle) => {
@@ -103,7 +130,7 @@ const NewOrder = () => {
     console.log("Selected service:", service)
     
     // Find the category that matches this service
-    const serviceCategory = categories.find(cat => cat.id === service.categoryId)
+    const serviceCategory = categories.find(cat => cat.id === service.category_id)
     console.log("Found category:", serviceCategory)
     
     if (serviceCategory) {
@@ -136,6 +163,7 @@ const NewOrder = () => {
     
     setSearchQuery("")
     setShowSearchResults(false)
+    setSearchResults([])
   }
 
   const handleSearchChange = (e) => {
@@ -146,11 +174,12 @@ const NewOrder = () => {
       setShowSearchResults(true)
     } else {
       setShowSearchResults(false)
+      setSearchResults([])
     }
   }
 
   const handleSearchFocus = () => {
-    if (searchQuery.length > 0 && allServices.length > 0) {
+    if (searchQuery.length > 0) {
       setShowSearchResults(true)
     }
   }
@@ -167,11 +196,13 @@ const NewOrder = () => {
     
     setIsLoadingAllServices(true)
     try {
-      console.log("Loading all services...")
-      const allServicesData = []
+      console.log("Loading essential services for search...")
+      const essentialServices = []
       
-      // Fetch services for all categories
-      for (const category of categories) {
+      // Load services for first 3 categories only for initial search (performance optimization)
+      const categoriesToLoad = categories.slice(0, 3)
+      
+      for (const category of categoriesToLoad) {
         try {
           console.log(`Fetching services for category: ${category.category_title}`)
           const response = await fetchSmmServices(category.id.toString())
@@ -180,38 +211,53 @@ const NewOrder = () => {
           
           // Add category information to each service
           const servicesWithCategory = servicesData.map(service => ({
-            ...service,
+            id: service.id,
+            service_title: service.service_title,
             categoryName: category.category_title,
-            categoryId: category.id
+            categoryId: category.id,
+            price: service.price,
+            min_amount: service.min_amount,
+            max_amount: service.max_amount,
+            description: service.description
           }))
           
-          allServicesData.push(...servicesWithCategory)
+          essentialServices.push(...servicesWithCategory)
         } catch (err) {
           console.error(`Error fetching services for category ${category.id}:`, err)
         }
       }
       
-      console.log("Total services loaded:", allServicesData.length)
-      setAllServices(allServicesData)
+      console.log("Total essential services loaded:", essentialServices.length)
+      setAllServices(essentialServices)
     } catch (err) {
-      console.error("Error loading all services:", err)
-      toast.error("Failed to load services for search")
+      console.error("Error loading essential services:", err)
     } finally {
       setIsLoadingAllServices(false)
     }
   }
 
-  // Filter services based on search query
-  const searchResults = searchQuery && allServices.length > 0
-    ? allServices.filter(service => {
-        const searchLower = searchQuery.toLowerCase()
-        return (
-          service.service_title?.toLowerCase().includes(searchLower) ||
-          service.description?.toLowerCase().includes(searchLower) ||
-          service.categoryName?.toLowerCase().includes(searchLower)
-        )
-      })
-    : [];
+  // Fast search effect
+  useEffect(() => {
+    const performSearch = async () => {
+      if (debouncedSearchQuery && debouncedSearchQuery.length >= 2) {
+        setIsSearching(true)
+        try {
+          const response = await searchServicesFast(debouncedSearchQuery, 20)
+          setSearchResults(response.data.data || [])
+        } catch (error) {
+          console.error('Search error:', error)
+          setSearchResults([])
+        } finally {
+          setIsSearching(false)
+        }
+      } else {
+        setSearchResults([])
+        setIsSearching(false)
+      }
+    }
+
+    performSearch()
+  }, [debouncedSearchQuery])
 
   const handleSubmitOrder = async () => {
     if (!selectedCategory || !selectedService || !quantity || !link) {
@@ -327,7 +373,7 @@ const NewOrder = () => {
     fetchServices()
   }, [selectedCategory])
 
-  // Load all services when categories are loaded
+  // Load essential services when categories are loaded
   useEffect(() => {
     if (categories.length > 0 && allServices.length === 0) {
       loadAllServices()
@@ -366,7 +412,7 @@ const NewOrder = () => {
 
     const startTime = selectedService.start_time || "5-30 minutes"
     const speed = selectedService.speed || "100-1000/hour"
-    const avgTime = selectedService.avg_time || "7 hours 43 minutes"
+    const avgTime = selectedService.avg_time || selectedService.average_time || "7 hours 43 minutes"
     const guarantee = selectedService.guarantee || "30 days"
 
     return { startTime, speed, avgTime, guarantee }
@@ -378,18 +424,18 @@ const NewOrder = () => {
   const SearchResultsDropdown = () => {
     if (!showSearchResults || !searchQuery) return null
 
-    if (isLoadingAllServices) {
+    if (isSearching) {
       return (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
           <div className="p-4 text-center">
             <Loader2 className="w-5 h-5 animate-spin mx-auto text-blue-500" />
-            <p className="text-sm text-gray-500 mt-2">Loading services...</p>
+            <p className="text-sm text-gray-500 mt-2">Searching services...</p>
           </div>
         </div>
       )
     }
 
-    if (searchResults.length === 0 && searchQuery.length > 0) {
+    if (searchResults.length === 0 && searchQuery.length > 0 && !isSearching) {
       return (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
           <div className="p-4 text-center">
@@ -417,9 +463,9 @@ const NewOrder = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-1">
-                    {getPlatformIcon(service.categoryName)}
+                    {getPlatformIcon(service.category?.category_title)}
                     <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      {service.categoryName}
+                      {service.category?.category_title || 'Uncategorized'}
                     </span>
                   </div>
                   <h4 className="font-medium text-gray-800 text-sm mb-1">
@@ -430,7 +476,7 @@ const NewOrder = () => {
                   </p>
                   <div className="flex items-center space-x-4 mt-2">
                     <span className="text-xs text-green-600 font-medium">
-                      {formatCurrency(convertToSelectedCurrency(service.price   *  1000, "NGN"), selectedCurrency)} per 1k
+                      {formatCurrency(convertToSelectedCurrency(service.price * 1000, "NGN"), selectedCurrency)} per 1k
                     </span>
                     <span className="text-xs text-gray-500">
                       Min: {service.min_amount} | Max: {service.max_amount}
@@ -598,6 +644,7 @@ const NewOrder = () => {
                           setSelectedCategory(cat)
                           setSearchQuery("")
                           setShowSearchResults(false)
+                          setSearchResults([])
                         }}
                         className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm appearance-none bg-gray-50"
                       >
@@ -640,7 +687,7 @@ const NewOrder = () => {
                         services.map((service) => (
                           <option key={service.id} value={service.id.toString()}>
                             {service.service_title} - {formatCurrency(
-                              convertToSelectedCurrency(service.price   *  1000, "NGN"),
+                              convertToSelectedCurrency(service.price * 1000, "NGN"),
                               selectedCurrency
                             )} per 1k
                           </option>
@@ -693,7 +740,7 @@ const NewOrder = () => {
                   <p className="text-sm text-gray-600 mb-1">Total Cost</p>
                   <p className="text-2xl font-bold text-gray-800">{formattedTotalCost}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price *  1000, "NGN"), selectedCurrency) : '0'} per 1k
+                    {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price * 1000, "NGN"), selectedCurrency) : '0'} per 1k
                   </p>
                 </div>
               </div>
@@ -893,6 +940,7 @@ const NewOrder = () => {
                               setSelectedCategory(cat)
                               setSearchQuery("")
                               setShowSearchResults(false)
+                              setSearchResults([])
                             }}
                             className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl appearance-none bg-gray-50 text-lg"
                           >
@@ -935,7 +983,7 @@ const NewOrder = () => {
                             services.map((service) => (
                               <option key={service.id} value={service.id.toString()}>
                                 {service.service_title} - {formatCurrency(
-                                  convertToSelectedCurrency(service.price   *  1000, "NGN"),
+                                  convertToSelectedCurrency(service.price * 1000, "NGN"),
                                   selectedCurrency
                                 )} per 1k
                               </option>
@@ -988,7 +1036,7 @@ const NewOrder = () => {
                       <p className="text-xl text-gray-600 mb-3">Total Cost</p>
                       <p className="text-4xl font-bold text-gray-800 mb-3">{formattedTotalCost}</p>
                       <p className="text-lg text-gray-500">
-                        {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price   *  1000, "NGN"), selectedCurrency) : '0'} per 1k
+                        {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price * 1000, "NGN"), selectedCurrency) : '0'} per 1k
                       </p>
                     </div>
                   </div>
