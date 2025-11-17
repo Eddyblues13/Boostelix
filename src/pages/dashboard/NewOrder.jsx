@@ -285,6 +285,7 @@ const NewOrder = () => {
       const response = await createOrder(orderData)
       
       const orderId = response.order_id || response.data?.order_id
+      const newBalance = response.balance // Get updated balance from response
       
       if (!orderId) {
         throw new Error("Order ID not received in response")
@@ -295,6 +296,14 @@ const NewOrder = () => {
         message: "Order submitted successfully!",
         orderId: orderId,
       })
+
+      // Update user balance in frontend state
+      if (newBalance !== undefined) {
+        setUser(prevUser => ({
+          ...prevUser,
+          balance: newBalance
+        }))
+      }
 
       toast.success("Order submitted successfully!")
 
