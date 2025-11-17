@@ -129,81 +129,59 @@ const NewOrder = () => {
   const handleServiceSelect = async (service) => {
     console.log("Selected service from search:", service)
     
-    // Find the category that matches this service - FIXED LOGIC
-    const serviceCategory = categories.find(cat => cat.id === service.category_id)
-    console.log("Found category for service:", serviceCategory)
-    
-    if (serviceCategory) {
-      // Set the selected category immediately
-      setSelectedCategory(serviceCategory)
-      
-      // Wait a moment for state to update, then fetch services for that category
-      try {
-        setLoadingServices(true)
-        const response = await fetchSmmServices(serviceCategory.id.toString())
-        const categoryServices = response.data.data
-        setServices(categoryServices)
-        
-        // Find and set the exact service from the category services
-        const exactService = categoryServices.find(s => s.id === service.id)
-        if (exactService) {
-          setSelectedService(exactService)
-          console.log("Successfully set selected service:", exactService)
-          
-          // Auto-fill quantity with minimum amount
-          setQuantity(exactService.min_amount.toString())
-          
-          // Show success feedback
-          toast.success(`Selected: ${exactService.service_title}`)
-        } else {
-          // If exact match not found, try to find by title
-          const similarService = categoryServices.find(s => 
-            s.service_title.toLowerCase().includes(service.service_title.toLowerCase()) ||
-            service.service_title.toLowerCase().includes(s.service_title.toLowerCase())
-          )
-          
-          if (similarService) {
-            setSelectedService(similarService)
-            setQuantity(similarService.min_amount.toString())
-            toast.success(`Selected similar service: ${similarService.service_title}`)
-          } else {
-            // If no similar service found, set the first service from the category
-            const firstService = categoryServices.length > 0 ? categoryServices[0] : null
-            setSelectedService(firstService)
-            if (firstService) {
-              setQuantity(firstService.min_amount.toString())
-              toast.success(`Selected first available service: ${firstService.service_title}`)
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching services for selected category:", err)
-        toast.error("Failed to load services for selected category")
-      } finally {
-        setLoadingServices(false)
-      }
-    } else {
-      console.warn("No category found for service:", service)
-      console.log("Available categories:", categories)
-      console.log("Service category_id:", service.category_id)
-      
-      // Try to find category by ID from the service data
-      const categoryById = categories.find(cat => cat.id === service.category_id)
-      if (categoryById) {
-        console.log("Found category by direct ID match:", categoryById)
-        setSelectedCategory(categoryById)
-        // Retry the service selection with the found category
-        setTimeout(() => handleServiceSelect(service), 100)
-        return
-      }
-      
-      toast.error("Could not find category for selected service. Please select manually.")
-    }
-    
-    // Clear search
+    // Clear search immediately for better UX
     setSearchQuery("")
     setShowSearchResults(false)
-    setSearchResults([])
+    
+    // Find the category - check multiple possible ID formats
+    let serviceCategory = categories.find(cat => 
+      cat.id === service.category_id || 
+      cat.id.toString() === service.category_id?.toString() ||
+      cat.id === service.category?.id
+    )
+    
+    console.log("Found category:", serviceCategory)
+    
+    if (!serviceCategory) {
+      toast.error("Could not find category for this service")
+      setSearchResults([])
+      return
+    }
+    
+    // Set the category first
+    setSelectedCategory(serviceCategory)
+    
+    try {
+      setLoadingServices(true)
+      
+      // Fetch all services for this category
+      const response = await fetchSmmServices(serviceCategory.id.toString())
+      const categoryServices = response.data.data
+      setServices(categoryServices)
+      
+      // Find the exact service by ID
+      const exactService = categoryServices.find(s => s.id === service.id || s.id.toString() === service.id.toString())
+      
+      if (exactService) {
+        setSelectedService(exactService)
+        setQuantity(exactService.min_amount.toString())
+        toast.success(`✓ Selected: ${exactService.service_title}`)
+      } else {
+        // Fallback to first service if exact match not found
+        const firstService = categoryServices[0]
+        if (firstService) {
+          setSelectedService(firstService)
+          setQuantity(firstService.min_amount.toString())
+          toast.success(`✓ Selected: ${firstService.service_title}`)
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching services:", err)
+      toast.error("Failed to load service details")
+    } finally {
+      setLoadingServices(false)
+      setSearchResults([])
+    }
   }
 
   const handleSearchChange = (e) => {
@@ -234,42 +212,45 @@ const NewOrder = () => {
   // Enhanced search effect - more sensitive and comprehensive
   useEffect(() => {
     const performSearch = async () => {
-      if (debouncedSearchQuery && debouncedSearchQuery.length >= 2) {
+      if (debouncedSearchQuery && debouncedSearchQuery.length >= 1) { // Changed from 2 to 1 for more sensitivity
         setIsSearching(true)
         try {
           console.log("Searching for:", debouncedSearchQuery)
-          const response = await searchServicesFast(debouncedSearchQuery, 50)
+          const response = await searchServicesFast(debouncedSearchQuery, 100) // Increased from 50 to 100
           
-          // Ensure we have the proper service data structure
           const allResults = response.data.data || []
-          
           console.log("Raw search results:", allResults)
           
-          // More sensitive search with better matching
+          // More sensitive search - match ANY word or partial match
+          const searchTerm = debouncedSearchQuery.toLowerCase().trim()
+          const searchWords = searchTerm.split(/\s+/).filter(w => w.length > 0)
+          
           const sensitiveResults = allResults.filter(service => {
-            const searchTerm = debouncedSearchQuery.toLowerCase()
             const serviceTitle = service.service_title?.toLowerCase() || ''
             const serviceDesc = service.description?.toLowerCase() || ''
             const categoryName = service.category?.category_title?.toLowerCase() || ''
             
-            return (
-              serviceTitle.includes(searchTerm) ||
-              serviceDesc.includes(searchTerm) ||
-              categoryName.includes(searchTerm) ||
-              searchTerm.split(' ').some(word => 
-                serviceTitle.includes(word) || 
-                serviceDesc.includes(word) ||
-                categoryName.includes(word)
-              )
+            // Direct match on full search term
+            if (serviceTitle.includes(searchTerm) || 
+                serviceDesc.includes(searchTerm) ||
+                categoryName.includes(searchTerm)) {
+              return true
+            }
+            
+            // Match ANY search word (more sensitive)
+            return searchWords.some(word => 
+              serviceTitle.includes(word) || 
+              serviceDesc.includes(word) ||
+              categoryName.includes(word)
             )
           })
           
           console.log(`Found ${sensitiveResults.length} sensitive results`)
           
-          // Ensure each service has the category_id
+          // Ensure each service has proper category_id
           const resultsWithCategoryId = sensitiveResults.map(service => ({
             ...service,
-            category_id: service.category_id || service.category?.id
+            category_id: service.category_id || service.category?.id || service.categoryId
           }))
           
           setSearchResults(resultsWithCategoryId)
@@ -287,25 +268,31 @@ const NewOrder = () => {
     }
 
     const performClientSideSearch = () => {
-      if (allServices.length > 0 && debouncedSearchQuery.length >= 2) {
-        const searchTerm = debouncedSearchQuery.toLowerCase()
+      if (allServices.length > 0 && debouncedSearchQuery.length >= 1) { // Changed from 2 to 1
+        const searchTerm = debouncedSearchQuery.toLowerCase().trim()
+        const searchWords = searchTerm.split(/\s+/).filter(w => w.length > 0)
+        
         const results = allServices.filter(service => {
           const serviceTitle = service.service_title?.toLowerCase() || ''
           const serviceDesc = service.description?.toLowerCase() || ''
           const categoryName = service.categoryName?.toLowerCase() || ''
           
-          return (
-            serviceTitle.includes(searchTerm) ||
-            serviceDesc.includes(searchTerm) ||
-            categoryName.includes(searchTerm) ||
-            searchTerm.split(' ').some(word => 
-              serviceTitle.includes(word) || 
-              serviceDesc.includes(word) ||
-              categoryName.includes(word)
-            )
+          // Direct match
+          if (serviceTitle.includes(searchTerm) || 
+              serviceDesc.includes(searchTerm) ||
+              categoryName.includes(searchTerm)) {
+            return true
+          }
+          
+          // Match ANY word
+          return searchWords.some(word => 
+            serviceTitle.includes(word) || 
+            serviceDesc.includes(word) ||
+            categoryName.includes(word)
           )
         })
-        setSearchResults(results.slice(0, 30))
+        
+        setSearchResults(results.slice(0, 50)) // Increased from 30 to 50
       }
     }
 
@@ -720,7 +707,7 @@ const NewOrder = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search services... (min 2 characters)"
+                  placeholder="Search any service (Instagram, TikTok, YouTube...)"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   onFocus={handleSearchFocus}
@@ -1017,7 +1004,7 @@ const NewOrder = () => {
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="text"
-                      placeholder="Search services... (minimum 2 characters)"
+                      placeholder="Search any service (Instagram, TikTok, YouTube...)"
                       value={searchQuery}
                       onChange={handleSearchChange}
                       onFocus={handleSearchFocus}
