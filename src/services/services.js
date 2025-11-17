@@ -101,12 +101,38 @@ export const createOrder = async (orderData) => {
     const response = await api.post('/orders', orderData, {
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 30000
     });
     return response.data;
   } catch (error) {
     console.error('Error creating order:', error);
-    throw error;
+    
+    let errorMessage = 'Failed to create order. Please try again.';
+    
+    if (error.code === 'ECONNABORTED') {
+      errorMessage = 'Request timeout. Please check your connection and try again.';
+    } else if (error.response) {
+      const serverError = error.response.data;
+      
+      if (serverError.message) {
+        errorMessage = serverError.message;
+      }
+      
+      if (serverError.shortfall) {
+        errorMessage += ` You need $${serverError.shortfall} more.`;
+      }
+    } else if (error.request) {
+      errorMessage = 'Network error. Please check your internet connection.';
+    }
+    
+    const enhancedError = new Error(errorMessage);
+    enhancedError.originalError = error;
+    enhancedError.responseData = error.response?.data;
+    enhancedError.isNetworkError = !error.response;
+    enhancedError.isTimeout = error.code === 'ECONNABORTED';
+    
+    throw enhancedError;
   }
 }
 
