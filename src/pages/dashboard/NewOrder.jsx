@@ -129,7 +129,7 @@ const NewOrder = () => {
   const handleServiceSelect = async (service) => {
     console.log("Selected service from search:", service)
     
-    // Find the category that matches this service
+    // Find the category that matches this service - FIXED LOGIC
     const serviceCategory = categories.find(cat => cat.id === service.category_id)
     console.log("Found category for service:", serviceCategory)
     
@@ -156,12 +156,24 @@ const NewOrder = () => {
           // Show success feedback
           toast.success(`Selected: ${exactService.service_title}`)
         } else {
-          // If exact match not found, set the first service from the category
-          const firstService = categoryServices.length > 0 ? categoryServices[0] : null
-          setSelectedService(firstService)
-          if (firstService) {
-            setQuantity(firstService.min_amount.toString())
-            toast.success(`Selected similar service: ${firstService.service_title}`)
+          // If exact match not found, try to find by title
+          const similarService = categoryServices.find(s => 
+            s.service_title.toLowerCase().includes(service.service_title.toLowerCase()) ||
+            service.service_title.toLowerCase().includes(s.service_title.toLowerCase())
+          )
+          
+          if (similarService) {
+            setSelectedService(similarService)
+            setQuantity(similarService.min_amount.toString())
+            toast.success(`Selected similar service: ${similarService.service_title}`)
+          } else {
+            // If no similar service found, set the first service from the category
+            const firstService = categoryServices.length > 0 ? categoryServices[0] : null
+            setSelectedService(firstService)
+            if (firstService) {
+              setQuantity(firstService.min_amount.toString())
+              toast.success(`Selected first available service: ${firstService.service_title}`)
+            }
           }
         }
       } catch (err) {
@@ -172,7 +184,20 @@ const NewOrder = () => {
       }
     } else {
       console.warn("No category found for service:", service)
-      toast.error("Could not find category for selected service")
+      console.log("Available categories:", categories)
+      console.log("Service category_id:", service.category_id)
+      
+      // Try to find category by ID from the service data
+      const categoryById = categories.find(cat => cat.id === service.category_id)
+      if (categoryById) {
+        console.log("Found category by direct ID match:", categoryById)
+        setSelectedCategory(categoryById)
+        // Retry the service selection with the found category
+        setTimeout(() => handleServiceSelect(service), 100)
+        return
+      }
+      
+      toast.error("Could not find category for selected service. Please select manually.")
     }
     
     // Clear search
@@ -213,12 +238,14 @@ const NewOrder = () => {
         setIsSearching(true)
         try {
           console.log("Searching for:", debouncedSearchQuery)
-          const response = await searchServicesFast(debouncedSearchQuery, 50) // Increased limit
+          const response = await searchServicesFast(debouncedSearchQuery, 50)
           
-          // Enhanced filtering for more sensitive matching
+          // Ensure we have the proper service data structure
           const allResults = response.data.data || []
           
-          // More sensitive search: check service title, description, and category
+          console.log("Raw search results:", allResults)
+          
+          // More sensitive search with better matching
           const sensitiveResults = allResults.filter(service => {
             const searchTerm = debouncedSearchQuery.toLowerCase()
             const serviceTitle = service.service_title?.toLowerCase() || ''
@@ -238,9 +265,16 @@ const NewOrder = () => {
           })
           
           console.log(`Found ${sensitiveResults.length} sensitive results`)
-          setSearchResults(sensitiveResults)
+          
+          // Ensure each service has the category_id
+          const resultsWithCategoryId = sensitiveResults.map(service => ({
+            ...service,
+            category_id: service.category_id || service.category?.id
+          }))
+          
+          setSearchResults(resultsWithCategoryId)
         } catch (error) {
-          console.error('Search error:', error)
+          console.error('Search API error:', error)
           // Fallback to client-side search if API fails
           performClientSideSearch()
         } finally {
@@ -271,7 +305,7 @@ const NewOrder = () => {
             )
           )
         })
-        setSearchResults(results.slice(0, 30)) // Limit results for performance
+        setSearchResults(results.slice(0, 30))
       }
     }
 
