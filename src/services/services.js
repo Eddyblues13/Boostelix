@@ -149,7 +149,7 @@ export const fetchOrderHistory = async (params = {}) => {
     if (params.per_page) queryParams.append('per_page', params.per_page);
     
     const response = await api.get(`/orders/history?${queryParams.toString()}`);
-    return response.data.data;
+    return response.data;
   } catch (error) {
     console.error('Error fetching order history:', error);
     throw error;
