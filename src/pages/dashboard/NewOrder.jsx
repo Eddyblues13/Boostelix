@@ -1,1223 +1,711 @@
 "use client"
-import { useState, useEffect, useCallback } from "react"
-import {
-  ShoppingCart,
-  Search,
-  Instagram,
-  Clock,
-  Info,
-  Facebook,
-  Youtube,
-  Twitter,
-  MessageSquare,
-  Music,
-  Twitch,
-  Globe,
-  Loader2,
-  AlertCircle,
-  CheckCircle2,
-  Camera,
-  Video,
-  Headphones,
-  Send,
-  Linkedin,
-  Github,
-  Play,
-  Radio,
-  Mic,
-  Heart,
-  MessageCircle,
-  Phone,
-  Mail,
-  Gamepad2,
-  Monitor,
-  Smartphone,
-} from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, ExternalLink, RefreshCw, Download, Copy, ChevronDown, ChevronUp } from "lucide-react"
 import toast from "react-hot-toast"
-import { fetchUserData } from "../../services/userService"
-import { 
-  fetchSmmCategories, 
-  fetchSmmServices, 
-  createOrder, 
-  searchServicesFast,
-  debouncedSearch 
-} from "../../services/services"
-import { CSS_COLORS } from "../../components/constant/colors"
-import { useOutletContext } from "react-router-dom"
+import { THEME_COLORS, CSS_COLORS } from "../../components/constant/colors"
+import { fetchOrderHistory } from "../../services/services"
 
-// Custom debounce hook
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+const statusTabs = [
+  { id: "all", label: "All", color: null },
+  { id: "pending", label: "Pending", color: "#3b82f6" },
+  { id: "processing", label: "Processing", color: "#f59e0b" },
+  { id: "completed", label: "Completed", color: "#10b981" },
+  { id: "partial", label: "Partial", color: "#8b5cf6" },
+  { id: "cancelled", label: "Cancelled", color: "#ef4444" },
+  { id: "failed", label: "Failed", color: "#dc2626" },
+]
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
+const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case "completed":
+      return "bg-green-100 text-green-800"
+    case "pending":
+      return "bg-yellow-100 text-yellow-800"
+    case "processing":
+      return `${THEME_COLORS.primary[100]} ${THEME_COLORS.text.primary700}`
+    case "partial":
+      return "bg-purple-100 text-purple-800"
+    case "cancelled":
+      return "bg-red-100 text-red-800"
+    case "failed":
+      return "bg-red-100 text-red-800"
+    default:
+      return "bg-gray-100 text-gray-800"
+  }
+}
 
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
-  return debouncedValue;
-};
+const formatPrice = (price) => {
+  if (price === null || price === undefined) return '$0.00'
+  return `$${parseFloat(price).toFixed(2)}`
+}
 
-const NewOrder = () => {
-  // Get currency context from DashboardLayout
-  const { 
-    selectedCurrency, 
-    convertToSelectedCurrency, 
-    formatCurrency,
-    user: contextUser
-  } = useOutletContext();
-
-  const [user, setUser] = useState(contextUser || null)
-  const [categories, setCategories] = useState([])
-  const [services, setServices] = useState([])
-  const [allServices, setAllServices] = useState([])
-  const [selectedCategory, setSelectedCategory] = useState(null)
-  const [selectedService, setSelectedService] = useState(null)
-  const [quantity, setQuantity] = useState("")
-  const [link, setLink] = useState("")
-  const [loadingCategories, setLoadingCategories] = useState(false)
-  const [loadingServices, setLoadingServices] = useState(false)
-  const [showServiceDescription, setShowServiceDescription] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [orderStatus, setOrderStatus] = useState(null)
+const OrderHistory = () => {
+  const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-  const [showSearchResults, setShowSearchResults] = useState(false)
-  const [isLoadingAllServices, setIsLoadingAllServices] = useState(false)
-  const [searchResults, setSearchResults] = useState([])
-  const [isSearching, setIsSearching] = useState(false)
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [statusCounts, setStatusCounts] = useState({})
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    total: 0,
+    perPage: 10,
+    lastPage: 1
+  })
+  const [expandedOrder, setExpandedOrder] = useState(null)
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
-  // Calculate converted amounts
-  const convertedBalance = user?.balance ? convertToSelectedCurrency(user.balance, "NGN") : 0;
-  const formattedBalance = formatCurrency(convertedBalance, selectedCurrency);
-  
-  // Fixed total cost calculation
-  const totalCost = selectedService && quantity ? 
-    convertToSelectedCurrency((quantity * selectedService.price) / 1, "NGN") : 0;
-  const formattedTotalCost = formatCurrency(totalCost, selectedCurrency);
-
-  const getPlatformIcon = (categoryTitle) => {
-    if (!categoryTitle) return <Globe className="w-5 h-5 text-gray-500 flex-shrink-0" />
-
-    const cleanedTitle = categoryTitle.replace(/^[^a-zA-Z0-9]+/, "").toLowerCase()
-
-    if (cleanedTitle.includes("instagram")) return <Instagram className="w-5 h-5 text-pink-500 flex-shrink-0" />
-    if (cleanedTitle.includes("facebook")) return <Facebook className="w-5 h-5 text-blue-600 flex-shrink-0" />
-    if (cleanedTitle.includes("youtube")) return <Youtube className="w-5 h-5 text-red-500 flex-shrink-0" />
-    if (cleanedTitle.includes("twitter") || cleanedTitle.includes("x"))
-      return <Twitter className="w-5 h-5 text-blue-400 flex-shrink-0" />
-    if (cleanedTitle.includes("tiktok")) return <Video className="w-5 h-5 text-black flex-shrink-0" />
-    if (cleanedTitle.includes("soundcloud")) return <Music className="w-5 h-5 text-orange-500 flex-shrink-0" />
-    if (cleanedTitle.includes("twitch")) return <Twitch className="w-5 h-5 text-purple-500 flex-shrink-0" />
-    if (cleanedTitle.includes("telegram")) return <Send className="w-5 h-5 text-blue-500 flex-shrink-0" />
-    if (cleanedTitle.includes("linkedin")) return <Linkedin className="w-5 h-5 text-blue-700 flex-shrink-0" />
-    if (cleanedTitle.includes("spotify")) return <Headphones className="w-5 h-5 text-green-500 flex-shrink-0" />
-    if (cleanedTitle.includes("snapchat")) return <Camera className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-    if (cleanedTitle.includes("discord")) return <MessageSquare className="w-5 h-5 text-indigo-500 flex-shrink-0" />
-    if (cleanedTitle.includes("reddit")) return <MessageCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
-    if (cleanedTitle.includes("pinterest")) return <Heart className="w-5 h-5 text-red-600 flex-shrink-0" />
-    if (cleanedTitle.includes("whatsapp")) return <Phone className="w-5 h-5 text-green-600 flex-shrink-0" />
-
-    return <Globe className="w-5 h-5 text-gray-500 flex-shrink-0" />
-  }
-
-  const handleServiceSelect = async (service) => {
-    console.log("Selected service from search:", service)
-    
-    // Clear search UI immediately for better UX
-    setSearchQuery("")
-    setShowSearchResults(false)
-    
-    // Find the category - try multiple methods
-    let serviceCategory = categories.find(cat => cat.id === service.category_id)
-    
-    // If not found, try finding by category object
-    if (!serviceCategory && service.category) {
-      serviceCategory = categories.find(cat => cat.id === service.category.id)
-    }
-    
-    console.log("Found category for service:", serviceCategory)
-    
-    if (serviceCategory) {
-      // Set the selected category first
-      setSelectedCategory(serviceCategory)
-      
-      try {
-        setLoadingServices(true)
-        const response = await fetchSmmServices(serviceCategory.id.toString())
-        const categoryServices = response.data.data
-        setServices(categoryServices)
-        
-        // Find the exact service from the category services
-        const exactService = categoryServices.find(s => s.id === service.id)
-        
-        if (exactService) {
-          // Successfully found exact match
-          setSelectedService(exactService)
-          setQuantity(exactService.min_amount.toString())
-          
-          console.log("Successfully set selected service:", exactService)
-          toast.success(`Selected: ${exactService.service_title}`)
-        } else {
-          // Fallback: try to find by title match
-          const similarService = categoryServices.find(s => 
-            s.service_title.toLowerCase() === service.service_title.toLowerCase()
-          )
-          
-          if (similarService) {
-            setSelectedService(similarService)
-            setQuantity(similarService.min_amount.toString())
-            toast.success(`Selected: ${similarService.service_title}`)
-          } else {
-            // Last fallback: use first service
-            const firstService = categoryServices[0]
-            if (firstService) {
-              setSelectedService(firstService)
-              setQuantity(firstService.min_amount.toString())
-              toast.info(`Category selected. Please choose your specific service.`)
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching services for selected category:", err)
-        toast.error("Failed to load services for selected category")
-      } finally {
-        setLoadingServices(false)
-      }
-    } else {
-      console.warn("No category found for service:", service)
-      toast.error("Could not find category for selected service. Please try again.")
-    }
-    
-    // Clear search results
-    setSearchResults([])
-  }
-
-  const handleSearchChange = (e) => {
-    const query = e.target.value
-    setSearchQuery(query)
-    
-    if (query.length > 0) {
-      setShowSearchResults(true)
-    } else {
-      setShowSearchResults(false)
-      setSearchResults([])
-    }
-  }
-
-  const handleSearchFocus = () => {
-    if (searchQuery.length > 0 && searchResults.length > 0) {
-      setShowSearchResults(true)
-    }
-  }
-
-  const handleSearchBlur = () => {
-    // Delay hiding to allow for item selection
-    setTimeout(() => {
-      setShowSearchResults(false)
-    }, 300)
-  }
-
-  // Enhanced search effect - more sensitive and comprehensive
+  // Debounce search input
   useEffect(() => {
-    const performSearch = async () => {
-      if (debouncedSearchQuery && debouncedSearchQuery.length >= 2) {
-        setIsSearching(true)
-        try {
-          console.log("Searching for:", debouncedSearchQuery)
-          const response = await searchServicesFast(debouncedSearchQuery, 50)
-          
-          // Ensure we have the proper service data structure
-          const allResults = response.data.data || []
-          
-          console.log("Raw search results:", allResults)
-          
-          // More sensitive search with better matching
-          const sensitiveResults = allResults.filter(service => {
-            const searchTerm = debouncedSearchQuery.toLowerCase()
-            const serviceTitle = service.service_title?.toLowerCase() || ''
-            const serviceDesc = service.description?.toLowerCase() || ''
-            const categoryName = service.category?.category_title?.toLowerCase() || ''
-            
-            return (
-              serviceTitle.includes(searchTerm) ||
-              serviceDesc.includes(searchTerm) ||
-              categoryName.includes(searchTerm) ||
-              searchTerm.split(' ').some(word => 
-                serviceTitle.includes(word) || 
-                serviceDesc.includes(word) ||
-                categoryName.includes(word)
-              )
-            )
-          })
-          
-          console.log(`Found ${sensitiveResults.length} sensitive results`)
-          
-          // Ensure each service has the category_id properly set
-          const resultsWithCategoryId = sensitiveResults.map(service => ({
-            ...service,
-            category_id: service.category_id || service.category?.id,
-            // Ensure we have category info for later use
-            category: service.category || { id: service.category_id }
-          }))
-          
-          setSearchResults(resultsWithCategoryId)
-        } catch (error) {
-          console.error('Search API error:', error)
-          // Fallback to client-side search if API fails
-          performClientSideSearch()
-        } finally {
-          setIsSearching(false)
-        }
-      } else {
-        setSearchResults([])
-        setIsSearching(false)
-      }
-    }
+    const timer = setTimeout(() => {
+      fetchOrders(1)
+    }, 500)
 
-    const performClientSideSearch = () => {
-      if (allServices.length > 0 && debouncedSearchQuery.length >= 2) {
-        const searchTerm = debouncedSearchQuery.toLowerCase()
-        const results = allServices.filter(service => {
-          const serviceTitle = service.service_title?.toLowerCase() || ''
-          const serviceDesc = service.description?.toLowerCase() || ''
-          const categoryName = service.categoryName?.toLowerCase() || ''
-          
-          return (
-            serviceTitle.includes(searchTerm) ||
-            serviceDesc.includes(searchTerm) ||
-            categoryName.includes(searchTerm) ||
-            searchTerm.split(' ').some(word => 
-              serviceTitle.includes(word) || 
-              serviceDesc.includes(word) ||
-              categoryName.includes(word)
-            )
-          )
-        })
-        setSearchResults(results.slice(0, 30))
-      }
-    }
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
-    performSearch()
-  }, [debouncedSearchQuery, allServices])
+  // Fetch orders when tab changes
+  useEffect(() => {
+    fetchOrders(1)
+  }, [activeTab])
 
-  const handleSubmitOrder = async () => {
-    if (!selectedCategory || !selectedService || !quantity || !link) {
-      toast.error("Please fill all required fields")
-      return
-    }
-
-    if (quantity < selectedService.min_amount || quantity > selectedService.max_amount) {
-      toast.error(`Quantity must be between ${selectedService.min_amount} and ${selectedService.max_amount}`)
-      return
-    }
-
-    setIsSubmitting(true)
-    setOrderStatus(null)
-
+  const fetchOrders = async (page = 1) => {
     try {
-      const orderData = {
-        category: selectedCategory.id,
-        service: selectedService.id,
-        link,
-        quantity: Number.parseInt(quantity),
-        check: true,
-      }
-
-      const response = await createOrder(orderData)
-      
-      const orderId = response.order_id || response.data?.order_id
-      const newBalance = response.balance // Get updated balance from response
-      
-      if (!orderId) {
-        throw new Error("Order ID not received in response")
-      }
-
-      setOrderStatus({
-        success: true,
-        message: "Order submitted successfully!",
-        orderId: orderId,
+      setLoading(true)
+      const response = await fetchOrderHistory({
+        status: activeTab === "all" ? null : activeTab,
+        search: searchQuery,
+        page: page
       })
-
-      // Update user balance in frontend state
-      if (newBalance !== undefined) {
-        setUser(prevUser => ({
-          ...prevUser,
-          balance: newBalance
-        }))
-      }
-
-      toast.success("Order submitted successfully!")
-
-      // Reset form
-      setQuantity("")
-      setLink("")
-      setSelectedService(null)
+      
+      setOrders(response.data || [])
+      setStatusCounts(response.status_counts || {})
+      setPagination({
+        currentPage: response.meta?.current_page || 1,
+        total: response.meta?.total || 0,
+        perPage: response.meta?.per_page || 10,
+        lastPage: response.meta?.last_page || 1
+      })
     } catch (error) {
-      console.error("Order submission error:", error)
-      setOrderStatus({
-        success: false,
-        message: error.response?.data?.message || error.message || "Failed to submit order",
-      })
-      toast.error(error.response?.data?.message || error.message || "Failed to submit order")
+      toast.error(error.response?.data?.message || error.message || "Failed to fetch orders")
     } finally {
-      setIsSubmitting(false)
+      setLoading(false)
     }
   }
 
-  // Fetch user if not available from context
-  useEffect(() => {
-    if (!contextUser) {
-      const fetchUser = async () => {
-        try {
-          const response = await fetchUserData()
-          setUser(response.data)
-        } catch (err) {
-          toast.error("Failed to fetch user info")
-        }
-      }
-      fetchUser()
+  const handleRefresh = () => {
+    fetchOrders(pagination.currentPage)
+    toast.success("Orders refreshed!")
+  }
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= pagination.lastPage) {
+      fetchOrders(page)
     }
-  }, [contextUser])
+  }
 
-  // Fetch categories
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true)
-        const response = await fetchSmmCategories()
-        const catData = response.data.data
-        setCategories(catData)
-        if (catData.length > 0) setSelectedCategory(catData[0])
-      } catch (err) {
-        toast.error("Failed to fetch categories")
-      } finally {
-        setLoadingCategories(false)
-      }
-    }
-    fetchCategories()
-  }, [])
+  const handleExport = () => {
+    toast.success("Export functionality coming soon!")
+  }
 
-  // Fetch services for selected category
-  useEffect(() => {
-    const fetchServices = async () => {
-      if (!selectedCategory) return
+  const copyToClipboard = (text) => {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    toast.success('Copied to clipboard!')
+  }
 
-      try {
-        setLoadingServices(true)
-        const response = await fetchSmmServices(selectedCategory.id.toString())
-        const srv = response.data.data
-        setServices(srv)
-        // Only set selected service if it's not already set or if it doesn't belong to current category
-        if (!selectedService || selectedService.category !== selectedCategory.id) {
-          setSelectedService(srv.length > 0 ? srv[0] : null)
-        }
-      } catch (err) {
-        console.error("Error fetching services:", err)
-        toast.error("Failed to fetch services")
-        setServices([])
-        setSelectedService(null)
-      } finally {
-        setLoadingServices(false)
-      }
-    }
-    fetchServices()
-  }, [selectedCategory])
+  const toggleOrderExpansion = (orderId) => {
+    setExpandedOrder(expandedOrder === orderId ? null : orderId)
+  }
 
-  // Load essential services when categories are loaded
-  useEffect(() => {
-    const loadAllServices = async () => {
-      if (categories.length > 0 && allServices.length === 0 && !isLoadingAllServices) {
-        setIsLoadingAllServices(true)
-        try {
-          console.log("Loading essential services for search...")
-          const essentialServices = []
-          
-          // Load services for first 5 categories for better search coverage
-          const categoriesToLoad = categories.slice(0, 5)
-          
-          for (const category of categoriesToLoad) {
-            try {
-              console.log(`Fetching services for category: ${category.category_title}`)
-              const response = await fetchSmmServices(category.id.toString())
-              const servicesData = response.data.data
-              console.log(`Found ${servicesData.length} services for ${category.category_title}`)
-              
-              // Add category information to each service
-              const servicesWithCategory = servicesData.map(service => ({
-                ...service,
-                categoryName: category.category_title,
-                categoryId: category.id,
-              }))
-              
-              essentialServices.push(...servicesWithCategory)
-            } catch (err) {
-              console.error(`Error fetching services for category ${category.id}:`, err)
-            }
-          }
-          
-          console.log("Total essential services loaded:", essentialServices.length)
-          setAllServices(essentialServices)
-        } catch (err) {
-          console.error("Error loading essential services:", err)
-        } finally {
-          setIsLoadingAllServices(false)
-        }
-      }
-    }
-
-    loadAllServices()
-  }, [categories])
-
-  const socialPlatforms = [
-    { name: "Instagram", icon: Instagram, bgColor: "#e4405f" },
-    { name: "Facebook", icon: Facebook, bgColor: "#1877f2" },
-    { name: "Youtube", icon: Youtube, bgColor: "#ff0000" },
-    { name: "Twitter/X", icon: Twitter, bgColor: "#1da1f2" },
-    { name: "TikTok", icon: Video, bgColor: "#000000" },
-    { name: "LinkedIn", icon: Linkedin, bgColor: "#0077b5" },
-    { name: "Spotify", icon: Headphones, bgColor: "#1db954" },
-    { name: "Snapchat", icon: Camera, bgColor: "#fffc00" },
-    { name: "Telegram", icon: Send, bgColor: "#0088cc" },
-    { name: "SoundCloud", icon: Music, bgColor: "#ff5500" },
-    { name: "Twitch", icon: Twitch, bgColor: "#9146ff" },
-    { name: "Discord", icon: MessageSquare, bgColor: "#5865f2" },
-    { name: "Reddit", icon: MessageCircle, bgColor: "#ff4500" },
-    { name: "Pinterest", icon: Heart, bgColor: "#bd081c" },
-    { name: "WhatsApp", icon: Phone, bgColor: "#25d366" },
-    { name: "GitHub", icon: Github, bgColor: "#333333" },
-    { name: "Clubhouse", icon: Mic, bgColor: "#f1c40f" },
-    { name: "Vimeo", icon: Play, bgColor: "#1ab7ea" },
-    { name: "Podcast", icon: Radio, bgColor: "#9b59b6" },
-    { name: "Gaming", icon: Gamepad2, bgColor: "#e74c3c" },
-    { name: "Website Traffic", icon: Globe, bgColor: "#6b7280" },
-    { name: "App Downloads", icon: Smartphone, bgColor: "#34495e" },
-    { name: "Live Streaming", icon: Monitor, bgColor: "#e67e22" },
-    { name: "Email Marketing", icon: Mail, bgColor: "#3498db" },
+  // Mobile table columns configuration - Updated to match SQL structure
+  const mobileColumns = [
+    { key: 'id', label: 'ID', className: 'font-semibold' },
+    { key: 'created_at', label: 'Date', render: (order) => formatDate(order.created_at) },
+    { 
+      key: 'service_id', 
+      label: 'Service ID',
+      render: (order) => order.service_id || 'N/A'
+    },
+    { key: 'status', label: 'Status', render: (order) => (
+      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+        {order.status}
+      </span>
+    )},
+    { key: 'price', label: 'Price', render: (order) => formatPrice(order.price) },
+    { key: 'quantity', label: 'Quantity', render: (order) => order.quantity || 0 }
   ]
 
-  const getServiceMetrics = () => {
-    if (!selectedService) return null
-
-    const startTime = selectedService.start_time || "5-30 minutes"
-    const speed = selectedService.speed || "100-1000/hour"
-    const avgTime = selectedService.avg_time || selectedService.average_time || "7 hours 43 minutes"
-    const guarantee = selectedService.guarantee || "30 days"
-
-    return { startTime, speed, avgTime, guarantee }
-  }
-
-  const metrics = getServiceMetrics()
-
-  // Enhanced Search Results Dropdown Component
-  const SearchResultsDropdown = () => {
-    if (!showSearchResults || !searchQuery) return null
-
-    if (isSearching) {
-      return (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
-          <div className="p-4 text-center">
-            <Loader2 className="w-5 h-5 animate-spin mx-auto text-blue-500" />
-            <p className="text-sm text-gray-500 mt-2">Searching services...</p>
-          </div>
-        </div>
-      )
-    }
-
-    if (searchResults.length === 0 && searchQuery.length > 0 && !isSearching) {
-      return (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
-          <div className="p-4 text-center">
-            <p className="text-sm text-gray-500">No services found for "{searchQuery}"</p>
-            <p className="text-xs text-gray-400 mt-1">Try different keywords or check spelling</p>
-          </div>
-        </div>
-      )
-    }
-
-    return (
-      <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-96 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg">
-        <div className="p-2">
-          <div className="px-3 py-2 border-b border-gray-100">
-            <p className="text-xs font-medium text-gray-500">
-              Found {searchResults.length} service{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
-            </p>
-          </div>
-          {searchResults.slice(0, 25).map((service) => (
-            <div
-              key={service.id}
-              onMouseDown={() => handleServiceSelect(service)}
-              className="p-3 hover:bg-blue-50 rounded-lg cursor-pointer transition-all duration-200 border-b border-gray-100 last:border-b-0 group"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    {getPlatformIcon(service.category?.category_title || service.categoryName)}
-                    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      {service.category?.category_title || service.categoryName || 'Uncategorized'}
-                    </span>
-                  </div>
-                  <h4 className="font-medium text-gray-800 text-sm mb-1 group-hover:text-blue-600">
-                    {service.service_title}
-                  </h4>
-                  <p className="text-xs text-gray-600 line-clamp-2">
-                    {service.description || "No description available"}
-                  </p>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <span className="text-xs text-green-600 font-medium">
-                      {formatCurrency(convertToSelectedCurrency(service.price * 1000, "NGN"), selectedCurrency)} per 1k
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Min: {service.min_amount} | Max: {service.max_amount}
-                    </span>
-                  </div>
-                </div>
-                <div className="text-xs text-blue-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  Select →
-                </div>
-              </div>
-            </div>
-          ))}
-          {searchResults.length > 25 && (
-            <div className="px-3 py-2 border-t border-gray-100">
-              <p className="text-xs text-gray-500 text-center">
-                Showing first 25 of {searchResults.length} services
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Order Status Alert */}
-      {orderStatus && (
-        <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
-            orderStatus.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
-          <div className="flex items-start">
-            {orderStatus.success ? (
-              <CheckCircle2 className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
-            ) : (
-              <AlertCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
-            )}
-            <div>
-              <p className="font-medium">{orderStatus.success ? "Success!" : "Error!"}</p>
-              <p className="text-sm">{orderStatus.message}</p>
-              {orderStatus.success && orderStatus.orderId && (
-                <p className="text-xs mt-1">Order ID: {orderStatus.orderId}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Layout */}
-      <div className="lg:hidden">
-        <div className="container mx-auto p-4 space-y-6">
-          {/* Stats Cards - Mobile */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="text-3xl">💰</div>
-                <div>
-                  <p className="text-xs text-gray-500">Balance</p>
-                  <h3 className="text-lg font-bold text-gray-800 truncate">{formattedBalance}</h3>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="text-3xl">👑</div>
-                <div>
-                  <p className="text-xs text-gray-500">Status</p>
-                  <h3 className="text-lg font-bold text-gray-800 truncate">{user?.status || "NEW"}</h3>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="text-3xl">👤</div>
-                <div>
-                  <p className="text-xs text-gray-500">Username</p>
-                  <h3 className="text-lg font-bold text-gray-800 truncate">{user?.username || "loading.."}</h3>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="text-3xl">📦</div>
-                <div>
-                  <p className="text-xs text-gray-500">Orders</p>
-                  <h3 className="text-lg font-bold text-gray-800">{user?.total_orders || "0"}</h3>
-                </div>
-              </div>
+    <div className="w-full min-h-screen" style={{ background: CSS_COLORS.background.primary }}>
+      {/* Mobile View (Table Cards) */}
+      <div className="block lg:hidden p-3 sm:p-4">
+        <div className="space-y-4">
+          {/* Status Filter Pills */}
+          <div className="overflow-x-auto pb-2">
+            <div className="flex space-x-2" style={{ minWidth: "max-content" }}>
+              {statusTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium ${
+                    activeTab === tab.id
+                      ? `${THEME_COLORS.primary[500]} text-white shadow-lg`
+                      : `${THEME_COLORS.background.card} text-gray-700 ${THEME_COLORS.border.primary200} border ${THEME_COLORS.hover.primary100}`
+                  }`}
+                >
+                  {tab.color && activeTab !== tab.id && (
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tab.color }} />
+                  )}
+                  <span>{tab.label}</span>
+                  {statusCounts[tab.id] > 0 && activeTab !== tab.id && (
+                    <span className="text-xs text-gray-500">({statusCounts[tab.id]})</span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Quick Platforms - Mobile */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Popular Platforms</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {socialPlatforms.slice(0, 6).map((platform, index) => {
-                const IconComponent = platform.icon
-                return (
-                  <div
-                    key={index}
-                    className="bg-gray-50 rounded-xl p-3 text-center hover:scale-105 transition-all duration-200 cursor-pointer border border-gray-100"
-                  >
-                    <div
-                      className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center text-white"
-                      style={{ backgroundColor: platform.bgColor }}
-                    >
-                      <IconComponent className="w-4 h-4" />
-                    </div>
-                    <p className="text-xs font-medium text-gray-700 truncate">{platform.name}</p>
+          {/* Search and Actions */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search orders..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${THEME_COLORS.border.primary200} ${THEME_COLORS.background.muted}`}
+              />
+            </div>
+            <button
+              onClick={handleRefresh}
+              className={`p-2.5 rounded-xl border flex items-center ${THEME_COLORS.background.card} ${THEME_COLORS.border.primary200} ${THEME_COLORS.hover.primary100}`}
+            >
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          {/* Orders List - Mobile Table Cards */}
+          <div className="space-y-3">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
+              </div>
+            ) : orders.length > 0 ? (
+              orders.map((order) => (
+                <div
+                  key={order.id}
+                  className={`rounded-xl p-4 border ${THEME_COLORS.border.primary200} ${THEME_COLORS.background.card}`}
+                >
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {mobileColumns.map((column) => (
+                      <div key={column.key} className="space-y-1">
+                        <div className="text-xs text-gray-500">{column.label}</div>
+                        <div className={column.className}>
+                          {column.render ? column.render(order) : order[column.key]}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                )
-              })}
-            </div>
-          </div>
+                  
+                  {/* Expandable details section */}
+                  <button
+                    onClick={() => toggleOrderExpansion(order.id)}
+                    className="w-full mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    <span>View Details</span>
+                    {expandedOrder === order.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
 
-          {/* Action Buttons - Mobile */}
-          <div className="flex gap-3">
-            <button
-              className="flex-1 text-white py-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg"
-              style={{ backgroundColor: CSS_COLORS.primary }}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span>New order</span>
-            </button>
-            <button
-              className="flex-1 py-4 rounded-xl font-medium flex items-center justify-center space-x-2 border border-gray-200 bg-white text-gray-700"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span>Mass order</span>
-            </button>
-          </div>
+                  {expandedOrder === order.id && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
+                      {/* Link with copy button */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-gray-500">Link</div>
+                          <button 
+                            onClick={() => copyToClipboard(order.link)}
+                            className="text-gray-400 hover:text-blue-500"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <a
+                          href={order.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline break-all"
+                        >
+                          {order.link}
+                        </a>
+                      </div>
 
-          {/* Order Form - Mobile */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Place Your Order</h2>
-            <div className="space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search services... (min 2 characters)"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  onFocus={handleSearchFocus}
-                  onBlur={handleSearchBlur}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
-                />
-                <SearchResultsDropdown />
-              </div>
+                      {/* API Order ID */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">API Order ID:</span>
+                        <span>{order.api_order_id || 'N/A'}</span>
+                      </div>
 
-              {/* Category & Service Row */}
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                  {loadingCategories ? (
-                    <div className="p-3 border border-gray-200 rounded-xl bg-gray-50 animate-pulse">
-                      <div className="h-4 bg-gray-300 rounded"></div>
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <select
-                        value={selectedCategory?.id || ""}
-                        onChange={(e) => {
-                          const cat = categories.find((c) => c.id.toString() === e.target.value)
-                          setSelectedCategory(cat)
-                          setSearchQuery("")
-                          setShowSearchResults(false)
-                          setSearchResults([])
-                        }}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm appearance-none bg-gray-50"
-                      >
-                        {categories.map((category) => (
-                          <option key={category.id} value={category.id.toString()}>
-                            {category.category_title}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                        {selectedCategory ? (
-                          getPlatformIcon(selectedCategory.category_title)
-                        ) : (
-                          <Globe className="w-4 h-4 text-gray-500" />
-                        )}
+                      {/* Category ID */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">Category ID:</span>
+                        <span>{order.category_id || 'N/A'}</span>
+                      </div>
+
+                      {/* Start Counter */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">Start Counter:</span>
+                        <span>{order.start_counter !== null ? order.start_counter : 'N/A'}</span>
+                      </div>
+
+                      {/* Remains */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">Remains:</span>
+                        <span>{order.remains !== null ? order.remains : 'N/A'}</span>
+                      </div>
+
+                      {/* Status Description */}
+                      {order.status_description && (
+                        <div className="text-xs">
+                          <div className="text-gray-500 mb-1">Status Description:</div>
+                          <div className="bg-gray-50 p-2 rounded text-gray-700">
+                            {order.status_description}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reason */}
+                      {order.reason && (
+                        <div className="text-xs">
+                          <div className="text-gray-500 mb-1">Reason:</div>
+                          <div className="bg-red-50 p-2 rounded text-red-700 border border-red-200">
+                            {order.reason}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Additional Details */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <div className="text-gray-500">Runs:</div>
+                          <div>{order.runs !== null ? order.runs : 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Interval:</div>
+                          <div>{order.interval !== null ? order.interval : 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Drip Feed:</div>
+                          <div>{order.drip_feed !== null ? (order.drip_feed ? 'Yes' : 'No') : 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Refilled At:</div>
+                          <div>{order.refilled_at ? formatDate(order.refilled_at) : 'N/A'}</div>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service</label>
-                  {loadingServices ? (
-                    <div className="p-3 border border-gray-200 rounded-xl bg-gray-50 animate-pulse">
-                      <div className="h-4 bg-gray-300 rounded"></div>
-                    </div>
-                  ) : (
-                    <select
-                      value={selectedService?.id || ""}
-                      onChange={(e) => {
-                        const srv = services.find((s) => s.id.toString() === e.target.value)
-                        if (srv) {
-                          setSelectedService(srv)
-                          setQuantity(srv.min_amount.toString())
-                        }
-                      }}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm appearance-none bg-gray-50"
-                      disabled={!selectedCategory || services.length === 0}
-                    >
-                      {services.length > 0 ? (
-                        services.map((service) => (
-                          <option key={service.id} value={service.id.toString()}>
-                            {service.service_title} - {formatCurrency(
-                              convertToSelectedCurrency(service.price * 1000, "NGN"),
-                              selectedCurrency
-                            )} per 1k
-                          </option>
-                        ))
-                      ) : (
-                        <option value="">No services available</option>
-                      )}
-                    </select>
-                  )}
-                  {selectedService && (
-                    <p className="text-xs text-gray-500 mt-2">
-                      Min: {selectedService.min_amount} - Max: {selectedService.max_amount}
-                    </p>
-                  )}
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <div className={`w-16 h-16 ${THEME_COLORS.background.muted} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                  <Search className="w-8 h-8 text-gray-400" />
                 </div>
+                <p className="text-gray-500 font-medium">No orders found</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  {searchQuery ? "Try adjusting your search terms" : "You haven't placed any orders yet"}
+                </p>
               </div>
+            )}
+          </div>
 
-              {/* Link & Quantity */}
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Link</label>
-                  <input
-                    type="url"
-                    value={link}
-                    onChange={(e) => setLink(e.target.value)}
-                    placeholder="Enter your profile/post URL"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    min={selectedService?.min_amount || 0}
-                    max={selectedService?.max_amount || 1000000}
-                    placeholder="Enter quantity"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Cost Summary - Mobile */}
-              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-1">Total Cost</p>
-                  <p className="text-2xl font-bold text-gray-800">{formattedTotalCost}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price * 1000, "NGN"), selectedCurrency) : '0'} per 1k
-                  </p>
-                </div>
-              </div>
-
-              {/* Submit Button - Mobile */}
+          {/* Pagination */}
+          {orders.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
               <button
-                onClick={handleSubmitOrder}
-                disabled={isSubmitting}
-                className="w-full text-white font-semibold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center transition-all duration-200 hover:opacity-90"
-                style={{ backgroundColor: CSS_COLORS.primary }}
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1 || loading}
+                className={`px-3 py-1.5 border rounded-lg text-sm font-medium disabled:opacity-50 ${THEME_COLORS.border.primary200} ${THEME_COLORS.hover.primary100}`}
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Submit Order"
-                )}
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {pagination.currentPage} of {pagination.lastPage}
+              </span>
+              <button
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === pagination.lastPage || loading}
+                className={`px-3 py-1.5 border rounded-lg text-sm font-medium disabled:opacity-50 ${THEME_COLORS.border.primary200} ${THEME_COLORS.hover.primary100}`}
+              >
+                Next
               </button>
             </div>
-          </div>
-
-          {/* Service Description - Mobile */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Service Details</h3>
-            
-            {/* Service Header */}
-            <div className="bg-blue-600 rounded-xl p-4 text-white mb-4">
-              <div className="flex items-center space-x-3 mb-2">
-                {selectedCategory && getPlatformIcon(selectedCategory.category_title)}
-                <h4 className="font-medium">Service</h4>
-              </div>
-              <p className="text-sm opacity-90">{selectedService?.service_title || "Select a service"}</p>
-            </div>
-
-            {/* Service Metrics */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-gray-50 rounded-xl p-3">
-                <h5 className="text-xs font-medium text-gray-600 mb-1">Start Time</h5>
-                <p className="text-sm text-gray-800">{metrics?.startTime || "--"}</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3">
-                <h5 className="text-xs font-medium text-gray-600 mb-1">Speed</h5>
-                <p className="text-sm text-gray-800">{metrics?.speed || "--"}</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3">
-                <h5 className="text-xs font-medium text-gray-600 mb-1">Avg. Time</h5>
-                <p className="text-sm text-gray-800 font-medium">{metrics?.avgTime || "--"}</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3">
-                <h5 className="text-xs font-medium text-gray-600 mb-1">Guarantee</h5>
-                <p className="text-sm text-gray-800">{metrics?.guarantee || "--"}</p>
-              </div>
-            </div>
-
-            {/* Service Description */}
-            <div>
-              <h5 className="text-sm font-medium text-gray-600 mb-3">Description</h5>
-              <div className="text-sm text-gray-700 space-y-2">
-                <p className="font-medium">
-                  {selectedService?.description || "Select a service to view description"}
-                </p>
-                {!selectedService?.description && (
-                  <>
-                    <p>⚡ High-quality service delivery</p>
-                    <p>🛡️ 30-day guarantee on all orders</p>
-                    <p>🚀 Fast and reliable results</p>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        <div className="container mx-auto p-6">
-          {/* Top Stats Cards - Desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">💰</div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Account Balance</p>
-                  <h3 className="text-2xl font-bold text-gray-800">{formattedBalance}</h3>
-                </div>
-              </div>
+      {/* Desktop View */}
+      <div className="hidden lg:block p-4 xl:p-6">
+        <div className="space-y-6">
+          {/* Status Filter Pills */}
+          <div className={`rounded-xl p-6 border ${THEME_COLORS.border.primary200} ${THEME_COLORS.background.card}`}>
+            <div className="flex flex-wrap gap-3">
+              {statusTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 px-6 py-3 rounded-full font-medium ${
+                    activeTab === tab.id
+                      ? `${THEME_COLORS.primary[500]} text-white shadow-lg`
+                      : `${THEME_COLORS.background.card} text-gray-700 ${THEME_COLORS.border.primary200} border ${THEME_COLORS.hover.primary100}`
+                  }`}
+                >
+                  {tab.color && activeTab !== tab.id && (
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tab.color }} />
+                  )}
+                  <span>{tab.label}</span>
+                  {statusCounts[tab.id] > 0 && activeTab !== tab.id && (
+                    <span className="text-xs text-gray-500">({statusCounts[tab.id]})</span>
+                  )}
+                </button>
+              ))}
             </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">👑</div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Account Status</p>
-                  <h3 className="text-xl font-bold text-gray-800">{user?.status || "NEW"}</h3>
-                </div>
+          </div>
+
+          {/* Search and Actions */}
+          <div className={`rounded-xl p-6 border ${THEME_COLORS.border.primary200} ${THEME_COLORS.background.card}`}>
+            <div className="flex gap-4">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search orders, services, or links..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base ${THEME_COLORS.border.primary200} ${THEME_COLORS.background.muted}`}
+                />
               </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">👤</div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Username</p>
-                  <h3 className="text-xl font-bold text-gray-800">{user?.username || "loading.."}</h3>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">📦</div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Total Orders</p>
-                  <h3 className="text-2xl font-bold text-gray-800">{user?.total_orders || "0"}</h3>
-                </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRefresh}
+                  className={`p-3 rounded-xl border flex items-center ${THEME_COLORS.background.card} ${THEME_COLORS.border.primary200} ${THEME_COLORS.hover.primary100}`}
+                >
+                  <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                </button>
+                <button
+                  onClick={handleExport}
+                  className={`p-3 rounded-xl border flex items-center ${THEME_COLORS.background.card} ${THEME_COLORS.border.primary200} ${THEME_COLORS.hover.primary100}`}
+                >
+                  <Download className="w-5 h-5" />
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Social Platforms Section - Desktop (NOW ABOVE ORDER FORM) */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Social Media Platforms</h2>
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-              {socialPlatforms.map((platform, index) => {
-                const IconComponent = platform.icon
-                return (
+          {/* Orders Table */}
+          <div className={`rounded-xl border overflow-hidden ${THEME_COLORS.border.primary200} ${THEME_COLORS.background.card}`}>
+            {/* Table Header */}
+            <div className="grid grid-cols-14 gap-2 px-4 py-4 text-white font-semibold text-sm" style={{ background: CSS_COLORS.background.sidebar }}>
+              <div className="col-span-1">ID</div>
+              <div className="col-span-1">User ID</div>
+              <div className="col-span-1">Date</div>
+              <div className="col-span-1">Service</div>
+              <div className="col-span-2">Link</div>
+              <div className="col-span-1">Price</div>
+              <div className="col-span-1">Quantity</div>
+              <div className="col-span-1">Start Count</div>
+              <div className="col-span-1">Status</div>
+              <div className="col-span-1">Remains</div>
+              <div className="col-span-1">Status Desc</div>
+              <div className="col-span-1">Reason</div>
+              <div className="col-span-1">Actions</div>
+            </div>
+
+            {/* Table Body */}
+            <div className="divide-y divide-gray-100">
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
+                </div>
+              ) : orders.length > 0 ? (
+                orders.map((order) => (
                   <div
-                    key={index}
-                    className="bg-gray-50 rounded-xl p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer border border-gray-100 hover:border-gray-200"
+                    key={order.id}
+                    className={`grid grid-cols-14 gap-2 px-4 py-4 items-center text-sm ${THEME_COLORS.hover.primary100} ${expandedOrder === order.id ? 'bg-blue-50' : ''}`}
                   >
-                    <div
-                      className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center text-white"
-                      style={{ backgroundColor: platform.bgColor }}
-                    >
-                      <IconComponent className="w-5 h-5" />
+                    <div className="col-span-1 font-medium">{order.id}</div>
+                    <div className="col-span-1">{order.user_id}</div>
+                    <div className="col-span-1 text-gray-600 text-xs">{formatDate(order.created_at)}</div>
+                    <div className="col-span-1">{order.service_id}</div>
+                    <div className="col-span-2 flex items-center">
+                      <a
+                        href={order.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline truncate text-xs"
+                        title={order.link}
+                      >
+                        {order.link?.substring(0, 25)}...
+                      </a>
                     </div>
-                    <p className="text-sm font-medium text-gray-700 truncate">{platform.name}</p>
+                    <div className="col-span-1 font-semibold text-xs">{formatPrice(order.price)}</div>
+                    <div className="col-span-1">{order.quantity}</div>
+                    <div className="col-span-1">{order.start_counter || 0}</div>
+                    <div className="col-span-1">
+                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="col-span-1">{order.remains !== null ? order.remains : 'N/A'}</div>
+                    <div className="col-span-1">
+                      {order.status_description ? (
+                        <button
+                          onClick={() => toggleOrderExpansion(order.id)}
+                          className="text-blue-600 hover:text-blue-800 text-xs truncate max-w-full"
+                          title={order.status_description}
+                        >
+                          {order.status_description.substring(0, 15)}...
+                        </button>
+                      ) : (
+                        'N/A'
+                      )}
+                    </div>
+                    <div className="col-span-1">
+                      {order.reason ? (
+                        <button
+                          onClick={() => toggleOrderExpansion(order.id)}
+                          className="text-red-600 hover:text-red-800 text-xs truncate max-w-full"
+                          title={order.reason}
+                        >
+                          {order.reason.substring(0, 15)}...
+                        </button>
+                      ) : (
+                        'N/A'
+                      )}
+                    </div>
+                    <div className="col-span-1 flex space-x-1">
+                      <button
+                        onClick={() => copyToClipboard(order.link)}
+                        className="text-gray-400 hover:text-blue-500 p-1"
+                        title="Copy link"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                      <a
+                        href={order.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-blue-500 p-1"
+                        title="Open link"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                      <button
+                        onClick={() => toggleOrderExpansion(order.id)}
+                        className="text-gray-400 hover:text-blue-500 p-1"
+                        title="View details"
+                      >
+                        {expandedOrder === order.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                    </div>
                   </div>
-                )
-              })}
+                ))
+              ) : (
+                <div className="text-center py-16">
+                  <div className={`w-16 h-16 ${THEME_COLORS.background.muted} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    <Search className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 font-medium">No orders found</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {searchQuery ? "Try adjusting your search terms" : "You haven't placed any orders yet"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Action Buttons - Desktop */}
-          <div className="flex gap-4 mb-8">
-            <button
-              className="flex-1 text-white py-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg transition-all duration-200 hover:opacity-90"
-              style={{ backgroundColor: CSS_COLORS.primary }}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="text-lg">New Order</span>
-            </button>
-            <button
-              className="flex-1 py-4 rounded-xl font-medium flex items-center justify-center space-x-2 border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all duration-200"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="text-lg">Mass Order</span>
-            </button>
-          </div>
-
-          {/* Main Content Area - Order Form & Description */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* Order Form - Takes 2/3 of the space */}
-            <div className="xl:col-span-2">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Place Your Order</h2>
-                <div className="space-y-6">
-                  {/* Search */}
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder="Search services... (minimum 2 characters)"
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      onFocus={handleSearchFocus}
-                      onBlur={handleSearchBlur}
-                      className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 text-lg"
-                    />
-                    <SearchResultsDropdown />
-                  </div>
-
-                  {/* Category & Service */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-lg font-medium text-gray-700 mb-3">Category</label>
-                      {loadingCategories ? (
-                        <div className="p-4 border border-gray-200 rounded-xl bg-gray-50 animate-pulse">
-                          <div className="h-4 bg-gray-300 rounded"></div>
+          {/* Expanded Order Details Modal */}
+          {expandedOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className={`rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto ${THEME_COLORS.background.card} ${THEME_COLORS.border.primary200} border`}>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Order Details #{expandedOrder}</h3>
+                  <button
+                    onClick={() => setExpandedOrder(null)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                {(() => {
+                  const order = orders.find(o => o.id === expandedOrder)
+                  if (!order) return null
+                  
+                  return (
+                    <div className="space-y-4 text-sm">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-gray-500">Order ID</div>
+                          <div className="font-semibold">{order.id}</div>
                         </div>
-                      ) : (
-                        <div className="relative">
-                          <select
-                            value={selectedCategory?.id || ""}
-                            onChange={(e) => {
-                              const cat = categories.find((c) => c.id.toString() === e.target.value)
-                              setSelectedCategory(cat)
-                              setSearchQuery("")
-                              setShowSearchResults(false)
-                              setSearchResults([])
-                            }}
-                            className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl appearance-none bg-gray-50 text-lg"
+                        <div>
+                          <div className="text-gray-500">User ID</div>
+                          <div>{order.user_id}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Service ID</div>
+                          <div>{order.service_id}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Category ID</div>
+                          <div>{order.category_id || 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">API Order ID</div>
+                          <div>{order.api_order_id || 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Status</div>
+                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="text-gray-500 mb-1">Link</div>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={order.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline break-all"
                           >
-                            {categories.map((category) => (
-                              <option key={category.id} value={category.id.toString()}>
-                                {category.category_title}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                            {selectedCategory ? (
-                              getPlatformIcon(selectedCategory.category_title)
-                            ) : (
-                              <Globe className="w-5 h-5 text-gray-500" />
-                            )}
+                            {order.link}
+                          </a>
+                          <button
+                            onClick={() => copyToClipboard(order.link)}
+                            className="text-gray-400 hover:text-blue-500"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {order.status_description && (
+                        <div>
+                          <div className="text-gray-500 mb-1">Status Description</div>
+                          <div className="bg-gray-50 p-3 rounded text-gray-700">
+                            {order.status_description}
                           </div>
                         </div>
                       )}
-                    </div>
 
-                    <div>
-                      <label className="block text-lg font-medium text-gray-700 mb-3">Service</label>
-                      {loadingServices ? (
-                        <div className="p-4 border border-gray-200 rounded-xl bg-gray-50 animate-pulse">
-                          <div className="h-4 bg-gray-300 rounded"></div>
+                      {order.reason && (
+                        <div>
+                          <div className="text-gray-500 mb-1">Reason</div>
+                          <div className="bg-red-50 p-3 rounded text-red-700 border border-red-200">
+                            {order.reason}
+                          </div>
                         </div>
-                      ) : (
-                        <select
-                          value={selectedService?.id || ""}
-                          onChange={(e) => {
-                            const srv = services.find((s) => s.id.toString() === e.target.value)
-                            if (srv) {
-                              setSelectedService(srv)
-                              setQuantity(srv.min_amount.toString())
-                            }
-                          }}
-                          className="w-full px-4 py-4 border border-gray-200 rounded-xl appearance-none bg-gray-50 text-lg"
-                          disabled={!selectedCategory || services.length === 0}
-                        >
-                          {services.length > 0 ? (
-                            services.map((service) => (
-                              <option key={service.id} value={service.id.toString()}>
-                                {service.service_title} - {formatCurrency(
-                                  convertToSelectedCurrency(service.price * 1000, "NGN"),
-                                  selectedCurrency
-                                )} per 1k
-                              </option>
-                            ))
-                          ) : (
-                            <option value="">No services available</option>
-                          )}
-                        </select>
                       )}
-                      {selectedService && (
-                        <p className="text-sm text-gray-500 mt-3">
-                          Min: {selectedService.min_amount} - Max: {selectedService.max_amount}
-                        </p>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Link & Quantity */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-lg font-medium text-gray-700 mb-3">Link</label>
-                      <input
-                        type="url"
-                        value={link}
-                        onChange={(e) => setLink(e.target.value)}
-                        placeholder="Enter your profile/post URL"
-                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 text-lg"
-                        required
-                      />
-                    </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <div className="text-gray-500">Price</div>
+                          <div className="font-semibold">{formatPrice(order.price)}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Quantity</div>
+                          <div>{order.quantity}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Remains</div>
+                          <div>{order.remains !== null ? order.remains : 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Start Counter</div>
+                          <div>{order.start_counter || 0}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Runs</div>
+                          <div>{order.runs !== null ? order.runs : 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Interval</div>
+                          <div>{order.interval !== null ? order.interval : 'N/A'}</div>
+                        </div>
+                      </div>
 
-                    <div>
-                      <label className="block text-lg font-medium text-gray-700 mb-3">Quantity</label>
-                      <input
-                        type="number"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        min={selectedService?.min_amount || 0}
-                        max={selectedService?.max_amount || 1000000}
-                        placeholder="Enter quantity"
-                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 text-lg"
-                        required
-                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-gray-500">Drip Feed</div>
+                          <div>{order.drip_feed !== null ? (order.drip_feed ? 'Yes' : 'No') : 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Refilled At</div>
+                          <div>{order.refilled_at ? formatDate(order.refilled_at) : 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Created At</div>
+                          <div>{formatDate(order.created_at)}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Updated At</div>
+                          <div>{formatDate(order.updated_at)}</div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )
+                })()}
+              </div>
+            </div>
+          )}
 
-                  {/* Cost Summary - Desktop */}
-                  <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
-                    <div className="text-center">
-                      <p className="text-xl text-gray-600 mb-3">Total Cost</p>
-                      <p className="text-4xl font-bold text-gray-800 mb-3">{formattedTotalCost}</p>
-                      <p className="text-lg text-gray-500">
-                        {quantity} units × {selectedService ? formatCurrency(convertToSelectedCurrency(selectedService.price * 1000, "NGN"), selectedCurrency) : '0'} per 1k
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Submit Button - Desktop */}
+          {/* Pagination */}
+          {orders.length > 0 && (
+            <div className={`rounded-xl p-4 border ${THEME_COLORS.border.primary200} ${THEME_COLORS.background.card}`}>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {orders.length} of {pagination.total} orders
+                </div>
+                <div className="flex items-center space-x-2">
                   <button
-                    onClick={handleSubmitOrder}
-                    disabled={isSubmitting}
-                    className="w-full text-white font-semibold py-5 rounded-xl shadow-lg text-xl flex items-center justify-center transition-all duration-200 hover:opacity-90"
-                    style={{ backgroundColor: CSS_COLORS.primary }}
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1 || loading}
+                    className={`px-4 py-2 border rounded-lg text-sm font-medium disabled:opacity-50 ${THEME_COLORS.border.primary200} ${THEME_COLORS.hover.primary100}`}
                   >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-6 h-6 mr-3 animate-spin" />
-                        Processing Order...
-                      </>
-                    ) : (
-                      "Submit Order"
-                    )}
+                    Previous
+                  </button>
+                  <span className="px-4 py-2 text-sm text-gray-600">
+                    Page {pagination.currentPage} of {pagination.lastPage}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.lastPage || loading}
+                    className={`px-4 py-2 border rounded-lg text-sm font-medium disabled:opacity-50 ${THEME_COLORS.border.primary200} ${THEME_COLORS.hover.primary100}`}
+                  >
+                    Next
                   </button>
                 </div>
               </div>
             </div>
-
-            {/* Service Description - Takes 1/3 of the space */}
-            <div className="xl:col-span-1">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 sticky top-6">
-                <h3 className="text-2xl font-semibold text-gray-800 mb-6">Service Details</h3>
-                
-                {/* Service Header */}
-                <div className="bg-blue-600 rounded-xl p-4 text-white mb-6">
-                  <div className="flex items-center space-x-3 mb-2">
-                    {selectedCategory && getPlatformIcon(selectedCategory.category_title)}
-                    <h4 className="font-medium text-lg">Service</h4>
-                  </div>
-                  <p className="text-base opacity-90">{selectedService?.service_title || "Select a service"}</p>
-                </div>
-
-                {/* Service Metrics */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <h5 className="text-sm font-medium text-gray-600 mb-2">Start Time</h5>
-                    <p className="text-base text-gray-800">{metrics?.startTime || "--"}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <h5 className="text-sm font-medium text-gray-600 mb-2">Speed</h5>
-                    <p className="text-base text-gray-800">{metrics?.speed || "--"}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <h5 className="text-sm font-medium text-gray-600 mb-2">Avg. Time</h5>
-                    <p className="text-base text-gray-800 font-medium">{metrics?.avgTime || "--"}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <h5 className="text-sm font-medium text-gray-600 mb-2">Guarantee</h5>
-                    <p className="text-base text-gray-800">{metrics?.guarantee || "--"}</p>
-                  </div>
-                </div>
-
-                {/* Service Description */}
-                <div>
-                  <h5 className="text-lg font-medium text-gray-600 mb-4">Description</h5>
-                  <div className="text-base text-gray-700 space-y-3">
-                    <p className="font-medium">
-                      {selectedService?.description || "Select a service to view detailed description and features."}
-                    </p>
-                    {!selectedService?.description && (
-                      <>
-                        <p>⚡ High-quality service delivery with guaranteed results</p>
-                        <p>🛡️ 30-day guarantee on all orders with free refills</p>
-                        <p>🚀 Fast and reliable delivery with real-time updates</p>
-                        <p>💯 100% customer satisfaction guaranteed</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-export default NewOrder
+export default OrderHistory
