@@ -142,9 +142,20 @@ const OrderHistory = () => {
       else setLoading(true)
 
       const payload = buildRequestPayload(page)
+      console.log('🔄 Fetching orders with payload:', payload)
+      
       const response = await fetchOrderHistory(payload)
-
+      console.log('📦 API Response:', response)
+      
       const incoming = response.data || []
+      console.log('📊 Incoming orders data:', incoming)
+
+      // Debug: Check first order structure
+      if (incoming.length > 0) {
+        console.log('🔍 First order structure:', incoming[0])
+        console.log('📋 Available fields:', Object.keys(incoming[0]))
+      }
+
       const newOrders = append ? [...orders, ...incoming] : incoming
 
       setOrders(newOrders)
@@ -157,6 +168,8 @@ const OrderHistory = () => {
         lastPage: response.meta?.last_page || 1,
       })
     } catch (error) {
+      console.error('❌ Error fetching orders:', error)
+      console.error('📄 Error response:', error.response)
       toast.error(error.response?.data?.message || error.message || "Failed to fetch orders")
     } finally {
       setLoading(false)
@@ -279,21 +292,35 @@ const OrderHistory = () => {
   // mobile table columns configuration
   const mobileColumns = [
     { key: "id", label: "ID", className: "font-semibold" },
-    { key: "created_at", label: "Date", render: (order) => formatDate(order.created_at) },
+    { 
+      key: "created_at", 
+      label: "Date", 
+      render: (order) => formatDate(order.created_at) 
+    },
     {
-      key: "service_id",
-      label: "Service ID",
-      render: (order) => order.service_id || "N/A",
+      key: "service_name",
+      label: "Service",
+      render: (order) => order.service_name || order.service_id || "N/A",
     },
     {
       key: "status",
       label: "Status",
       render: (order) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>{order.status}</span>
+        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+          {order.status}
+        </span>
       ),
     },
-    { key: "price", label: "Price", render: (order) => formatPrice(order.price) },
-    { key: "quantity", label: "Quantity", render: (order) => order.quantity || 0 },
+    { 
+      key: "price", 
+      label: "Price", 
+      render: (order) => formatPrice(order.price) 
+    },
+    { 
+      key: "quantity", 
+      label: "Quantity", 
+      render: (order) => order.quantity || 0 
+    },
   ]
 
   /* ---------- small skeleton helpers ---------- */
@@ -387,7 +414,9 @@ const OrderHistory = () => {
                     {mobileColumns.map((column) => (
                       <div key={column.key} className="space-y-1">
                         <div className="text-xs text-gray-500">{column.label}</div>
-                        <div className={column.className}>{column.render ? column.render(order) : order[column.key]}</div>
+                        <div className={column.className}>
+                          {column.render ? column.render(order) : order[column.key]}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -562,15 +591,11 @@ const OrderHistory = () => {
               <div className="col-span-1 cursor-pointer" onClick={() => setSorting("id")}>
                 ID {sortBy === "id" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
               </div>
-              <div className="col-span-1 cursor-pointer" onClick={() => setSorting("user_id")}>
-                User ID {sortBy === "user_id" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
-              </div>
+              <div className="col-span-1">User ID</div>
               <div className="col-span-1 cursor-pointer" onClick={() => setSorting("created_at")}>
                 Date {sortBy === "created_at" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
               </div>
-              <div className="col-span-1 cursor-pointer" onClick={() => setSorting("service_id")}>
-                Service {sortBy === "service_id" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
-              </div>
+              <div className="col-span-1">Service</div>
               <div className="col-span-2">Link</div>
               <div className="col-span-1 cursor-pointer" onClick={() => setSorting("price")}>
                 Price {sortBy === "price" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
@@ -602,7 +627,9 @@ const OrderHistory = () => {
                     <div className="col-span-1 font-medium">{order.id}</div>
                     <div className="col-span-1">{order.user_id}</div>
                     <div className="col-span-1 text-gray-600 text-xs">{formatDate(order.created_at)}</div>
-                    <div className="col-span-1">{order.service_id}</div>
+                    <div className="col-span-1" title={order.service_name}>
+                      {order.service_name || order.service_id}
+                    </div>
                     <div className="col-span-2 flex items-center">
                       <a href={order.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate text-xs" title={order.link}>
                         {order.link?.substring(0, 25)}...
@@ -612,7 +639,9 @@ const OrderHistory = () => {
                     <div className="col-span-1">{order.quantity}</div>
                     <div className="col-span-1">{order.start_counter || 0}</div>
                     <div className="col-span-1">
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>{order.status}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
                     </div>
                     <div className="col-span-1">{order.remains !== null ? order.remains : "N/A"}</div>
                     <div className="col-span-1">
