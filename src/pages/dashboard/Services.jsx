@@ -41,13 +41,30 @@ const Services = () => {
           fetchRecommendedServices()
         ])
         
-        setCategories(categoriesRes)
-        setNewServices(newServicesRes.data || [])
-        setRecommendedServices(recommendedRes.data || [])
+        // Handle categories response - can be array or object with data
+        const categoriesData = Array.isArray(categoriesRes?.data) 
+          ? categoriesRes.data 
+          : (Array.isArray(categoriesRes) ? categoriesRes : [])
+        setCategories(categoriesData || [])
+        
+        // Handle services responses - extract data from response
+        const newServicesData = Array.isArray(newServicesRes?.data) 
+          ? newServicesRes.data 
+          : (Array.isArray(newServicesRes) ? newServicesRes : [])
+        setNewServices(newServicesData || [])
+        
+        const recommendedData = Array.isArray(recommendedRes?.data) 
+          ? recommendedRes.data 
+          : (Array.isArray(recommendedRes) ? recommendedRes : [])
+        setRecommendedServices(recommendedData || [])
         
       } catch (error) {
         console.error("Error fetching data:", error)
-        setError(error.message || 'Failed to fetch data')
+        setError(error.response?.data?.message || error.message || 'Failed to fetch data')
+        // Set empty arrays on error to prevent crashes
+        setCategories([])
+        setNewServices([])
+        setRecommendedServices([])
       } finally {
         setIsLoading(false)
       }
@@ -57,6 +74,9 @@ const Services = () => {
   }, [])
 
   const getPlatformIcon = (platform) => {
+    if (!platform) return <Star className="w-4 h-4 text-gray-500" />
+    
+    const platformLower = platform.toLowerCase()
     const icons = {
       instagram: <MessageCircle className="w-4 h-4 text-pink-500" />,
       tiktok: <Play className="w-4 h-4 text-black" />,
@@ -65,12 +85,29 @@ const Services = () => {
       youtube: <Play className="w-4 h-4 text-red-500" />,
       telegram: <MessageCircle className="w-4 h-4 text-blue-500" />,
     }
-    return icons[platform] || <Star className="w-4 h-4 text-gray-500" />
+    
+    // Try to match by slug or category title
+    for (const [key, icon] of Object.entries(icons)) {
+      if (platformLower.includes(key)) {
+        return icon
+      }
+    }
+    
+    return <Star className="w-4 h-4 text-gray-500" />
   }
 
   const filteredServices = [...newServices, ...recommendedServices].filter((service) => {
-    const matchesSearch = service.service_title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || service.category?.slug === selectedCategory
+    const matchesSearch = service.service_title?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
+    let matchesCategory = true
+    
+    if (selectedCategory !== "all") {
+      const serviceCategorySlug = service.category?.slug || 
+                                   service.category?.category_title?.toLowerCase().replace(/\s+/g, '-') ||
+                                   ''
+      matchesCategory = serviceCategorySlug === selectedCategory || 
+                       service.category?.category_title?.toLowerCase().includes(selectedCategory.replace(/-/g, ' '))
+    }
+    
     return matchesSearch && matchesCategory
   })
 
@@ -136,8 +173,8 @@ const Services = () => {
               >
                 <option value="all">🌟 All Services</option>
                 {categories.map((category) => (
-                  <option key={category.id} value={category.slug}>
-                    {category.icon} {category.name}
+                  <option key={category.id} value={category.slug || category.category_title?.toLowerCase().replace(/\s+/g, '-')}>
+                    {category.icon || '📱'} {category.name || category.category_title}
                   </option>
                 ))}
               </select>
@@ -218,22 +255,16 @@ const Services = () => {
                       <td className="py-3 px-4">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            {getPlatformIcon(service.category?.slug)}
+                            {getPlatformIcon(service.category?.slug || service.category?.category_title || service.category?.name)}
                             <span className="font-medium text-gray-900 line-clamp-2">
                               {service.service_title}
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-1">
-                            {service.features?.map((feature, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
-                              >
-                                {feature}
+                            {service.description && (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs line-clamp-1">
+                                {service.description.length > 50 ? `${service.description.substring(0, 50)}...` : service.description}
                               </span>
-                            ))}
-                            {service.is_new && (
-                              <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">NEW</span>
                             )}
                           </div>
                         </div>
@@ -300,26 +331,21 @@ const Services = () => {
                       <td className="py-3 px-4">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            {getPlatformIcon(service.category?.slug)}
+                            {getPlatformIcon(service.category?.slug || service.category?.category_title || service.category?.name)}
                             <span className="font-medium text-gray-900 line-clamp-2">
                               {service.service_title}
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-1">
-                            {service.features?.map((feature, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs"
-                              >
-                                {feature}
-                              </span>
-                            ))}
-                            {service.is_recommended && (
-                              <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs flex items-center">
-                                <TrendingUp className="w-3 h-3 mr-1" />
-                                RECOMMENDED
+                            {service.description && (
+                              <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs line-clamp-1">
+                                {service.description.length > 50 ? `${service.description.substring(0, 50)}...` : service.description}
                               </span>
                             )}
+                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs flex items-center">
+                              <TrendingUp className="w-3 h-3 mr-1" />
+                              RECOMMENDED
+                            </span>
                           </div>
                         </div>
                       </td>

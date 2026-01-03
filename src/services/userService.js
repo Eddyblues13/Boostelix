@@ -60,33 +60,50 @@ export const fetchOrderHistory = async ({ status, search, page }) => {
 
 
 export const fetchSmmCategories = async () => {
-  const response = await api.get('/all-smm-categories');
-  return response;
+  try {
+    const response = await api.get('/all-smm-categories');
+    // Return data directly if it's an array, otherwise return response
+    if (Array.isArray(response.data)) {
+      return { data: response.data };
+    }
+    return response;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
 }
-
-
 
 export const fetchNewServices = async () => {
   try {
     const response = await api.get('/all-smm-services', {
-    
+      params: {
+        is_new: true,
+        sort: 'newest'
+      }
     });
+    // Handle response structure
     return response;
   } catch (error) {
     console.error('Error fetching new services:', error);
-    throw error;
+    // Return empty data structure on error
+    return { data: [] };
   }
 };
 
 export const fetchRecommendedServices = async () => {
   try {
     const response = await api.get('/all-smm-services', {
-  
+      params: {
+        is_recommended: true,
+        sort: 'popular'
+      }
     });
+    // Handle response structure
     return response;
   } catch (error) {
     console.error('Error fetching recommended services:', error);
-    throw error;
+    // Return empty data structure on error
+    return { data: [] };
   }
 };
 
