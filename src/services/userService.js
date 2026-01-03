@@ -114,7 +114,8 @@ export const fetchAffiliateData = async () => {
     return response.data;
   } catch (error) {
     console.error('Affiliate fetch error:', error.response?.data || error.message);
-    throw error;
+    // Return empty data instead of throwing to prevent UI crashes
+    return { has_program: false };
   }
 };
 
@@ -134,17 +135,28 @@ export const fetchAffiliateStats = async () => {
     return response.data;
   } catch (error) {
     console.error('Affiliate stats fetch error:', error.response?.data || error.message);
-    throw error;
+    // Return empty stats instead of throwing
+    return {
+      visits: 0,
+      registrations: 0,
+      referrals: 0,
+      conversion_rate: 0,
+      total_earnings: 0,
+      available_earnings: 0
+    };
   }
 };
 
 export const fetchAffiliatePayouts = async () => {
   try {
     const response = await api.get('/affiliate/payouts');
-    return response.data;
+    const data = response.data;
+    // Handle both array and object responses
+    return Array.isArray(data) ? data : (data?.data || []);
   } catch (error) {
     console.error('Affiliate payouts fetch error:', error.response?.data || error.message);
-    throw error;
+    // Return empty array instead of throwing
+    return [];
   }
 };
 

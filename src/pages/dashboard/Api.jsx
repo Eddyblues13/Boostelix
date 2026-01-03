@@ -33,27 +33,43 @@ function API() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [userResponse, servicesResponse] = await Promise.all([
-          fetchUserData(),
-          fetchSmmServices()
-        ]);
-
-        const storedApiKey = localStorage.getItem('api_key');
+        const userResponse = await fetchUserData();
+        const storedApiKey = localStorage.getItem('api_key') || userResponse?.data?.api_key || userResponse?.api_key;
+        
         if (storedApiKey) {
           setApiKey(storedApiKey);
+          localStorage.setItem('api_key', storedApiKey);
+          
           // Update test config with the API key
-          setTestConfig(prev => ({
-            ...prev,
-            params: JSON.stringify({ ...JSON.parse(prev.params), key: storedApiKey }, null, 2)
-          }));
-        }
-
-        if (servicesResponse) {
-          setServices(servicesResponse);
+          setTestConfig(prev => {
+            try {
+              const currentParams = JSON.parse(prev.params || '{}');
+              return {
+                ...prev,
+                params: JSON.stringify({ ...currentParams, key: storedApiKey }, null, 2)
+              };
+            } catch (e) {
+              return {
+                ...prev,
+                params: JSON.stringify({ key: storedApiKey }, null, 2)
+              };
+            }
+          });
+          
+          // Try to fetch services if we have an API key
+          try {
+            const servicesResponse = await fetchSmmServices();
+            if (servicesResponse && Array.isArray(servicesResponse) && servicesResponse.length > 0) {
+              setServices(servicesResponse);
+            }
+          } catch (servicesError) {
+            console.warn("Could not load services:", servicesError);
+            // Don't show error toast for services, as API key might not be generated yet
+          }
         }
       } catch (error) {
         console.error("Error loading initial data:", error);
-        toast.error("Failed to load API data");
+        // Don't show error toast on initial load - user might not have API key yet
       } finally {
         setLoading(prev => ({ ...prev, initial: false }));
       }
@@ -66,16 +82,45 @@ function API() {
     try {
       setLoading(prev => ({ ...prev, generateKey: true }));
       const response = await generateApiKey();
-      setApiKey(response.api_key);
-      localStorage.setItem('api_key', response.api_key);
+      const newApiKey = response.api_key || response.data?.api_key;
+      
+      if (!newApiKey) {
+        throw new Error("API key not received from server");
+      }
+      
+      setApiKey(newApiKey);
+      localStorage.setItem('api_key', newApiKey);
+      
       // Update test config with the new API key
-      setTestConfig(prev => ({
-        ...prev,
-        params: JSON.stringify({ ...JSON.parse(prev.params), key: response.api_key }, null, 2)
-      }));
+      setTestConfig(prev => {
+        try {
+          const currentParams = JSON.parse(prev.params || '{}');
+          return {
+            ...prev,
+            params: JSON.stringify({ ...currentParams, key: newApiKey }, null, 2)
+          };
+        } catch (e) {
+          return {
+            ...prev,
+            params: JSON.stringify({ key: newApiKey }, null, 2)
+          };
+        }
+      });
+      
+      // Try to fetch services after generating key
+      try {
+        const servicesResponse = await fetchSmmServices({ key: newApiKey });
+        if (servicesResponse && Array.isArray(servicesResponse) && servicesResponse.length > 0) {
+          setServices(servicesResponse);
+        }
+      } catch (servicesError) {
+        console.warn("Could not load services:", servicesError);
+      }
+      
       toast.success("API key generated successfully");
     } catch (error) {
-      toast.error(error.message || "Failed to generate API key");
+      console.error("API key generation error:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to generate API key");
     } finally {
       setLoading(prev => ({ ...prev, generateKey: false }));
     }
@@ -112,13 +157,20 @@ function API() {
           response = await checkOrderStatus(params.order);
           break;
         case '/orders/multi-status':
-          response = await checkMultiOrderStatus(params.orders.split(','));
+          response = await checkMultiOrderStatus(params.orders?.split(',') || []);
           break;
         case '/refill':
           response = await requestRefill(params.order);
           break;
         case '/balance':
           response = await getApiBalance();
+          break;
+        case '/orders/history':
+          response = await fetchApiOrderHistory({
+            status: params.status,
+            search: params.search,
+            page: params.page || 1
+          });
           break;
         default:
           throw new Error("Invalid endpoint");
@@ -184,12 +236,121 @@ function API() {
         { param: "service", desc: "Service ID" },
         { param: "link", desc: "Target URL" },
         { param: "quantity", desc: "Order quantity" },
-        { param: "runs", desc: "Runs (optional)" },
-        { param: "interval", desc: "Interval in minutes (optional)" },
+        { param: "runs", desc: "Runs (optional, for drip feed)" },
+        { param: "interval", desc: "Interval in minutes (optional, for drip feed)" },
+        { param: "drip_feed", desc: "Enable drip feed (optional, boolean)" },
       ],
       exampleResponse: {
         order: 12345,
         provider_order_id: "provider_123"
+      },
+    },
+    {
+      title: "Check Order Status",
+      type: "endpoint",
+      endpoint: "/orders/status",
+      action: "status",
+      parameters: [
+        { param: "key", desc: "Your API key" },
+        { param: "action", desc: "status" },
+        { param: "order", desc: "Order ID" },
+      ],
+      exampleResponse: {
+        charge: 10.50,
+        start_count: 1000,
+        status: "completed",
+        status_description: "Order completed successfully",
+        remains: 0,
+        currency: "USD",
+        provider_order_id: "provider_123"
+      },
+    },
+    {
+      title: "Check Multiple Orders Status",
+      type: "endpoint",
+      endpoint: "/orders/multi-status",
+      action: "multi-status",
+      parameters: [
+        { param: "key", desc: "Your API key" },
+        { param: "action", desc: "multi-status" },
+        { param: "orders", desc: "Comma-separated order IDs (e.g., '123,456,789')" },
+      ],
+      exampleResponse: {
+        "123": {
+          charge: 10.50,
+          start_count: 1000,
+          status: "completed",
+          remains: 0,
+          currency: "USD"
+        },
+        "456": {
+          charge: 25.00,
+          start_count: 500,
+          status: "in progress",
+          remains: 300,
+          currency: "USD"
+        }
+      },
+    },
+    {
+      title: "Get Balance",
+      type: "endpoint",
+      endpoint: "/balance",
+      action: "balance",
+      parameters: [
+        { param: "key", desc: "Your API key" },
+        { param: "action", desc: "balance" },
+      ],
+      exampleResponse: {
+        balance: 150.75,
+        currency: "USD"
+      },
+    },
+    {
+      title: "Request Refill",
+      type: "endpoint",
+      endpoint: "/refill",
+      action: "refill",
+      parameters: [
+        { param: "key", desc: "Your API key" },
+        { param: "action", desc: "refill" },
+        { param: "order", desc: "Order ID" },
+      ],
+      exampleResponse: {
+        refill: 12345,
+        provider_refill_id: "refill_123"
+      },
+    },
+    {
+      title: "Order History",
+      type: "endpoint",
+      endpoint: "/orders/history",
+      action: "history",
+      parameters: [
+        { param: "key", desc: "Your API key" },
+        { param: "action", desc: "history" },
+        { param: "status", desc: "Filter by status (optional)" },
+        { param: "search", desc: "Search term (optional)" },
+        { param: "page", desc: "Page number (optional, default: 1)" },
+      ],
+      exampleResponse: {
+        data: [
+          {
+            id: 123,
+            service_id: 5,
+            link: "https://example.com",
+            quantity: 1000,
+            price: 10.50,
+            status: "completed",
+            created_at: "2024-01-01T00:00:00Z"
+          }
+        ],
+        meta: {
+          current_page: 1,
+          last_page: 5,
+          per_page: 20,
+          total: 100
+        }
       },
     },
   ];
@@ -324,11 +485,34 @@ function API() {
               <label className="block text-sm md:text-base font-medium text-gray-700 mb-1">Endpoint</label>
               <select
                 value={testConfig.endpoint}
-                onChange={(e) => setTestConfig(prev => ({
-                  ...prev,
-                  endpoint: e.target.value,
-                  params: JSON.stringify({ action: apiSections.find(s => s.endpoint === e.target.value)?.action }, null, 2)
-                }))}
+                onChange={(e) => {
+                  const selectedSection = apiSections.find(s => s.endpoint === e.target.value);
+                  const defaultParams = { 
+                    key: apiKey || "",
+                    action: selectedSection?.action || ""
+                  };
+                  
+                  // Add endpoint-specific default params
+                  if (e.target.value === '/orders') {
+                    defaultParams.service = "";
+                    defaultParams.link = "";
+                    defaultParams.quantity = "";
+                  } else if (e.target.value === '/orders/status' || e.target.value === '/refill') {
+                    defaultParams.order = "";
+                  } else if (e.target.value === '/orders/multi-status') {
+                    defaultParams.orders = "";
+                  } else if (e.target.value === '/orders/history') {
+                    defaultParams.page = 1;
+                    defaultParams.status = "";
+                    defaultParams.search = "";
+                  }
+                  
+                  setTestConfig(prev => ({
+                    ...prev,
+                    endpoint: e.target.value,
+                    params: JSON.stringify(defaultParams, null, 2)
+                  }));
+                }}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-sm md:text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
               >
                 {apiSections.filter(s => s.type === "endpoint").map((section, idx) => (

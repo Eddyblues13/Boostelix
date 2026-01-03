@@ -43,7 +43,8 @@ const Affiliate = () => {
     referrals: 0,
     conversion_rate: 0,
     total_earnings: 0,
-    available_earnings: 0
+    available_earnings: 0,
+    paid_earnings: 0
   })
 
   const loadData = async () => {
@@ -57,9 +58,22 @@ const Affiliate = () => {
         fetchAffiliateStats()
       ])
       
-      setAffiliateData(affiliateRes)
-      setPayouts(payoutsRes)
-      setStats(statsRes)
+      // Handle response structures
+      const affiliateData = affiliateRes?.data || affiliateRes || {}
+      const payoutsData = payoutsRes?.data || (Array.isArray(payoutsRes) ? payoutsRes : [])
+      const statsData = statsRes?.data || statsRes || {}
+      
+      setAffiliateData(affiliateData)
+      setPayouts(Array.isArray(payoutsData) ? payoutsData : [])
+      setStats({
+        visits: Number(statsData.visits) || 0,
+        registrations: Number(statsData.registrations) || 0,
+        referrals: Number(statsData.referrals) || 0,
+        conversion_rate: Number(statsData.conversion_rate) || 0,
+        total_earnings: Number(statsData.total_earnings) || 0,
+        available_earnings: Number(statsData.available_earnings) || 0,
+        paid_earnings: Number(statsData.paid_earnings) || 0
+      })
     } catch (err) {
       setError(err.message || "Failed to load data")
       toast.error(err.message || "Failed to load data")
@@ -73,8 +87,8 @@ const Affiliate = () => {
   }, [])
 
   const referralLink = affiliateData?.referral_link || ""
-  const commissionRate = affiliateData?.commission_rate || 0
-  const minimumPayout = affiliateData?.minimum_payout || 0
+  const commissionRate = Number(affiliateData?.commission_rate) || 0
+  const minimumPayout = Number(affiliateData?.minimum_payout) || 0
 
   const copyReferralLink = async () => {
     try {
@@ -107,12 +121,25 @@ const Affiliate = () => {
   const handleGenerateLink = async () => {
     try {
       setIsLoading(true)
-      const data = await generateAffiliateLink()
-      setAffiliateData(data)
-      toast.success('Affiliate program created successfully!')
+      const response = await generateAffiliateLink()
+      const data = response?.data || response || {}
+      
+      setAffiliateData({
+        has_program: true,
+        referral_link: data.referral_link,
+        commission_rate: data.commission_rate || 4.0,
+        minimum_payout: data.minimum_payout || 2000.00,
+        referral_code: data.referral_code
+      })
+      
+      toast.success(response?.message || data?.message || 'Affiliate program created successfully!')
+      
+      // Refresh data
+      await loadData()
     } catch (err) {
-      setError(err.message || "Failed to generate link")
-      toast.error(err.message || "Failed to generate link")
+      const errorMsg = err.response?.data?.message || err.message || "Failed to generate link"
+      setError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -121,12 +148,14 @@ const Affiliate = () => {
   const handleRequestPayout = async () => {
     try {
       setIsLoading(true)
-      await requestAffiliatePayout()
-      toast.success('Payout request submitted successfully!')
+      const response = await requestAffiliatePayout()
+      const message = response?.message || response?.data?.message || 'Payout request submitted successfully!'
+      toast.success(message)
       await loadData() // Refresh all data
     } catch (err) {
-      setError(err.message || "Failed to request payout")
-      toast.error(err.message || "Failed to request payout")
+      const errorMsg = err.response?.data?.message || err.message || "Failed to request payout"
+      setError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -143,7 +172,7 @@ const Affiliate = () => {
       const headers = ['Date', 'Amount', 'Status', 'Transaction ID']
       const rows = payouts.map(payout => [
         new Date(payout.created_at).toLocaleDateString(),
-        `₦${payout.amount.toLocaleString()}`,
+        `₦${(Number(payout.amount) || 0).toLocaleString()}`,
         payout.status,
         payout.transaction_id || 'N/A'
       ])
@@ -325,17 +354,21 @@ const Affiliate = () => {
                 </div>
 
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">{stats?.conversion_rate?.toFixed(2) || 0}%</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {typeof stats?.conversion_rate === 'number' 
+                      ? stats.conversion_rate.toFixed(2) 
+                      : (Number(stats?.conversion_rate) || 0).toFixed(2)}%
+                  </div>
                   <div className="text-sm text-gray-600">Conversion Rate</div>
                 </div>
 
                 <div className="text-center p-4 bg-emerald-50 rounded-lg">
-                  <div className="text-2xl font-bold text-emerald-600">₦{(stats?.total_earnings || 0).toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-emerald-600">₦{(Number(stats?.total_earnings) || 0).toLocaleString()}</div>
                   <div className="text-sm text-gray-600">Total Earnings</div>
                 </div>
 
                 <div className="text-center p-4 bg-indigo-50 rounded-lg">
-                  <div className="text-2xl font-bold text-indigo-600">₦{(stats?.available_earnings || 0).toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-indigo-600">₦{(Number(stats?.available_earnings) || 0).toLocaleString()}</div>
                   <div className="text-sm text-gray-600">Available Earnings</div>
                 </div>
               </div>
@@ -360,7 +393,7 @@ const Affiliate = () => {
                     </button>
                     <button
                       onClick={handleRequestPayout}
-                      disabled={isLoading || (stats?.available_earnings || 0) < minimumPayout}
+                      disabled={isLoading || (Number(stats?.available_earnings) || 0) < Number(minimumPayout)}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium disabled:opacity-50"
                     >
                       {isLoading ? 'Processing...' : 'Request Payout'}
@@ -383,7 +416,7 @@ const Affiliate = () => {
                         payouts.map((payout, index) => (
                           <tr key={index} className="border-b hover:bg-gray-50">
                             <td className="py-3 px-4">{new Date(payout.created_at).toLocaleDateString()}</td>
-                            <td className="py-3 px-4 font-semibold text-green-600">₦{payout.amount.toLocaleString()}</td>
+                            <td className="py-3 px-4 font-semibold text-green-600">₦{(Number(payout.amount) || 0).toLocaleString()}</td>
                             <td className="py-3 px-4">
                               <span
                                 className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${

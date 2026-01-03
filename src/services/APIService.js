@@ -3,9 +3,10 @@ import api from "./api";
 // API Key Management
 export const generateApiKey = async () => {
   try {
-    const response = await api.post('/v2/generate-key');
+    const response = await api.post('/v2/generate-key', {});
     return response.data;
   } catch (error) {
+    console.error('API key generation error:', error);
     throw error.response?.data || error;
   }
 };
@@ -13,13 +14,26 @@ export const generateApiKey = async () => {
 // Service Methods
 export const fetchSmmServices = async (params = {}) => {
   try {
+    const apiKey = params.key || localStorage.getItem('api_key');
+    if (!apiKey) {
+      throw new Error('API key is required');
+    }
+    
     const response = await api.post('/v2/services', {
-      key: localStorage.getItem('api_key'),
+      key: apiKey,
       action: 'services',
       ...params
     });
-    return response.data;
+    
+    // Handle array response directly
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    
+    // Handle object with data property
+    return response.data?.data || response.data || [];
   } catch (error) {
+    console.error('Error fetching services:', error);
     throw error.response?.data || error;
   }
 };
