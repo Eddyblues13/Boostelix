@@ -271,8 +271,18 @@ export const createServiceUpdate = async (updateData) => {
 
 
 export const ServiceUpdateHistory = async () => {
-  const response = await api.get('/admin/service-updates-history')
-  return response.data
+  try {
+    const response = await api.get('/admin/service-update-history')
+    // Handle both wrapped and direct data responses
+    return {
+      data: response.data?.data || response.data || []
+    }
+  } catch (error) {
+    console.error('Error fetching service update history:', error);
+    return {
+      data: []
+    }
+  }
 }
 
 

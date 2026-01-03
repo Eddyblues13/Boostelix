@@ -101,6 +101,22 @@ CREATE TABLE IF NOT EXISTS `general_notifications` (
   CONSTRAINT `general_notifications_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Step 8: Create service_updates table (if it doesn't exist)
+CREATE TABLE IF NOT EXISTS `service_updates` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `service` VARCHAR(255) NOT NULL,
+  `details` TEXT NOT NULL,
+  `date` DATE NOT NULL,
+  `update` TEXT NOT NULL,
+  `category` VARCHAR(255) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `service_updates_date_index` (`date`),
+  KEY `service_updates_category_index` (`category`),
+  KEY `service_updates_created_at_index` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================
 -- END OF SQL UPDATES
 -- ============================================

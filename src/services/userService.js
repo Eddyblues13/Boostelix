@@ -6,8 +6,18 @@ export const fetchUserData = async () => {
 
 
 export const fetchAllUpdates = async () => {
-    const response = await api.get("/updates");
-     return response;
+    try {
+        const response = await api.get("/updates");
+        // Handle both wrapped and direct data responses
+        return {
+            data: response.data?.data || response.data || []
+        };
+    } catch (error) {
+        console.error('Error fetching updates:', error);
+        return {
+            data: []
+        };
+    }
 }
 
 export const initiatePayment = async (paymentData) => {

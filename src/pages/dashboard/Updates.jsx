@@ -79,10 +79,19 @@ function Updates() {
     const fetchUpdates = async () => {
       try {
         setLoading(true)
+        setError(null)
         const response = await fetchAllUpdates()
-        setUpdates(response.data)
+        
+        // Handle different response formats
+        const updatesData = Array.isArray(response?.data) 
+          ? response.data 
+          : (response?.data?.data || [])
+        
+        setUpdates(updatesData || [])
       } catch (err) {
-        setError(err.message || "Something went wrong")
+        console.error('Error fetching updates:', err)
+        setError(err?.response?.data?.message || err.message || "Failed to load updates")
+        setUpdates([])
       } finally {
         setLoading(false)
       }
@@ -102,11 +111,20 @@ function Updates() {
   ]
 
   const filteredUpdates = updates.filter((update) => {
-    const matchesSearch =
-      update.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      update.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      update.update.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesFilter = selectedFilter === "all" || update.category === selectedFilter
+    if (!update) return false
+    
+    const service = (update.service || '').toLowerCase()
+    const details = (update.details || '').toLowerCase()
+    const updateText = (update.update || '').toLowerCase()
+    const category = (update.category || '').toLowerCase()
+    
+    const matchesSearch = searchTerm === '' || 
+      service.includes(searchTerm.toLowerCase()) ||
+      details.includes(searchTerm.toLowerCase()) ||
+      updateText.includes(searchTerm.toLowerCase())
+    
+    const matchesFilter = selectedFilter === "all" || category === selectedFilter.toLowerCase()
+    
     return matchesSearch && matchesFilter
   })
 
@@ -204,20 +222,24 @@ function Updates() {
                     key={update.id}
                     className="flex flex-col md:grid md:grid-cols-3 gap-3 p-4 rounded-xl bg-white hover:bg-gray-50 transition-colors border border-gray-100"
                   >
-                    <div className="space-y-1">
-                      <h3 className="font-medium text-gray-900">{update.service}</h3>
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-gray-900 text-sm md:text-base">{update.service || 'N/A'}</h3>
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
                           categoryColors[update.category] || "bg-gray-100 text-gray-700"
                         }`}
                       >
-                        {update.category}
+                        {update.category || 'Uncategorized'}
                       </span>
-                      <p className="text-xs md:text-sm text-gray-500">{update.details}</p>
+                      {update.details && (
+                        <p className="text-xs md:text-sm text-gray-600 line-clamp-2">{update.details}</p>
+                      )}
                     </div>
-                    <div className="text-sm text-gray-500 md:self-center">{update.date}</div>
+                    <div className="text-xs md:text-sm text-gray-500 md:self-center">
+                      {update.date ? new Date(update.date).toLocaleDateString() : 'N/A'}
+                    </div>
                     <div className="text-sm md:text-base text-gray-900 font-medium md:self-center">
-                      {update.update}
+                      {update.update || 'N/A'}
                     </div>
                   </div>
                 ))
