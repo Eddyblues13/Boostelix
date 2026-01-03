@@ -57,23 +57,23 @@ const PlatformGrid = ({ isMobile = false }) => {
 
   if (isMobile) {
     return (
-      <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Popular Platforms</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
+      <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-5">Popular Platforms</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4">
           {socialPlatforms.slice(0, 6).map((platform, index) => {
             const IconComponent = platform.icon
             return (
               <div
                 key={index}
-                className="bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3 text-center hover:scale-105 transition-all duration-200 cursor-pointer border border-gray-100"
+                className="bg-gray-50 rounded-xl p-3 sm:p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer border border-gray-100"
               >
                 <div
-                  className="w-7 h-7 sm:w-8 sm:h-8 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-white"
+                  className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 rounded-full flex items-center justify-center text-white shadow-sm"
                   style={{ backgroundColor: platform.bgColor }}
                 >
-                  <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-700 truncate leading-tight">{platform.name}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-700 truncate leading-tight">{platform.name}</p>
               </div>
             )
           })}

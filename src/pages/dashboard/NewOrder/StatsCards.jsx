@@ -5,34 +5,34 @@ const StatsCards = ({ user, formattedBalance, selectedCurrency }) => {
   return (
     <>
       {/* Mobile Stats Cards */}
-      <div className="lg:hidden grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-        <div className="bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-3 md:p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-2">
-            <div className="text-xl sm:text-2xl md:text-3xl flex-shrink-0">💰</div>
+      <div className="lg:hidden grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0">💰</div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-xs text-gray-500">Balance</p>
-              <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-800 truncate leading-tight">{formattedBalance}</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mb-1">Balance</p>
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 truncate leading-tight">{formattedBalance}</h3>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-3 md:p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-2">
-            <div className="text-xl sm:text-2xl md:text-3xl flex-shrink-0">👑</div>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0">👑</div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-xs text-gray-500">Status</p>
-              <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-800 truncate leading-tight">{user?.status || "NEW"}</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mb-1">Status</p>
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 truncate leading-tight">{user?.status || "NEW"}</h3>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-3 md:p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-2">
-            <div className="text-xl sm:text-2xl md:text-3xl flex-shrink-0">👤</div>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0">👤</div>
             <div className="min-w-0 flex-1 overflow-hidden">
-              <p className="text-[10px] sm:text-xs text-gray-500">Username</p>
+              <p className="text-xs sm:text-sm text-gray-500 mb-1">Username</p>
               <h3 
-                className="text-sm sm:text-base md:text-lg font-bold text-gray-800 truncate break-words leading-tight"
+                className="text-base sm:text-lg md:text-xl font-bold text-gray-800 truncate break-words leading-tight"
                 title={user?.username || "loading.."}
               >
                 {user?.username || "loading.."}
@@ -41,12 +41,12 @@ const StatsCards = ({ user, formattedBalance, selectedCurrency }) => {
           </div>
         </div>
         
-        <div className="bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-3 md:p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-2">
-            <div className="text-xl sm:text-2xl md:text-3xl flex-shrink-0">📦</div>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0">📦</div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-xs text-gray-500">Orders</p>
-              <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-800 leading-tight">{user?.total_orders || "0"}</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mb-1">Orders</p>
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 leading-tight">{user?.total_orders || "0"}</h3>
             </div>
           </div>
         </div>

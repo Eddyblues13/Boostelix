@@ -18,7 +18,9 @@ import {
   Heart,
   Phone,
   Globe,
+  ShoppingCart,
 } from "lucide-react"
+import { CSS_COLORS } from "../../../components/constant/colors"
 import { fetchUserData } from "../../../services/userService"
 import {
   fetchSmmCategories,
@@ -26,7 +28,7 @@ import {
   createOrder,
   searchServicesFast,
 } from "../../../services/services"
-import { useOutletContext } from "react-router-dom"
+import { useOutletContext, useNavigate } from "react-router-dom"
 
 // Import components
 import StatsCards from "./StatsCards"
@@ -88,6 +90,8 @@ const NewOrder = () => {
   const [isLoadingAllServices, setIsLoadingAllServices] = useState(false)
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
+
+  const navigate = useNavigate()
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -622,13 +626,13 @@ const NewOrder = () => {
   const metrics = getServiceMetrics()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden pb-6 sm:pb-8">
       {/* Order Status Alert */}
       <OrderStatusAlert orderStatus={orderStatus} setOrderStatus={setOrderStatus} />
 
       {/* Mobile Layout */}
       <div className="lg:hidden w-full">
-        <div className="w-full max-w-full px-2 sm:px-4 space-y-4 sm:space-y-6">
+        <div className="w-full max-w-full px-4 sm:px-5 md:px-6 space-y-5 sm:space-y-6">
           {/* Balance Warning */}
           <BalanceWarning
             selectedService={selectedService}
@@ -650,6 +654,25 @@ const NewOrder = () => {
 
           {/* Platform Grid */}
           <PlatformGrid isMobile={true} />
+
+          {/* Action Buttons - Mobile */}
+          <div className="flex gap-2 sm:gap-3">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex-1 text-white py-3 sm:py-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg transition-all duration-200 hover:opacity-90"
+              style={{ backgroundColor: CSS_COLORS.primary }}
+            >
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base">New Order</span>
+            </button>
+            <button
+              onClick={() => navigate('/dashboard/mass-order')}
+              className="flex-1 py-3 sm:py-4 rounded-xl font-medium flex items-center justify-center space-x-2 border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            >
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base">Mass Order</span>
+            </button>
+          </div>
 
           {/* Order Form */}
           <OrderForm
@@ -719,6 +742,25 @@ const NewOrder = () => {
 
           {/* Platform Grid */}
           <PlatformGrid isMobile={false} />
+
+          {/* Action Buttons - Desktop */}
+          <div className="flex gap-4 mb-8">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex-1 text-white py-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg transition-all duration-200 hover:opacity-90"
+              style={{ backgroundColor: CSS_COLORS.primary }}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="text-lg">New Order</span>
+            </button>
+            <button
+              onClick={() => navigate('/dashboard/mass-order')}
+              className="flex-1 py-4 rounded-xl font-medium flex items-center justify-center space-x-2 border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="text-lg">Mass Order</span>
+            </button>
+          </div>
 
           {/* Main Content Area - Order Form & Description */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">

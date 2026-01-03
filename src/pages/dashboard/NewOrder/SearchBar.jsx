@@ -54,24 +54,23 @@ const SearchResultsDropdown = ({
           >
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  {getPlatformIcon(service.category?.category_title || service.categoryName, service.service_title)}
-                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded truncate">
+                <div className="flex items-center space-x-2 mb-1.5">
+                  <span className="text-xs sm:text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded truncate">
                     {service.category?.category_title || service.categoryName || 'Uncategorized'}
                   </span>
                 </div>
-                <h4 className="font-medium text-gray-800 text-sm mb-1 group-hover:text-blue-600 truncate flex items-center gap-2">
+                <h4 className="font-medium text-gray-800 text-sm sm:text-base mb-1 group-hover:text-blue-600 truncate flex items-center gap-2">
                   {getPlatformIcon(service.category?.category_title || service.categoryName, service.service_title)}
                   <span>{service.service_title}</span>
                 </h4>
-                <p className="text-xs text-gray-600 line-clamp-2">
+                <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
                   {service.description || "No description available"}
                 </p>
-                <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2">
-                  <span className="text-xs text-green-600 font-medium">
+                <div className="flex items-center flex-wrap gap-x-3 sm:gap-x-4 gap-y-1.5 mt-2">
+                  <span className="text-xs sm:text-sm text-green-600 font-medium">
                     {formatCurrency ? formatCurrency(convertToSelectedCurrency(service.price * 1000, "NGN"), selectedCurrency) : `₦${(service.price * 1000).toLocaleString()}`} per 1k
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs sm:text-sm text-gray-500">
                     Min: {service.min_amount} | Max: {service.max_amount}
                   </span>
                 </div>
