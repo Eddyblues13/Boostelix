@@ -57,23 +57,23 @@ const PlatformGrid = ({ isMobile = false }) => {
 
   if (isMobile) {
     return (
-      <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Popular Platforms</h2>
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Popular Platforms</h2>
+        <div className="grid grid-cols-4 gap-3">
           {socialPlatforms.slice(0, 4).map((platform, index) => {
             const IconComponent = platform.icon
             return (
               <div
                 key={index}
-                className="bg-gray-50 rounded-lg p-2 sm:p-3 text-center hover:scale-105 transition-all duration-200 cursor-pointer border border-gray-100"
+                className="bg-gray-50 rounded-lg p-3 text-center hover:scale-105 transition-all duration-200 cursor-pointer border border-gray-100"
               >
                 <div
-                  className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1.5 sm:mb-2 rounded-full flex items-center justify-center text-white shadow-sm"
+                  className="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center text-white shadow-sm"
                   style={{ backgroundColor: platform.bgColor }}
                 >
-                  <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <IconComponent className="w-6 h-6" />
                 </div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-700 truncate leading-tight">{platform.name}</p>
+                <p className="text-xs font-medium text-gray-700 truncate leading-tight">{platform.name}</p>
               </div>
             )
           })}
