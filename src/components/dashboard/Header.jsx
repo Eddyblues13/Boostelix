@@ -30,8 +30,8 @@ const Header = ({
   }, [])
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-30 mx-4 mt-4 rounded-2xl shadow-sm">
-      <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-30 mx-2 sm:mx-4 mt-2 sm:mt-4 rounded-xl sm:rounded-2xl shadow-sm">
+      <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
         {/* Left side */}
         <div className="flex items-center space-x-3">
           {/* Hamburger Menu - Mobile only */}
@@ -57,12 +57,12 @@ const Header = ({
         </div>
 
         {/* Right side */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3">
           {/* Currency Dropdown */}
           <div className="relative" ref={currencyRef}>
             <button
               onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
-              className="flex items-center space-x-2 px-3 py-2 rounded-xl border text-sm transition-colors"
+              className="flex items-center space-x-1 sm:space-x-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border text-xs sm:text-sm transition-colors"
               style={{
                 backgroundColor: CSS_COLORS.primaryExtraLight,
                 borderColor: CSS_COLORS.primaryLight,
@@ -121,19 +121,19 @@ const Header = ({
           {/* ⚙️ Settings */}
           <button
             onClick={() => navigate(`/dashboard/account`)}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-1.5 sm:p-2 rounded-full hover:bg-gray-100 transition-colors"
           >
-            <Settings className="w-5 h-5 text-gray-600" />
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
           </button>
 
           {/* 🚪 Logout */}
           <button
             onClick={onLogout}
-            className="text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors flex items-center space-x-2"
+            className="text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-colors flex items-center space-x-1 sm:space-x-2"
             style={{ backgroundColor: CSS_COLORS.primary }}
           >
-            <LogOut className="w-4 h-4" />
-            <span>Logout</span>
+            <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">Logout</span>
           </button>
         </div>
       </div>

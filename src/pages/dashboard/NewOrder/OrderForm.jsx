@@ -47,12 +47,12 @@ const OrderForm = ({
   isMobile = false
 }) => {
   return (
-    <div className={`bg-white rounded-2xl ${isMobile ? 'p-5' : 'p-6'} shadow-sm border border-gray-100`}>
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold text-gray-800 ${isMobile ? 'mb-6' : 'mb-6'}`}>
+    <div className={`bg-white ${isMobile ? 'rounded-xl p-3 sm:p-4 md:p-5' : 'rounded-2xl p-6'} shadow-sm border border-gray-100`}>
+      <h2 className={`${isMobile ? 'text-lg sm:text-xl' : 'text-2xl'} font-semibold text-gray-800 ${isMobile ? 'mb-4 sm:mb-6' : 'mb-6'}`}>
         Place Your Order
       </h2>
       
-      <div className={`space-y-${isMobile ? '4' : '6'}`}>
+      <div className={`${isMobile ? 'space-y-3 sm:space-y-4' : 'space-y-6'}`}>
         {/* Search Bar */}
         <SearchBar
           searchQuery={searchQuery}
@@ -71,7 +71,7 @@ const OrderForm = ({
         />
 
         {/* Category & Service */}
-        <div className={`grid grid-cols-1 ${!isMobile && 'md:grid-cols-2'} gap-${isMobile ? '4' : '6'}`}>
+        <div className={`grid grid-cols-1 ${!isMobile && 'md:grid-cols-2'} ${isMobile ? 'gap-4' : 'gap-6'}`}>
           <div>
             <label className={`block ${isMobile ? 'text-sm' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2' : 'mb-3'}`}>
               Category
@@ -164,7 +164,7 @@ const OrderForm = ({
         </div>
 
         {/* Link & Quantity */}
-        <div className={`grid grid-cols-1 ${!isMobile && 'md:grid-cols-2'} gap-${isMobile ? '4' : '6'}`}>
+        <div className={`grid grid-cols-1 ${!isMobile && 'md:grid-cols-2'} ${isMobile ? 'gap-4' : 'gap-6'}`}>
           <div>
             <label className={`block ${isMobile ? 'text-sm' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2' : 'mb-3'}`}>
               Link

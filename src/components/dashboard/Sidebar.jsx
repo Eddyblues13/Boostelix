@@ -52,7 +52,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, user }) => {
 
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-64
+          fixed inset-y-0 left-0 z-40 w-64 sm:w-72 lg:w-64
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
           overflow-y-auto text-white
@@ -64,22 +64,22 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, user }) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo & Toggle */}
-          <div className={`p-6 border-b ${THEME_COLORS.border.primary200}`}>
+          <div className={`p-4 sm:p-5 lg:p-6 border-b ${THEME_COLORS.border.primary200}`}>
             <div className="flex items-center justify-between">
-              <span className="font-bold text-white text-lg">boostelix.com</span>
+              <span className="font-bold text-white text-base sm:text-lg truncate">boostelix.com</span>
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className={`p-1 rounded-lg transition-colors ${THEME_COLORS.hover.primary100}`}
+                className={`p-1 rounded-lg transition-colors flex-shrink-0 ${THEME_COLORS.hover.primary100}`}
               >
-                <Menu className="w-5 h-5 text-white" />
+                <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </button>
             </div>
           </div>
 
           {/* User Profile */}
-          <div className={`p-6 border-b ${THEME_COLORS.border.primary200}`}>
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center">
+          <div className={`p-4 sm:p-5 lg:p-6 border-b ${THEME_COLORS.border.primary200}`}>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
                 {user?.avatar ? (
                   <img
                     src={user.avatar || "/placeholder.svg"}
@@ -87,27 +87,27 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, user }) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-blue-600 font-bold text-xl">
+                  <span className="text-blue-600 font-bold text-lg sm:text-xl">
                     {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
                   </span>
                 )}
               </div>
-              <div>
-                <div className="text-white font-medium">{user?.username || "Loading..."}</div>
-                <div className="text-sm text-gray-300">0+</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-white font-medium text-sm sm:text-base truncate">{user?.username || "Loading..."}</div>
+                <div className="text-xs sm:text-sm text-gray-300">0+</div>
               </div>
             </div>
           </div>
 
           {/* Menu Title */}
-          <div className="px-6 py-4">
+          <div className="px-4 sm:px-5 lg:px-6 py-3 sm:py-4">
             <span className="text-xs font-medium text-white/70 uppercase tracking-wider">
               Menu
             </span>
           </div>
 
           {/* Navigation Items */}
-          <nav className="flex-1 px-4 pb-4">
+          <nav className="flex-1 px-2 sm:px-4 pb-4">
             <div className="space-y-1">
               {sidebarItems.map((item, index) => {
                 const isActive = location.pathname === item.to
@@ -115,7 +115,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, user }) => {
                   <NavLink
                     key={index}
                     to={item.to}
-                    className={`relative w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+                    className={`relative w-full flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 group ${
                       isActive
                         ? `${THEME_COLORS.text.primary100} font-semibold`
                         : "text-white hover:bg-blue-100/10 hover:text-white"
@@ -127,13 +127,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, user }) => {
                     }
                   >
                     <item.icon
-                      className={`w-5 h-5 transition-colors ${
+                      className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors flex-shrink-0 ${
                         isActive
                           ? THEME_COLORS.text.primary100
                           : "text-white/70 group-hover:text-white"
                       }`}
                     />
-                    <span className="relative z-10">{item.label}</span>
+                    <span className="relative z-10 text-sm sm:text-base truncate">{item.label}</span>
                   </NavLink>
                 )
               })}

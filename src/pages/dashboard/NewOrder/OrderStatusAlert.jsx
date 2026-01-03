@@ -7,7 +7,7 @@ const OrderStatusAlert = ({ orderStatus, setOrderStatus }) => {
 
   return (
     <div
-      className={`fixed top-4 right-4 left-4 sm:left-auto sm:max-w-md z-50 p-4 rounded-lg shadow-lg ${
+      className={`fixed top-2 right-2 left-2 sm:top-4 sm:right-4 sm:left-4 sm:left-auto sm:max-w-md z-50 p-3 sm:p-4 rounded-lg shadow-lg ${
         orderStatus.success 
           ? "bg-green-100 text-green-800 border border-green-200" 
           : "bg-red-100 text-red-800 border border-red-200"
@@ -20,10 +20,10 @@ const OrderStatusAlert = ({ orderStatus, setOrderStatus }) => {
           <AlertCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-medium">
+          <p className="font-medium text-sm sm:text-base">
             {orderStatus.success ? "🎉 Success!" : "❌ Error!"}
           </p>
-          <p className="text-sm mt-1 break-words">{orderStatus.message}</p>
+          <p className="text-xs sm:text-sm mt-1 break-words">{orderStatus.message}</p>
           
           {/* Show detailed balance information for insufficient balance errors */}
           {!orderStatus.success && orderStatus.details && orderStatus.details.shortfall && (

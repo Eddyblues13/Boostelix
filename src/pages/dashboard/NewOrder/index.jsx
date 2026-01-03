@@ -626,23 +626,21 @@ const NewOrder = () => {
       {/* Order Status Alert */}
       <OrderStatusAlert orderStatus={orderStatus} setOrderStatus={setOrderStatus} />
 
-      {/* Balance Warning */}
-      <div className="container mx-auto p-4 sm:p-6">
-        <BalanceWarning
-          selectedService={selectedService}
-          quantity={quantity}
-          totalCost={totalCost}
-          convertedBalance={convertedBalance}
-          formattedTotalCost={formattedTotalCost}
-          formattedBalance={formattedBalance}
-          formatCurrency={formatCurrency}
-          selectedCurrency={selectedCurrency}
-        />
-      </div>
-
       {/* Mobile Layout */}
-      <div className="lg:hidden">
-        <div className="container mx-auto p-4 space-y-6">
+      <div className="lg:hidden w-full">
+        <div className="w-full max-w-full px-2 sm:px-4 space-y-4 sm:space-y-6">
+          {/* Balance Warning */}
+          <BalanceWarning
+            selectedService={selectedService}
+            quantity={quantity}
+            totalCost={totalCost}
+            convertedBalance={convertedBalance}
+            formattedTotalCost={formattedTotalCost}
+            formattedBalance={formattedBalance}
+            formatCurrency={formatCurrency}
+            selectedCurrency={selectedCurrency}
+          />
+
           {/* Stats Cards */}
           <StatsCards
             user={user}
@@ -698,8 +696,20 @@ const NewOrder = () => {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        <div className="container mx-auto p-6">
+      <div className="hidden lg:block w-full">
+        <div className="w-full max-w-7xl mx-auto px-4 lg:px-6 py-4 lg:py-6">
+          {/* Balance Warning */}
+          <BalanceWarning
+            selectedService={selectedService}
+            quantity={quantity}
+            totalCost={totalCost}
+            convertedBalance={convertedBalance}
+            formattedTotalCost={formattedTotalCost}
+            formattedBalance={formattedBalance}
+            formatCurrency={formatCurrency}
+            selectedCurrency={selectedCurrency}
+          />
+
           {/* Stats Cards */}
           <StatsCards
             user={user}

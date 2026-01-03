@@ -78,7 +78,7 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: CSS_COLORS.background.primary }}>
+    <div className="min-h-screen flex flex-col overflow-x-hidden" style={{ background: CSS_COLORS.background.primary }}>
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 lg:hidden transition-opacity duration-300"
@@ -109,9 +109,9 @@ const DashboardLayout = () => {
           user={user}
         />
 
-        <main className="flex-1 pt-16 lg:ml-64">
+        <main className="flex-1 pt-16 sm:pt-18 lg:pt-20 lg:ml-64">
           <div className="w-full min-h-[calc(100vh-4rem)]">
-            <div className="min-h-full p-3 sm:p-4" style={{ backgroundColor: CSS_COLORS.background.overlay }}>
+            <div className="min-h-full p-2 sm:p-3 md:p-4 lg:p-6" style={{ backgroundColor: CSS_COLORS.background.overlay }}>
               <Outlet context={{
                 selectedCurrency,
                 setSelectedCurrency,
