@@ -1,7 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Upload, Download, Info, CheckCircle, AlertCircle, Copy, FileText, Trash2 } from "lucide-react"
+import { Upload, Download, Info, CheckCircle, AlertCircle, Copy, FileText, Trash2, Loader2 } from "lucide-react"
+import { createMassOrder } from "../../services/services"
+import toast from "react-hot-toast"
+import { useNavigate } from "react-router-dom"
 
 const formatExamples = [
   "1 | https://instagram.com/example | 1000",
@@ -18,10 +21,13 @@ const validationRules = [
 ]
 
 const MassOrder = () => {
+  const navigate = useNavigate()
   const [orderText, setOrderText] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState([])
   const [validOrders, setValidOrders] = useState(0)
+  const [parsedOrders, setParsedOrders] = useState([])
+  const [submitResult, setSubmitResult] = useState(null)
 
   const validateOrders = (text) => {
     const lines = text
@@ -30,10 +36,12 @@ const MassOrder = () => {
       .filter((line) => line.trim())
     const errors = []
     let validCount = 0
+    const parsed = []
 
     if (lines.length === 0) {
       setValidationErrors([])
       setValidOrders(0)
+      setParsedOrders([])
       return
     }
 
@@ -66,16 +74,25 @@ const MassOrder = () => {
       }
 
       // Validate quantity
-      if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) {
+      const qtyNum = Number(quantity)
+      if (!quantity || isNaN(qtyNum) || qtyNum <= 0) {
         errors.push(`Line ${index + 1}: Quantity must be a positive number`)
         return
       }
 
+      // Store parsed order
+      parsed.push({
+        service: Number(serviceId),
+        link: link.trim(),
+        quantity: qtyNum,
+        lineNumber: index + 1
+      })
       validCount++
     })
 
     setValidationErrors(errors)
     setValidOrders(validCount)
+    setParsedOrders(parsed)
   }
 
   const handleTextChange = (value) => {
@@ -84,17 +101,79 @@ const MassOrder = () => {
   }
 
   const handleSubmit = async () => {
-    if (validationErrors.length > 0 || validOrders === 0) return
+    if (validationErrors.length > 0 || validOrders === 0 || parsedOrders.length === 0) {
+      toast.error("Please fix all validation errors before submitting")
+      return
+    }
 
     setIsSubmitting(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsSubmitting(false)
+    setSubmitResult(null)
 
-    // Reset form on success
-    setOrderText("")
-    setValidOrders(0)
-    setValidationErrors([])
+    try {
+      // Prepare orders for API (remove lineNumber before sending)
+      const ordersToSubmit = parsedOrders.map(({ lineNumber, ...order }) => order)
+
+      toast.loading(`Submitting ${validOrders} order(s)...`, { id: 'mass-order' })
+
+      const response = await createMassOrder(ordersToSubmit)
+
+      // Handle response
+      const successful = response.successful_orders || response.success_count || validOrders
+      const failed = response.failed_orders || response.fail_count || 0
+
+      let successMessage = `Successfully submitted ${successful} order(s)!`
+      
+      if (failed > 0) {
+        successMessage += ` ${failed} order(s) failed.`
+      }
+
+      toast.success(successMessage, { id: 'mass-order' })
+
+      setSubmitResult({
+        success: true,
+        successful,
+        failed,
+        orderIds: response.order_ids || [],
+        failedOrders: response.failed_orders || []
+      })
+
+      // Reset form after successful submission
+      setTimeout(() => {
+        setOrderText("")
+        setValidOrders(0)
+        setValidationErrors([])
+        setParsedOrders([])
+        setSubmitResult(null)
+      }, 3000)
+
+    } catch (error) {
+      console.error("Mass order submission error:", error)
+      
+      let errorMessage = error.message || "Failed to submit orders. Please try again."
+      
+      // Handle partial failures
+      if (error.responseData?.failed_orders) {
+        const failed = error.responseData.failed_orders.length
+        const successful = validOrders - failed
+        errorMessage = `Only ${successful} order(s) succeeded. ${failed} order(s) failed.`
+        
+        setSubmitResult({
+          success: false,
+          successful,
+          failed,
+          failedOrders: error.responseData.failed_orders
+        })
+      }
+
+      toast.error(errorMessage, { id: 'mass-order', duration: 5000 })
+      
+      setSubmitResult({
+        success: false,
+        message: errorMessage
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const loadExample = () => {
@@ -223,17 +302,59 @@ const MassOrder = () => {
                     <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
                     <div className="text-red-800">
                       <div className="font-semibold mb-2">Please fix the following errors:</div>
-                      <ul className="space-y-1 text-sm">
-                        {validationErrors.slice(0, 5).map((error, index) => (
+                      <ul className="space-y-1 text-sm max-h-40 overflow-y-auto">
+                        {validationErrors.slice(0, 10).map((error, index) => (
                           <li key={index} className="flex items-start gap-1">
                             <span className="text-red-600">•</span>
                             {error}
                           </li>
                         ))}
-                        {validationErrors.length > 5 && (
-                          <li className="text-red-600 font-medium">... and {validationErrors.length - 5} more errors</li>
+                        {validationErrors.length > 10 && (
+                          <li className="text-red-600 font-medium">... and {validationErrors.length - 10} more errors</li>
                         )}
                       </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Result */}
+              {submitResult && (
+                <div className={`border rounded-md p-4 ${
+                  submitResult.success 
+                    ? "border-green-200 bg-green-50" 
+                    : "border-red-200 bg-red-50"
+                }`}>
+                  <div className="flex items-start gap-2">
+                    {submitResult.success ? (
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                    )}
+                    <div className={submitResult.success ? "text-green-800" : "text-red-800"}>
+                      <div className="font-semibold mb-2">
+                        {submitResult.success ? "Orders Submitted!" : "Submission Failed"}
+                      </div>
+                      {submitResult.successful !== undefined && (
+                        <p className="text-sm mb-1">
+                          ✅ {submitResult.successful} order(s) submitted successfully
+                        </p>
+                      )}
+                      {submitResult.failed > 0 && (
+                        <div className="text-sm">
+                          <p className="mb-1">❌ {submitResult.failed} order(s) failed:</p>
+                          <ul className="list-disc list-inside space-y-0.5 max-h-32 overflow-y-auto">
+                            {submitResult.failedOrders?.slice(0, 5).map((order, idx) => (
+                              <li key={idx} className="text-xs">
+                                Line {order.lineNumber || idx + 1}: {order.message || order.error || "Unknown error"}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {submitResult.message && (
+                        <p className="text-sm mt-1">{submitResult.message}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -246,11 +367,11 @@ const MassOrder = () => {
                 <button
                   onClick={handleSubmit}
                   disabled={validationErrors.length > 0 || validOrders === 0 || isSubmitting}
-                  className="flex-1 h-12 px-4 py-2 text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-md shadow-lg disabled:opacity-70 flex items-center justify-center"
+                  className="flex-1 h-12 px-4 py-2 text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-md shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center transition-all"
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
                       Processing Orders...
                     </>
                   ) : (

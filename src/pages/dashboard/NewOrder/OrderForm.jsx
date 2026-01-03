@@ -47,12 +47,12 @@ const OrderForm = ({
   isMobile = false
 }) => {
   return (
-    <div className={`bg-white ${isMobile ? 'rounded-xl p-4 sm:p-5 md:p-6' : 'rounded-2xl p-6'} shadow-sm border border-gray-100`}>
-      <h2 className={`${isMobile ? 'text-xl sm:text-2xl' : 'text-2xl'} font-semibold text-gray-800 ${isMobile ? 'mb-5 sm:mb-6' : 'mb-6'}`}>
+    <div className={`bg-white ${isMobile ? 'rounded-lg sm:rounded-xl p-3 sm:p-4' : 'rounded-2xl p-6'} shadow-sm border border-gray-100`}>
+      <h2 className={`${isMobile ? 'text-lg sm:text-xl' : 'text-2xl'} font-semibold text-gray-800 ${isMobile ? 'mb-3 sm:mb-4' : 'mb-6'}`}>
         Place Your Order
       </h2>
       
-      <div className={`${isMobile ? 'space-y-4 sm:space-y-5' : 'space-y-6'}`}>
+      <div className={`${isMobile ? 'space-y-3 sm:space-y-4' : 'space-y-6'}`}>
         {/* Search Bar */}
         <SearchBar
           searchQuery={searchQuery}
@@ -71,9 +71,9 @@ const OrderForm = ({
         />
 
         {/* Category & Service */}
-        <div className={`grid grid-cols-1 ${!isMobile && 'md:grid-cols-2'} ${isMobile ? 'gap-4' : 'gap-6'}`}>
+        <div className={`grid grid-cols-1 ${!isMobile && 'md:grid-cols-2'} ${isMobile ? 'gap-3' : 'gap-6'}`}>
           <div>
-            <label className={`block ${isMobile ? 'text-base sm:text-lg' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2.5 sm:mb-3' : 'mb-3'}`}>
+            <label className={`block ${isMobile ? 'text-sm sm:text-base' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2' : 'mb-3'}`}>
               Category
             </label>
             {loadingCategories ? (
@@ -108,7 +108,7 @@ const OrderForm = ({
           </div>
 
           <div>
-            <label className={`block ${isMobile ? 'text-base sm:text-lg' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2.5 sm:mb-3' : 'mb-3'}`}>
+            <label className={`block ${isMobile ? 'text-sm sm:text-base' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2' : 'mb-3'}`}>
               Service
             </label>
             {loadingServices ? (
@@ -127,7 +127,7 @@ const OrderForm = ({
                         setQuantity(srv.min_amount.toString())
                       }
                     }}
-                    className={`w-full ${isMobile ? 'pl-10 pr-4 py-3.5 text-base' : 'pl-12 pr-4 py-4 text-lg'} border border-gray-200 rounded-xl appearance-none bg-gray-50`}
+                    className={`w-full ${isMobile ? 'pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base' : 'pl-12 pr-4 py-4 text-lg'} border border-gray-200 rounded-lg sm:rounded-xl appearance-none bg-gray-50`}
                     disabled={!selectedCategory || services.length === 0}
                   >
                     {services.length > 0 ? (
@@ -166,7 +166,7 @@ const OrderForm = ({
         {/* Link & Quantity */}
         <div className={`grid grid-cols-1 ${!isMobile && 'md:grid-cols-2'} ${isMobile ? 'gap-4' : 'gap-6'}`}>
           <div>
-            <label className={`block ${isMobile ? 'text-base sm:text-lg' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2.5 sm:mb-3' : 'mb-3'}`}>
+            <label className={`block ${isMobile ? 'text-sm sm:text-base' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2' : 'mb-3'}`}>
               Link
             </label>
             <input
@@ -174,13 +174,13 @@ const OrderForm = ({
               value={link}
               onChange={(e) => setLink(e.target.value)}
               placeholder="Enter your profile/post URL"
-              className={`w-full px-4 ${isMobile ? 'py-3.5 text-base' : 'py-4 text-lg'} border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50`}
+              className={`w-full px-3 sm:px-4 ${isMobile ? 'py-2.5 sm:py-3 text-sm sm:text-base' : 'py-4 text-lg'} border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50`}
               required
             />
           </div>
 
           <div>
-            <label className={`block ${isMobile ? 'text-base sm:text-lg' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2.5 sm:mb-3' : 'mb-3'}`}>
+            <label className={`block ${isMobile ? 'text-sm sm:text-base' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2' : 'mb-3'}`}>
               Quantity
             </label>
             <input
@@ -190,22 +190,22 @@ const OrderForm = ({
               min={selectedService?.min_amount || 0}
               max={selectedService?.max_amount || 1000000}
               placeholder="Enter quantity"
-              className={`w-full px-4 ${isMobile ? 'py-3.5 text-base' : 'py-4 text-lg'} border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50`}
+              className={`w-full px-3 sm:px-4 ${isMobile ? 'py-2.5 sm:py-3 text-sm sm:text-base' : 'py-4 text-lg'} border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50`}
               required
             />
           </div>
         </div>
 
         {/* Cost Summary */}
-        <div className={`bg-blue-50 rounded-xl ${isMobile ? 'p-5 sm:p-6' : 'p-6'} border border-blue-100`}>
+        <div className={`bg-blue-50 rounded-lg sm:rounded-xl ${isMobile ? 'p-3 sm:p-4' : 'p-6'} border border-blue-100`}>
           <div className="text-center">
-            <p className={`${isMobile ? 'text-base sm:text-lg' : 'text-xl'} text-gray-600 ${isMobile ? 'mb-2' : 'mb-3'}`}>
+            <p className={`${isMobile ? 'text-sm sm:text-base' : 'text-xl'} text-gray-600 ${isMobile ? 'mb-1.5' : 'mb-3'}`}>
               Total Cost
             </p>
-            <p className={`${isMobile ? 'text-3xl sm:text-4xl' : 'text-4xl'} font-bold text-gray-800 ${isMobile ? 'mb-3' : 'mb-3'}`}>
+            <p className={`${isMobile ? 'text-2xl sm:text-3xl' : 'text-4xl'} font-bold text-gray-800 ${isMobile ? 'mb-2' : 'mb-3'}`}>
               {formattedTotalCost}
             </p>
-            <p className={`${isMobile ? 'text-sm sm:text-base' : 'text-lg'} text-gray-500`}>
+            <p className={`${isMobile ? 'text-xs sm:text-sm' : 'text-lg'} text-gray-500`}>
               {quantity} units × {selectedService ? (formatCurrency && typeof formatCurrency === 'function' ? formatCurrency(convertToSelectedCurrency(selectedService.price * 1000, "NGN"), selectedCurrency) : `₦${(selectedService.price * 1000).toLocaleString()}`) : '0'} per 1k
             </p>
           </div>
@@ -215,7 +215,7 @@ const OrderForm = ({
         <button
           onClick={handleSubmitOrder}
           disabled={isSubmitting}
-          className={`w-full text-white font-semibold ${isMobile ? 'py-4 sm:py-5 text-base sm:text-lg' : 'py-5 text-xl'} rounded-xl shadow-lg flex items-center justify-center transition-all duration-200 hover:opacity-90`}
+          className={`w-full text-white font-semibold ${isMobile ? 'py-3 sm:py-4 text-sm sm:text-base' : 'py-5 text-xl'} rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center transition-all duration-200 active:opacity-90 disabled:opacity-70`}
           style={{ backgroundColor: CSS_COLORS.primary }}
         >
           {isSubmitting ? (

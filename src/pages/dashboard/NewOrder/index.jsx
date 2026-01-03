@@ -632,7 +632,7 @@ const NewOrder = () => {
 
       {/* Mobile Layout */}
       <div className="lg:hidden w-full">
-        <div className="w-full max-w-full px-4 sm:px-5 md:px-6 space-y-5 sm:space-y-6">
+        <div className="w-full max-w-full px-3 sm:px-4 md:px-5 space-y-3 sm:space-y-4 md:space-y-5">
           {/* Balance Warning */}
           <BalanceWarning
             selectedService={selectedService}
@@ -656,21 +656,21 @@ const NewOrder = () => {
           <PlatformGrid isMobile={true} />
 
           {/* Action Buttons - Mobile */}
-          <div className="flex gap-2 sm:gap-3">
+          <div className="flex gap-2">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex-1 text-white py-3 sm:py-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg transition-all duration-200 hover:opacity-90"
+              className="flex-1 text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-medium flex items-center justify-center space-x-1.5 sm:space-x-2 shadow-md transition-all duration-200 active:opacity-80"
               style={{ backgroundColor: CSS_COLORS.primary }}
             >
-              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-sm sm:text-base">New Order</span>
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="text-xs sm:text-sm">New Order</span>
             </button>
             <button
               onClick={() => navigate('/dashboard/mass-order')}
-              className="flex-1 py-3 sm:py-4 rounded-xl font-medium flex items-center justify-center space-x-2 border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all duration-200"
+              className="flex-1 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-medium flex items-center justify-center space-x-1.5 sm:space-x-2 border-2 border-gray-200 bg-white text-gray-700 active:bg-gray-50 transition-all duration-200"
             >
-              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-sm sm:text-base">Mass Order</span>
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="text-xs sm:text-sm">Mass Order</span>
             </button>
           </div>
 
