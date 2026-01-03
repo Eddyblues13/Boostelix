@@ -289,37 +289,29 @@ const OrderHistory = () => {
     }
   }
 
-  // mobile table columns configuration
+  // Helper function to check if value exists and is not null
+  const hasValue = (value) => {
+    return value !== null && value !== undefined && value !== ""
+  }
+
+  // Mobile table columns configuration - only show non-null values
   const mobileColumns = [
-    { key: "id", label: "ID", className: "font-semibold" },
+    { key: "id", label: "ID", className: "font-semibold", alwaysShow: true },
     { 
       key: "created_at", 
       label: "Date", 
-      render: (order) => formatDate(order.created_at) 
-    },
-    {
-      key: "service_name",
-      label: "Service",
-      render: (order) => order.service_name || order.service_id || "N/A",
+      render: (order) => formatDate(order.created_at || order.added_on),
+      alwaysShow: true
     },
     {
       key: "status",
       label: "Status",
       render: (order) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
-          {order.status}
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+          {order.status || "N/A"}
         </span>
       ),
-    },
-    { 
-      key: "price", 
-      label: "Price", 
-      render: (order) => formatPrice(order.price) 
-    },
-    { 
-      key: "quantity", 
-      label: "Quantity", 
-      render: (order) => order.quantity || 0 
+      alwaysShow: true
     },
   ]
 
@@ -438,52 +430,68 @@ const OrderHistory = () => {
                     </div>
                   </div>
 
-                  {/* Main Info Grid */}
+                  {/* Main Info Grid - Only show non-null values */}
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
                       <div className="text-xs text-gray-500 mb-1">Date</div>
-                      <div className="text-sm font-medium text-gray-800">{formatDate(order.created_at)}</div>
+                      <div className="text-sm font-medium text-gray-800">{formatDate(order.created_at || order.added_on)}</div>
                     </div>
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">Price</div>
-                      <div className="text-sm font-semibold text-gray-800">{formatPrice(order.price)}</div>
-                    </div>
-                    <div className="col-span-2">
-                      <div className="text-xs text-gray-500 mb-1">Service</div>
-                      <div className="text-sm font-medium text-gray-800 truncate">{order.service_name || order.service_id || "N/A"}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">Quantity</div>
-                      <div className="text-sm font-medium text-gray-800">{order.quantity || 0}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">Remains</div>
-                      <div className="text-sm font-medium text-gray-800">{order.remains !== null ? order.remains : "N/A"}</div>
-                    </div>
+                    {hasValue(order.price) && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Price</div>
+                        <div className="text-sm font-semibold text-gray-800">{formatPrice(order.price)}</div>
+                      </div>
+                    )}
+                    {(order.service_name || order.service_id) && (
+                      <div className="col-span-2">
+                        <div className="text-xs text-gray-500 mb-1">Service</div>
+                        <div className="text-sm font-medium text-gray-800 truncate">{order.service_name || `Service #${order.service_id}`}</div>
+                      </div>
+                    )}
+                    {hasValue(order.quantity) && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Quantity</div>
+                        <div className="text-sm font-medium text-gray-800">{order.quantity}</div>
+                      </div>
+                    )}
+                    {hasValue(order.remains) && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Remains</div>
+                        <div className="text-sm font-medium text-gray-800">{order.remains}</div>
+                      </div>
+                    )}
+                    {hasValue(order.start_counter) && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Start Counter</div>
+                        <div className="text-sm font-medium text-gray-800">{order.start_counter}</div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Link Preview */}
-                  <div className="mb-3 p-2 bg-gray-50 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Link</div>
-                    <div className="flex items-center gap-2">
-                      <a 
-                        href={order.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-xs text-blue-600 hover:underline truncate flex-1"
-                        title={order.link}
-                      >
-                        {order.link?.length > 40 ? `${order.link.substring(0, 40)}...` : order.link}
-                      </a>
-                      <button 
-                        onClick={() => copyToClipboard(order.link)} 
-                        className="text-gray-400 hover:text-blue-500 flex-shrink-0"
-                        title="Copy link"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
+                  {/* Link Preview - Only show if exists */}
+                  {hasValue(order.link) && (
+                    <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+                      <div className="text-xs text-gray-500 mb-1">Link</div>
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href={order.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-xs text-blue-600 hover:underline truncate flex-1"
+                          title={order.link}
+                        >
+                          {order.link?.length > 40 ? `${order.link.substring(0, 40)}...` : order.link}
+                        </a>
+                        <button 
+                          onClick={() => copyToClipboard(order.link)} 
+                          className="text-gray-400 hover:text-blue-500 flex-shrink-0"
+                          title="Copy link"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Expandable details section */}
                   <button
@@ -496,102 +504,132 @@ const OrderHistory = () => {
 
                   {expandedOrder === order.id && (
                     <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
-                      {/* Link - Full display */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs font-medium text-gray-700">Full Link</div>
-                          <div className="flex items-center gap-2">
-                            <button 
-                              onClick={() => copyToClipboard(order.link)} 
-                              className="text-gray-500 hover:text-blue-600 transition-colors"
-                              title="Copy link"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </button>
-                            <a 
-                              href={order.link} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-xs text-blue-600 hover:underline font-medium"
-                            >
-                              Open
-                            </a>
+                      {/* Link - Full display - Only if exists */}
+                      {hasValue(order.link) && (
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-xs font-medium text-gray-700">Full Link</div>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => copyToClipboard(order.link)} 
+                                className="text-gray-500 hover:text-blue-600 transition-colors"
+                                title="Copy link"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
+                              <a 
+                                href={order.link} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-xs text-blue-600 hover:underline font-medium"
+                              >
+                                Open
+                              </a>
+                            </div>
                           </div>
+                          <a 
+                            href={order.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-xs text-blue-600 hover:underline break-all block"
+                          >
+                            {order.link}
+                          </a>
                         </div>
-                        <a 
-                          href={order.link} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-xs text-blue-600 hover:underline break-all block"
-                        >
-                          {order.link}
-                        </a>
-                      </div>
+                      )}
 
-                      {/* Order Details Grid */}
+                      {/* Order Details Grid - Only show non-null values */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">API Order ID</div>
-                          <div className="text-sm font-medium text-gray-800">{order.api_order_id || "N/A"}</div>
-                        </div>
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">Category ID</div>
-                          <div className="text-sm font-medium text-gray-800">{order.category_id || "N/A"}</div>
-                        </div>
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">Start Counter</div>
-                          <div className="text-sm font-medium text-gray-800">{order.start_counter !== null ? order.start_counter : "N/A"}</div>
-                        </div>
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">User ID</div>
-                          <div className="text-sm font-medium text-gray-800">{order.user_id || "N/A"}</div>
-                        </div>
+                        {hasValue(order.api_order_id) && (
+                          <div className="p-2 bg-gray-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">API Order ID</div>
+                            <div className="text-sm font-medium text-gray-800">{order.api_order_id}</div>
+                          </div>
+                        )}
+                        {hasValue(order.api_refill_id) && (
+                          <div className="p-2 bg-gray-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">API Refill ID</div>
+                            <div className="text-sm font-medium text-gray-800">{order.api_refill_id}</div>
+                          </div>
+                        )}
+                        {hasValue(order.category_id) && (
+                          <div className="p-2 bg-gray-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Category ID</div>
+                            <div className="text-sm font-medium text-gray-800">{order.category_id}</div>
+                          </div>
+                        )}
+                        {hasValue(order.service_id) && (
+                          <div className="p-2 bg-gray-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Service ID</div>
+                            <div className="text-sm font-medium text-gray-800">{order.service_id}</div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Status Description */}
-                      {order.status_description && (
+                      {/* Status Description - Only if exists */}
+                      {hasValue(order.status_description) && (
                         <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
                           <div className="text-xs font-medium text-blue-700 mb-1">Status Description</div>
                           <div className="text-sm text-blue-800">{order.status_description}</div>
                         </div>
                       )}
 
-                      {/* Reason */}
-                      {order.reason && (
+                      {/* Refill Status - Only if exists */}
+                      {hasValue(order.refill_status) && (
+                        <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                          <div className="text-xs font-medium text-purple-700 mb-1">Refill Status</div>
+                          <div className="text-sm text-purple-800">{order.refill_status}</div>
+                        </div>
+                      )}
+
+                      {/* Reason - Only if exists */}
+                      {hasValue(order.reason) && (
                         <div className="p-3 bg-red-50 rounded-lg border border-red-100">
                           <div className="text-xs font-medium text-red-700 mb-1">Reason</div>
                           <div className="text-sm text-red-800">{order.reason}</div>
                         </div>
                       )}
 
-                      {/* Additional Details */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">Runs</div>
-                          <div className="text-sm font-medium text-gray-800">{order.runs !== null ? order.runs : "N/A"}</div>
+                      {/* Additional Details - Only show non-null values */}
+                      {(hasValue(order.runs) || hasValue(order.interval) || hasValue(order.drip_feed) || hasValue(order.refilled_at)) && (
+                        <div className="grid grid-cols-2 gap-2">
+                          {hasValue(order.runs) && (
+                            <div className="p-2 bg-gray-50 rounded-lg">
+                              <div className="text-xs text-gray-500 mb-1">Runs</div>
+                              <div className="text-sm font-medium text-gray-800">{order.runs}</div>
+                            </div>
+                          )}
+                          {hasValue(order.interval) && (
+                            <div className="p-2 bg-gray-50 rounded-lg">
+                              <div className="text-xs text-gray-500 mb-1">Interval (min)</div>
+                              <div className="text-sm font-medium text-gray-800">{order.interval}</div>
+                            </div>
+                          )}
+                          {hasValue(order.drip_feed) && (
+                            <div className="p-2 bg-gray-50 rounded-lg">
+                              <div className="text-xs text-gray-500 mb-1">Drip Feed</div>
+                              <div className="text-sm font-medium text-gray-800">{order.drip_feed ? "Yes" : "No"}</div>
+                            </div>
+                          )}
+                          {hasValue(order.refilled_at) && (
+                            <div className="p-2 bg-gray-50 rounded-lg">
+                              <div className="text-xs text-gray-500 mb-1">Refilled At</div>
+                              <div className="text-sm font-medium text-gray-800">{formatDate(order.refilled_at)}</div>
+                            </div>
+                          )}
                         </div>
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">Interval</div>
-                          <div className="text-sm font-medium text-gray-800">{order.interval !== null ? order.interval : "N/A"}</div>
-                        </div>
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">Drip Feed</div>
-                          <div className="text-sm font-medium text-gray-800">{order.drip_feed !== null ? (order.drip_feed ? "Yes" : "No") : "N/A"}</div>
-                        </div>
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">Refilled At</div>
-                          <div className="text-sm font-medium text-gray-800">{order.refilled_at ? formatDate(order.refilled_at) : "N/A"}</div>
-                        </div>
-                      </div>
+                      )}
 
                       {/* Timestamps */}
                       <div className="pt-2 border-t border-gray-200">
                         <div className="text-xs text-gray-500 space-y-1">
-                          <div className="flex justify-between">
-                            <span>Created:</span>
-                            <span className="text-gray-700">{formatDate(order.created_at)}</span>
-                          </div>
-                          {order.updated_at && (
+                          {(order.created_at || order.added_on) && (
+                            <div className="flex justify-between">
+                              <span>Created:</span>
+                              <span className="text-gray-700">{formatDate(order.created_at || order.added_on)}</span>
+                            </div>
+                          )}
+                          {hasValue(order.updated_at) && (
                             <div className="flex justify-between">
                               <span>Updated:</span>
                               <span className="text-gray-700">{formatDate(order.updated_at)}</span>
@@ -692,32 +730,29 @@ const OrderHistory = () => {
           </div>
 
           {/* Orders Table */}
-          <div className={`rounded-xl border overflow-hidden ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.card ?? "bg-white"}`}>
-            {/* Table Header */}
-            <div className="grid grid-cols-14 gap-2 px-4 py-4 text-white font-semibold text-sm" style={{ background: CSS_COLORS.background?.sidebar ?? "#0f172a" }}>
-              <div className="col-span-1 cursor-pointer" onClick={() => setSorting("id")}>
-                ID {sortBy === "id" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
+          <div className={`rounded-xl border overflow-hidden ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.card ?? "bg-white"} shadow-sm`}>
+            {/* Table Header - Better organized */}
+            <div className="min-w-full">
+              <div className="grid grid-cols-12 gap-4 px-6 py-4 text-white font-semibold text-sm" style={{ background: CSS_COLORS.background?.sidebar ?? "#0f172a" }}>
+                <div className="col-span-1 cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1" onClick={() => setSorting("id")}>
+                  ID {sortBy === "id" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
+                </div>
+                <div className="col-span-2 cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1" onClick={() => setSorting("created_at")}>
+                  Date {sortBy === "created_at" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
+                </div>
+                <div className="col-span-2">Service</div>
+                <div className="col-span-3">Link</div>
+                <div className="col-span-1 cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1" onClick={() => setSorting("price")}>
+                  Price {sortBy === "price" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
+                </div>
+                <div className="col-span-1 cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1" onClick={() => setSorting("quantity")}>
+                  Qty {sortBy === "quantity" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
+                </div>
+                <div className="col-span-1 cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1" onClick={() => setSorting("status")}>
+                  Status {sortBy === "status" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
+                </div>
+                <div className="col-span-1">Actions</div>
               </div>
-              <div className="col-span-1">User ID</div>
-              <div className="col-span-1 cursor-pointer" onClick={() => setSorting("created_at")}>
-                Date {sortBy === "created_at" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
-              </div>
-              <div className="col-span-1">Service</div>
-              <div className="col-span-2">Link</div>
-              <div className="col-span-1 cursor-pointer" onClick={() => setSorting("price")}>
-                Price {sortBy === "price" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
-              </div>
-              <div className="col-span-1 cursor-pointer" onClick={() => setSorting("quantity")}>
-                Quantity {sortBy === "quantity" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
-              </div>
-              <div className="col-span-1">Start Count</div>
-              <div className="col-span-1 cursor-pointer" onClick={() => setSorting("status")}>
-                Status {sortBy === "status" && (sortOrder === "asc" ? <ArrowUp className="inline w-3 h-3" /> : <ArrowDown className="inline w-3 h-3" />)}
-              </div>
-              <div className="col-span-1">Remains</div>
-              <div className="col-span-1">Status Desc</div>
-              <div className="col-span-1">Reason</div>
-              <div className="col-span-1">Actions</div>
             </div>
 
             {/* Table Body */}
@@ -730,54 +765,67 @@ const OrderHistory = () => {
                 </>
               ) : orders.length > 0 ? (
                 orders.map((order) => (
-                  <div key={order.id} className={`grid grid-cols-14 gap-2 px-4 py-4 items-center text-sm ${THEME_COLORS.hover?.primary100 ?? ""} ${expandedOrder === order.id ? "bg-blue-50" : ""}`}>
-                    <div className="col-span-1 font-medium">{order.id}</div>
-                    <div className="col-span-1">{order.user_id}</div>
-                    <div className="col-span-1 text-gray-600 text-xs">{formatDate(order.created_at)}</div>
-                    <div className="col-span-1" title={order.service_name}>
-                      {order.service_name || order.service_id}
+                  <div key={order.id} className={`grid grid-cols-12 gap-4 px-6 py-4 items-center text-sm border-b border-gray-100 hover:bg-gray-50 transition-colors ${expandedOrder === order.id ? "bg-blue-50" : ""}`}>
+                    <div className="col-span-1 font-bold text-gray-900">#{order.id}</div>
+                    <div className="col-span-2 text-gray-600 text-sm">
+                      {formatDate(order.created_at || order.added_on)}
                     </div>
-                    <div className="col-span-2 flex items-center">
-                      <a href={order.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate text-xs" title={order.link}>
-                        {order.link?.substring(0, 25)}...
-                      </a>
+                    <div className="col-span-2 text-gray-800 truncate font-medium" title={order.service_name || `Service #${order.service_id}`}>
+                      {order.service_name || (order.service_id ? `Service #${order.service_id}` : "—")}
                     </div>
-                    <div className="col-span-1 font-semibold text-xs">{formatPrice(order.price)}</div>
-                    <div className="col-span-1">{order.quantity}</div>
-                    <div className="col-span-1">{order.start_counter || 0}</div>
+                    <div className="col-span-3">
+                      {hasValue(order.link) ? (
+                        <div className="flex items-center gap-2">
+                          <a 
+                            href={order.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-blue-600 hover:underline truncate text-sm flex-1" 
+                            title={order.link}
+                          >
+                            {order.link.length > 40 ? `${order.link.substring(0, 40)}...` : order.link}
+                          </a>
+                          <button 
+                            onClick={() => copyToClipboard(order.link)} 
+                            className="text-gray-400 hover:text-blue-500 flex-shrink-0" 
+                            title="Copy link"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">—</span>
+                      )}
+                    </div>
+                    <div className="col-span-1 font-semibold text-gray-900">
+                      {hasValue(order.price) ? formatPrice(order.price) : "—"}
+                    </div>
+                    <div className="col-span-1 text-gray-700 font-medium">
+                      {hasValue(order.quantity) ? order.quantity : "—"}
+                    </div>
                     <div className="col-span-1">
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
-                        {order.status}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                        {order.status || "—"}
                       </span>
                     </div>
-                    <div className="col-span-1">{order.remains !== null ? order.remains : "N/A"}</div>
-                    <div className="col-span-1">
-                      {order.status_description ? (
-                        <button onClick={() => toggleOrderExpansion(order.id)} className="text-blue-600 hover:text-blue-800 text-xs truncate max-w-full" title={order.status_description}>
-                          {order.status_description.substring(0, 15)}...
-                        </button>
-                      ) : (
-                        "N/A"
+                    <div className="col-span-1 flex items-center space-x-2 justify-end">
+                      {hasValue(order.link) && (
+                        <a 
+                          href={order.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-gray-400 hover:text-blue-600 transition-colors" 
+                          title="Open link"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
                       )}
-                    </div>
-                    <div className="col-span-1">
-                      {order.reason ? (
-                        <button onClick={() => toggleOrderExpansion(order.id)} className="text-red-600 hover:text-red-800 text-xs truncate max-w-full" title={order.reason}>
-                          {order.reason.substring(0, 15)}...
-                        </button>
-                      ) : (
-                        "N/A"
-                      )}
-                    </div>
-                    <div className="col-span-1 flex space-x-1">
-                      <button onClick={() => copyToClipboard(order.link)} className="text-gray-400 hover:text-blue-500 p-1" title="Copy link">
-                        <Copy className="w-3 h-3" />
-                      </button>
-                      <a href={order.link} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-500 p-1" title="Open link">
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                      <button onClick={() => toggleOrderExpansion(order.id)} className="text-gray-400 hover:text-blue-500 p-1" title="View details">
-                        {expandedOrder === order.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      <button 
+                        onClick={() => toggleOrderExpansion(order.id)} 
+                        className="text-gray-400 hover:text-blue-600 transition-colors" 
+                        title="View details"
+                      >
+                        {expandedOrder === order.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
@@ -803,11 +851,19 @@ const OrderHistory = () => {
 
           {/* Expanded Order Details Modal */}
           {expandedOrder && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className={`rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto ${THEME_COLORS.background?.card ?? "bg-white"} ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} border`}>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Order Details #{expandedOrder}</h3>
-                  <button onClick={() => setExpandedOrder(null)} className="text-gray-500 hover:text-gray-700">×</button>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setExpandedOrder(null)}>
+              <div 
+                className={`rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto ${THEME_COLORS.background?.card ?? "bg-white"} ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} border shadow-2xl`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                  <h3 className="text-xl font-bold text-gray-900">Order Details #{expandedOrder}</h3>
+                  <button 
+                    onClick={() => setExpandedOrder(null)} 
+                    className="text-gray-500 hover:text-gray-700 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    ×
+                  </button>
                 </div>
 
                 {(() => {
@@ -816,105 +872,187 @@ const OrderHistory = () => {
 
                   return (
                     <div className="space-y-4 text-sm">
+                      {/* Primary Info */}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <div className="text-gray-500">Order ID</div>
-                          <div className="font-semibold">{order.id}</div>
+                          <div className="text-xs text-gray-500 mb-1">Order ID</div>
+                          <div className="font-semibold text-base">#{order.id}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500">User ID</div>
-                          <div>{order.user_id}</div>
+                          <div className="text-xs text-gray-500 mb-1">Status</div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>{order.status || "—"}</span>
                         </div>
-                        <div>
-                          <div className="text-gray-500">Service ID</div>
-                          <div>{order.service_id}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">Category ID</div>
-                          <div>{order.category_id || "N/A"}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">API Order ID</div>
-                          <div>{order.api_order_id || "N/A"}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">Status</div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>{order.status}</span>
-                        </div>
+                        {hasValue(order.price) && (
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">Price</div>
+                            <div className="font-semibold text-base">{formatPrice(order.price)}</div>
+                          </div>
+                        )}
+                        {hasValue(order.quantity) && (
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">Quantity</div>
+                            <div className="font-semibold text-base">{order.quantity}</div>
+                          </div>
+                        )}
                       </div>
 
-                      <div>
-                        <div className="text-gray-500 mb-1">Link</div>
-                        <div className="flex items-center gap-2">
-                          <a href={order.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
-                            {order.link}
-                          </a>
-                          <button onClick={() => copyToClipboard(order.link)} className="text-gray-400 hover:text-blue-500">
-                            <Copy className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {order.status_description && (
+                      {/* Link - Only if exists */}
+                      {hasValue(order.link) && (
                         <div>
-                          <div className="text-gray-500 mb-1">Status Description</div>
-                          <div className="bg-gray-50 p-3 rounded text-gray-700">{order.status_description}</div>
+                          <div className="text-xs text-gray-500 mb-2">Link</div>
+                          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                            <a 
+                              href={order.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-blue-600 hover:underline break-all flex-1 text-sm"
+                            >
+                              {order.link}
+                            </a>
+                            <button 
+                              onClick={() => copyToClipboard(order.link)} 
+                              className="text-gray-400 hover:text-blue-500 flex-shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       )}
 
-                      {order.reason && (
+                      {/* Status Description - Only if exists */}
+                      {hasValue(order.status_description) && (
                         <div>
-                          <div className="text-gray-500 mb-1">Reason</div>
-                          <div className="bg-red-50 p-3 rounded text-red-700 border border-red-200">{order.reason}</div>
+                          <div className="text-xs text-gray-500 mb-2">Status Description</div>
+                          <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm text-blue-800">{order.status_description}</div>
                         </div>
                       )}
 
-                      <div className="grid grid-cols-3 gap-4">
+                      {/* Refill Status - Only if exists */}
+                      {hasValue(order.refill_status) && (
                         <div>
-                          <div className="text-gray-500">Price</div>
-                          <div className="font-semibold">{formatPrice(order.price)}</div>
+                          <div className="text-xs text-gray-500 mb-2">Refill Status</div>
+                          <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-sm text-purple-800">{order.refill_status}</div>
                         </div>
+                      )}
+
+                      {/* Reason - Only if exists */}
+                      {hasValue(order.reason) && (
                         <div>
-                          <div className="text-gray-500">Quantity</div>
-                          <div>{order.quantity}</div>
+                          <div className="text-xs text-gray-500 mb-2">Reason</div>
+                          <div className="bg-red-50 p-3 rounded-lg border border-red-100 text-sm text-red-800">{order.reason}</div>
                         </div>
+                      )}
+
+                      {/* Additional Details - Only show non-null values */}
+                      {(hasValue(order.api_order_id) || hasValue(order.api_refill_id) || hasValue(order.category_id) || hasValue(order.service_id) || hasValue(order.user_id)) && (
                         <div>
-                          <div className="text-gray-500">Remains</div>
-                          <div>{order.remains !== null ? order.remains : "N/A"}</div>
+                          <div className="text-xs font-medium text-gray-700 mb-2">Order Information</div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {hasValue(order.api_order_id) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">API Order ID</div>
+                                <div className="text-sm font-medium text-gray-800">{order.api_order_id}</div>
+                              </div>
+                            )}
+                            {hasValue(order.api_refill_id) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">API Refill ID</div>
+                                <div className="text-sm font-medium text-gray-800">{order.api_refill_id}</div>
+                              </div>
+                            )}
+                            {hasValue(order.service_id) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Service ID</div>
+                                <div className="text-sm font-medium text-gray-800">{order.service_id}</div>
+                              </div>
+                            )}
+                            {hasValue(order.category_id) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Category ID</div>
+                                <div className="text-sm font-medium text-gray-800">{order.category_id}</div>
+                              </div>
+                            )}
+                          </div>
                         </div>
+                      )}
+
+                      {/* Counters - Only show non-null values */}
+                      {(hasValue(order.start_counter) || hasValue(order.remains)) && (
                         <div>
-                          <div className="text-gray-500">Start Counter</div>
-                          <div>{order.start_counter || 0}</div>
+                          <div className="text-xs font-medium text-gray-700 mb-2">Counters</div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {hasValue(order.start_counter) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Start Counter</div>
+                                <div className="text-sm font-medium text-gray-800">{order.start_counter}</div>
+                              </div>
+                            )}
+                            {hasValue(order.remains) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Remains</div>
+                                <div className="text-sm font-medium text-gray-800">{order.remains}</div>
+                              </div>
+                            )}
+                          </div>
                         </div>
+                      )}
+
+                      {/* Drip Feed Settings - Only if any value exists */}
+                      {(hasValue(order.runs) || hasValue(order.interval) || hasValue(order.drip_feed) || hasValue(order.refilled_at)) && (
                         <div>
-                          <div className="text-gray-500">Runs</div>
-                          <div>{order.runs !== null ? order.runs : "N/A"}</div>
+                          <div className="text-xs font-medium text-gray-700 mb-2">Drip Feed Settings</div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {hasValue(order.runs) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Runs</div>
+                                <div className="text-sm font-medium text-gray-800">{order.runs}</div>
+                              </div>
+                            )}
+                            {hasValue(order.interval) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Interval (minutes)</div>
+                                <div className="text-sm font-medium text-gray-800">{order.interval}</div>
+                              </div>
+                            )}
+                            {hasValue(order.drip_feed) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Drip Feed</div>
+                                <div className="text-sm font-medium text-gray-800">{order.drip_feed ? "Enabled" : "Disabled"}</div>
+                              </div>
+                            )}
+                            {hasValue(order.refilled_at) && (
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Refilled At</div>
+                                <div className="text-sm font-medium text-gray-800">{formatDate(order.refilled_at)}</div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-gray-500">Interval</div>
-                          <div>{order.interval !== null ? order.interval : "N/A"}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">Drip Feed</div>
-                          <div>{order.drip_feed !== null ? (order.drip_feed ? "Yes" : "No") : "N/A"}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">Refilled At</div>
-                          <div>{order.refilled_at ? formatDate(order.refilled_at) : "N/A"}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">Created At</div>
-                          <div>{formatDate(order.created_at)}</div>
+                      )}
+
+                      {/* Timestamps */}
+                      <div className="pt-3 border-t border-gray-200">
+                        <div className="text-xs text-gray-500 space-y-2">
+                          {(order.created_at || order.added_on) && (
+                            <div className="flex justify-between">
+                              <span>Created:</span>
+                              <span className="text-gray-700 font-medium">{formatDate(order.created_at || order.added_on)}</span>
+                            </div>
+                          )}
+                          {hasValue(order.updated_at) && (
+                            <div className="flex justify-between">
+                              <span>Updated:</span>
+                              <span className="text-gray-700 font-medium">{formatDate(order.updated_at)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div>
-                        <div className="text-gray-500 mb-1">Updated At</div>
-                        <div>{formatDate(order.updated_at)}</div>
-                      </div>
-
-                      <div className="flex justify-end pt-4">
-                        <button onClick={() => setExpandedOrder(null)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                      <div className="flex justify-end pt-4 border-t border-gray-200">
+                        <button 
+                          onClick={() => setExpandedOrder(null)} 
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        >
                           Close
                         </button>
                       </div>
