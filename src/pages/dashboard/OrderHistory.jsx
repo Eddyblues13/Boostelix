@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
+import { useOutletContext } from "react-router-dom"
 import {
   Search,
   ExternalLink,
@@ -57,13 +58,46 @@ const formatDate = (dateString) => {
   })
 }
 
-const formatPrice = (price) => {
-  if (price === null || price === undefined) return "$0.00"
-  return `$${parseFloat(price).toFixed(2)}`
-}
-
 /* ---------- component ---------- */
 const OrderHistory = () => {
+  // Get currency context from DashboardLayout
+  const context = useOutletContext()
+  const {
+    selectedCurrency: contextSelectedCurrency,
+    convertToSelectedCurrency: contextConvertToSelectedCurrency,
+    formatCurrency: contextFormatCurrency,
+  } = context || {}
+
+  // Default currency if not provided
+  const selectedCurrency = contextSelectedCurrency || { 
+    code: "NGN", 
+    symbol: "₦", 
+    rate: 1 
+  }
+
+  // Fallback convertToSelectedCurrency if not provided
+  const convertToSelectedCurrency = contextConvertToSelectedCurrency || ((amount, sourceCurrency = "NGN") => {
+    if (!amount || !selectedCurrency?.rate) return 0
+    // Simple conversion: if rates are available, use them, otherwise assume 1:1
+    return amount * (selectedCurrency.rate || 1)
+  })
+
+  // Fallback formatCurrency if not provided in context (matches NewOrder)
+  const formatCurrency = contextFormatCurrency || ((amount, currency) => {
+    if (!currency || amount === null || amount === undefined) return '0.00'
+    const formattedAmount = parseFloat(amount).toFixed(2)
+    return `${currency?.symbol || '₦'} ${formattedAmount}`
+  })
+
+  // Format price using the same currency as NewOrder page
+  const formatPrice = (price) => {
+    if (price === null || price === undefined || price === 0) {
+      return formatCurrency(0, selectedCurrency)
+    }
+    // Convert price from NGN to selected currency (prices are stored in NGN in database)
+    const convertedPrice = convertToSelectedCurrency(price, "NGN")
+    return formatCurrency(convertedPrice, selectedCurrency)
+  }
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [orders, setOrders] = useState([])
