@@ -28,23 +28,6 @@ const AddFunds = () => {
       minAmount: 100,
       supportedCurrencies: ["NGN", "USD", "GHS", "KES"],
     },
-    {
-      id: "paystack",
-      name: "Paystack",
-      bonus: "Instant Deposits",
-      description: "Deposit using Card, Bank Transfer. Minimum 100 NGN.",
-      icon: <CreditCard className="w-5 h-5" style={{ color: CSS_COLORS.primary }} />,
-      minAmount: 100,
-      supportedCurrencies: ["NGN", "USD", "GHS"],
-    },
-    {
-      id: "coinbase",
-      name: "Coinbase Commerce",
-      description: "Deposit with crypto worldwide. Supports BTC, ETH, LTC. Minimum 500 NGN.",
-      icon: <Bitcoin className="w-5 h-5 text-orange-500" />,
-      minAmount: 500,
-      supportedCurrencies: ["NGN", "USD"],
-    },
   ]
 
   const currencies = [
@@ -63,12 +46,12 @@ const AddFunds = () => {
     {
       id: "payment-methods",
       title: "What payment methods are available?",
-      content: "We support various payment methods including Flutterwave (cards, bank transfers), Paystack, and cryptocurrency options through Coinbase Commerce.",
+      content: "We support Flutterwave for secure payments via cards, bank transfers, and mobile money. All payments are processed securely and instantly.",
     },
     {
       id: "deposit-time",
       title: "How long do deposits take?",
-      content: "Card payments are instant. Bank transfers may take a few minutes. Cryptocurrency deposits require network confirmations and typically take 5-30 minutes.",
+      content: "Card payments are instant. Bank transfers may take a few minutes to process. Once confirmed, your funds will be added to your account immediately.",
     },
     {
       id: "failed-payments",
@@ -230,30 +213,16 @@ const AddFunds = () => {
                     </div>
                   </div>
 
-                  {/* Method Selection */}
+                  {/* Payment Method Info - Flutterwave only */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
-                    <div className="relative">
-                      <select
-                        value={selectedMethod}
-                        onChange={(e) => setSelectedMethod(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
-                        style={{ backgroundColor: CSS_COLORS.background.muted }}
-                        disabled={isLoading}
-                      >
-                        {paymentMethods.map((method) => (
-                          <option 
-                            key={method.id} 
-                            value={method.id}
-                            disabled={!method.supportedCurrencies.includes(selectedCurrency.code)}
-                          >
-                            {method.name} {method.bonus ? `(${method.bonus})` : ""}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                    <div className="px-4 py-4 border border-gray-200 rounded-xl bg-gray-50 flex items-center space-x-3">
+                      <CreditCard className="w-5 h-5" style={{ color: CSS_COLORS.primary }} />
+                      <div>
+                        <p className="font-medium text-gray-800">Flutterwave</p>
+                        <p className="text-sm text-gray-500">{currentMethod?.description}</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">{currentMethod?.description}</p>
                   </div>
 
                   {/* Amount Input */}
