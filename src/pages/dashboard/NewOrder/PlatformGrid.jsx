@@ -57,9 +57,9 @@ const PlatformGrid = ({ isMobile = false }) => {
 
   if (isMobile) {
     return (
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 w-full overflow-hidden">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Popular Platforms</h2>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-3 w-full">
           {socialPlatforms.slice(0, 4).map((platform, index) => {
             const IconComponent = platform.icon
             return (

@@ -109,9 +109,9 @@ const DashboardLayout = () => {
           user={user}
         />
 
-        <main className="flex-1 pt-16 sm:pt-18 lg:pt-20 lg:ml-64">
-          <div className="w-full min-h-[calc(100vh-4rem)]">
-            <div className="min-h-full p-2 sm:p-3 md:p-4 lg:p-6" style={{ backgroundColor: CSS_COLORS.background.overlay }}>
+        <main className="flex-1 pt-16 sm:pt-18 lg:pt-20 lg:ml-64 overflow-x-hidden">
+          <div className="w-full min-h-[calc(100vh-4rem)] overflow-x-hidden">
+            <div className="min-h-full p-2 sm:p-3 md:p-4 lg:p-6 w-full overflow-x-hidden" style={{ backgroundColor: CSS_COLORS.background.overlay }}>
               <Outlet context={{
                 selectedCurrency,
                 setSelectedCurrency,

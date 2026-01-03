@@ -3,7 +3,7 @@ import React from "react"
 
 const ServiceDetails = ({ selectedService, selectedCategory, getPlatformIcon, metrics, isMobile = false }) => {
   return (
-    <div className={`bg-white ${isMobile ? 'rounded-xl p-4' : 'rounded-2xl p-6'} shadow-sm border border-gray-100 ${!isMobile && 'sticky top-6'}`}>
+    <div className={`bg-white ${isMobile ? 'rounded-xl p-4' : 'rounded-2xl p-6'} shadow-sm border border-gray-100 w-full overflow-hidden ${!isMobile && 'sticky top-6'}`}>
       <h3 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-semibold text-gray-800 ${isMobile ? 'mb-4' : 'mb-6'}`}>
         Service Details
       </h3>

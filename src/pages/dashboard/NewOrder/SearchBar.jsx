@@ -109,8 +109,8 @@ const SearchBar = ({
   isMobile = false
 }) => {
   return (
-    <div className="relative">
-      <Search className={`absolute ${isMobile ? 'left-3' : 'left-4'} top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobile ? 'w-5 h-5' : 'w-5 h-5'}`} />
+    <div className="relative w-full">
+      <Search className={`absolute ${isMobile ? 'left-3' : 'left-4'} top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobile ? 'w-5 h-5' : 'w-5 h-5'} pointer-events-none`} />
       <input
         type="text"
         placeholder={isMobile ? "Search services..." : "Search services... (minimum 2 characters)"}
@@ -118,7 +118,7 @@ const SearchBar = ({
         onChange={onSearchChange}
         onFocus={onSearchFocus}
         onBlur={onSearchBlur}
-        className={`w-full ${isMobile ? 'pl-10 pr-4 py-3.5 text-base' : 'pl-12 pr-4 py-4 text-lg'} border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50`}
+        className={`w-full ${isMobile ? 'pl-10 pr-4 py-3.5 text-base' : 'pl-12 pr-4 py-4 text-lg'} border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 max-w-full`}
       />
       <SearchResultsDropdown
         showSearchResults={showSearchResults}

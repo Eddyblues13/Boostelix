@@ -626,13 +626,13 @@ const NewOrder = () => {
   const metrics = getServiceMetrics()
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden pb-6 sm:pb-8">
+    <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
       {/* Order Status Alert */}
       <OrderStatusAlert orderStatus={orderStatus} setOrderStatus={setOrderStatus} />
 
       {/* Mobile Layout */}
       <div className="lg:hidden w-full">
-        <div className="w-full max-w-full px-4 space-y-4">
+        <div className="w-full space-y-4">
           {/* Balance Warning */}
           <BalanceWarning
             selectedService={selectedService}

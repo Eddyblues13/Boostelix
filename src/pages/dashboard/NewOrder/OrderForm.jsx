@@ -47,12 +47,12 @@ const OrderForm = ({
   isMobile = false
 }) => {
   return (
-    <div className={`bg-white ${isMobile ? 'rounded-xl p-4' : 'rounded-2xl p-6'} shadow-sm border border-gray-100`}>
+    <div className={`bg-white ${isMobile ? 'rounded-xl p-4' : 'rounded-2xl p-6'} shadow-sm border border-gray-100 w-full overflow-hidden`}>
       <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold text-gray-800 ${isMobile ? 'mb-4' : 'mb-6'}`}>
         Place Your Order
       </h2>
       
-      <div className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
+      <div className={`${isMobile ? 'space-y-4' : 'space-y-6'} w-full`}>
         {/* Search Bar */}
         <SearchBar
           searchQuery={searchQuery}
@@ -117,7 +117,7 @@ const OrderForm = ({
               </div>
             ) : (
               <>
-                <div className="relative">
+                <div className="relative w-full">
                   <select
                     value={selectedService?.id || ""}
                     onChange={(e) => {
@@ -127,7 +127,7 @@ const OrderForm = ({
                         setQuantity(srv.min_amount.toString())
                       }
                     }}
-                    className={`w-full ${isMobile ? 'pl-11 pr-4 py-3 text-base' : 'pl-12 pr-4 py-4 text-lg'} border border-gray-200 rounded-xl appearance-none bg-gray-50`}
+                    className={`w-full ${isMobile ? 'pl-11 pr-4 py-3 text-base' : 'pl-12 pr-4 py-4 text-lg'} border border-gray-200 rounded-xl appearance-none bg-gray-50 max-w-full`}
                     disabled={!selectedCategory || services.length === 0}
                   >
                     {services.length > 0 ? (
@@ -164,8 +164,8 @@ const OrderForm = ({
         </div>
 
         {/* Link & Quantity */}
-        <div className={`grid grid-cols-1 ${!isMobile && 'md:grid-cols-2'} ${isMobile ? 'gap-4' : 'gap-6'}`}>
-          <div>
+        <div className={`${isMobile ? 'space-y-4' : `grid grid-cols-1 md:grid-cols-2 gap-6`}`}>
+          <div className="w-full">
             <label className={`block ${isMobile ? 'text-base' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2.5' : 'mb-3'}`}>
               Link
             </label>
@@ -174,12 +174,12 @@ const OrderForm = ({
               value={link}
               onChange={(e) => setLink(e.target.value)}
               placeholder="Enter your profile/post URL"
-              className={`w-full px-4 ${isMobile ? 'py-3.5 text-base' : 'py-4 text-lg'} border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50`}
+              className={`w-full px-4 ${isMobile ? 'py-3.5 text-base' : 'py-4 text-lg'} border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 max-w-full`}
               required
             />
           </div>
 
-          <div>
+          <div className="w-full">
             <label className={`block ${isMobile ? 'text-base' : 'text-lg'} font-medium text-gray-700 ${isMobile ? 'mb-2.5' : 'mb-3'}`}>
               Quantity
             </label>
@@ -190,7 +190,7 @@ const OrderForm = ({
               min={selectedService?.min_amount || 0}
               max={selectedService?.max_amount || 1000000}
               placeholder="Enter quantity"
-              className={`w-full px-4 ${isMobile ? 'py-3.5 text-base' : 'py-4 text-lg'} border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50`}
+              className={`w-full px-4 ${isMobile ? 'py-3.5 text-base' : 'py-4 text-lg'} border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50 max-w-full`}
               required
             />
           </div>

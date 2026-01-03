@@ -5,8 +5,8 @@ const StatsCards = ({ user, formattedBalance, selectedCurrency }) => {
   return (
     <>
       {/* Mobile Stats Cards - Vertical Stack */}
-      <div className="lg:hidden space-y-3">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      <div className="lg:hidden space-y-3 w-full">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 w-full overflow-hidden">
           <div className="flex items-center space-x-3">
             <div className="text-3xl flex-shrink-0">💰</div>
             <div className="min-w-0 flex-1">
