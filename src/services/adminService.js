@@ -119,30 +119,6 @@ export const fetchServices = async () => {
   const response = await api.get(`/admin/users/services`);
   return response.data;
 };
-
-
-
-export const deleteOrder = async (id) => {
-  const res = await api.delete(`/orders/${id}`)
-  return res.data
-}
-
-export const updateOrder = async (order) => {
-  const res = await api.put(`/orders/${order.id}`, order)
-  return res.data
-}
-
-export const updateOrderStatus = async (id, status, statusDescription, reason) => {
-  const res = await api.patch(`/orders/${id}/status`, {
-    status,
-    statusDescription,
-    reason,
-  })
-  return res.data
-}
-
-
-
 // Fetch user orders
 export const fetchUserTransactions = async (userId) => {
   const response = await api.get(`/admin/users/${userId}/transactions`);
