@@ -129,17 +129,26 @@ const TestimonialsSection = () => {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 5000,
+    accessibility: true,
+    focusOnSelect: false,
+    swipeToSlide: true,
+    pauseOnFocus: true,
+    pauseOnHover: true,
     responsive: [
       {
         breakpoint: 1024,
         settings: {
-          slidesToShow: 2
+          slidesToShow: 2,
+          accessibility: true,
+          focusOnSelect: false
         }
       },
       {
         breakpoint: 640,
         settings: {
-          slidesToShow: 1
+          slidesToShow: 1,
+          accessibility: true,
+          focusOnSelect: false
         }
       }
     ]
@@ -152,7 +161,7 @@ const TestimonialsSection = () => {
         <p className="text-gray-500 text-lg mb-10">Testimonials</p>
         <Slider {...settings}>
           {testimonials.map((testimonial, index) => (
-            <div key={index} className="p-4">
+            <div key={index} className="p-4" tabIndex={-1}>
               <div className="bg-white rounded-xl shadow hover:shadow-md transition duration-300 p-6 text-left h-full flex flex-col justify-between">
                 <div className="flex items-center mb-4 gap-4">
                   <img
