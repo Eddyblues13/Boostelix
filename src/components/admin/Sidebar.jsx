@@ -70,6 +70,12 @@ const Sidebar = ({
               key={index}
               to={item.to}
               end={item.to === '/admin'} // exact match for dashboard
+              onClick={() => {
+                // Close sidebar on mobile after clicking a link
+                if (window.innerWidth < 1024) {
+                  setSidebarOpen(false);
+                }
+              }}
               className={({ isActive }) =>
                 `w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
                   isActive

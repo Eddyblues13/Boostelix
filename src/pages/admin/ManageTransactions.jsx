@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useOutletContext } from "react-router-dom"
 import {
   Search,
   MoreVertical,
@@ -31,6 +32,32 @@ import {
 } from "../../services/adminService"
 
 const ManageTransactions = () => {
+  // Get currency context from AdminLayout
+  const context = useOutletContext()
+  const {
+    selectedCurrency: contextSelectedCurrency,
+    convertToSelectedCurrency: contextConvertToSelectedCurrency,
+    formatCurrency: contextFormatCurrency,
+  } = context || {}
+
+  // Default currency if not provided
+  const selectedCurrency = contextSelectedCurrency || { 
+    code: "NGN", 
+    symbol: "₦", 
+    rate: 1 
+  }
+
+  // Fallback functions if not provided
+  const convertToSelectedCurrency = contextConvertToSelectedCurrency || ((amount, sourceCurrency = "NGN") => {
+    if (!amount || !selectedCurrency?.rate) return 0
+    return amount * (selectedCurrency.rate || 1)
+  })
+
+  const formatCurrency = contextFormatCurrency || ((amount, currency) => {
+    if (!currency || amount === null || amount === undefined) return '0.00'
+    const formattedAmount = parseFloat(amount).toFixed(2)
+    return `${currency?.symbol || '₦'} ${formattedAmount}`
+  })
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All Status")
   const [typeFilter, setTypeFilter] = useState("All Types")
@@ -118,13 +145,11 @@ const ManageTransactions = () => {
     status: "pending",
   })
 
-  const formatCurrency = (amount, currency = "USD") => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)
+  // Format price using currency conversion (same as user side)
+  const formatPrice = (price) => {
+    if (!price || price === null || price === undefined) return formatCurrency(0, selectedCurrency)
+    const convertedPrice = convertToSelectedCurrency(price, "NGN")
+    return formatCurrency(convertedPrice, selectedCurrency)
   }
 
   const formatDate = (dateString) => {
@@ -339,12 +364,12 @@ const ManageTransactions = () => {
               <div className="flex justify-between">
                 <span className="text-gray-500">Amount:</span>
                 <span className="font-bold">
-                  {formatCurrency(parseFloat(transaction.amount || 0))}
+                  {formatPrice(transaction.amount)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Fee:</span>
-                <span>{formatCurrency(parseFloat(transaction.charge || 0))}</span>
+                <span>{formatPrice(transaction.charge)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Status:</span>
@@ -663,13 +688,13 @@ const ManageTransactions = () => {
                         transaction.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {transaction.transaction_type === 'credit' ? '+' : '-'}
-                        {formatCurrency(parseFloat(transaction.amount || 0))}
+                        {formatPrice(transaction.amount)}
                       </p>
                     </div>
                     
                     <div className="flex justify-between items-center">
                       <p className="text-xs text-gray-500">
-                        Fee: {formatCurrency(parseFloat(transaction.charge || 0))}
+                        Fee: {formatPrice(transaction.charge)}
                       </p>
                       <ActionDropdown
                         transaction={transaction}
@@ -731,10 +756,10 @@ const ManageTransactions = () => {
                             transaction.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'
                           }`}>
                             {transaction.transaction_type === 'credit' ? '+' : '-'}
-                            {formatCurrency(parseFloat(transaction.amount || 0))}
+                            {formatPrice(transaction.amount)}
                           </span>
                           <span className="text-xs text-gray-500">
-                            Fee: {formatCurrency(parseFloat(transaction.charge || 0))}
+                            Fee: {formatPrice(transaction.charge)}
                           </span>
                         </div>
                       </td>
@@ -853,9 +878,12 @@ const ManageTransactions = () => {
                 <div>
                   <p className="text-xs sm:text-sm text-gray-500">Total Credits</p>
                   <p className="text-lg sm:text-xl font-bold text-gray-900">
-                    {formatCurrency(transactions
+                    {formatPrice(transactions
                       .filter(t => t.transaction_type === 'credit')
-                      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+                      .reduce((sum, t) => {
+                        const convertedAmount = convertToSelectedCurrency(parseFloat(t.amount || 0), "NGN")
+                        return sum + convertedAmount
+                      }, 0)
                     )}
                   </p>
                 </div>
@@ -870,9 +898,12 @@ const ManageTransactions = () => {
                 <div>
                   <p className="text-xs sm:text-sm text-gray-500">Total Debits</p>
                   <p className="text-lg sm:text-xl font-bold text-gray-900">
-                    {formatCurrency(transactions
+                    {formatPrice(transactions
                       .filter(t => t.transaction_type === 'debit')
-                      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+                      .reduce((sum, t) => {
+                        const convertedAmount = convertToSelectedCurrency(parseFloat(t.amount || 0), "NGN")
+                        return sum + convertedAmount
+                      }, 0)
                     )}
                   </p>
                 </div>
@@ -888,7 +919,10 @@ const ManageTransactions = () => {
                   <p className="text-xs sm:text-sm text-gray-500">Total Fees</p>
                 
                   <p className="text-lg sm:text-xl font-bold text-gray-900">
-                    {formatCurrency(transactions.reduce((sum, t) => sum + parseFloat(t.charge || 0), 0))}
+                    {formatPrice(transactions.reduce((sum, t) => {
+                      const convertedCharge = convertToSelectedCurrency(parseFloat(t.charge || 0), "NGN")
+                      return sum + convertedCharge
+                    }, 0))}
                   </p>
                 </div>
               </div>

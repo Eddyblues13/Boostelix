@@ -165,9 +165,57 @@ export const fetchAdminTickets = async () => {
   const response = await api.get(`/admin/tickets`);
   return response.data.tickets;
 };
-export const fetchAllOrders = async () => {
-  const response = await api.get(`/admin/orders`);
-  return response;
+export const fetchAllOrders = async (params = {}) => {
+  try {
+    const cleanedParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== '' && params[key] !== null) {
+        cleanedParams[key] = params[key];
+      }
+    });
+
+    const response = await api.get('/admin/orders', { 
+      params: cleanedParams,
+      validateStatus: (status) => status < 500
+    });
+    
+    return {
+      data: response.data?.data || [],
+      current_page: response.data?.current_page || 1,
+      last_page: response.data?.last_page || 1,
+      per_page: response.data?.per_page || 15,
+      total: response.data?.total || 0,
+    };
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return {
+      data: [],
+      current_page: 1,
+      last_page: 1,
+      per_page: 15,
+      total: 0,
+    };
+  }
+};
+
+export const fetchOrderDetails = async (id) => {
+  const response = await api.get(`/admin/orders/${id}`);
+  return response.data;
+};
+
+export const updateOrder = async (id, orderData) => {
+  const response = await api.put(`/admin/orders/${id}`, orderData);
+  return response.data;
+};
+
+export const deleteOrder = async (id) => {
+  const response = await api.delete(`/admin/orders/${id}`);
+  return response.data;
+};
+
+export const updateOrderStatus = async (id, statusData) => {
+  const response = await api.patch(`/admin/orders/${id}/status`, statusData);
+  return response.data;
 };
 
 
