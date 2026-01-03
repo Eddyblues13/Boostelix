@@ -325,16 +325,23 @@ const OrderHistory = () => {
 
   /* ---------- small skeleton helpers ---------- */
   const MobileSkeleton = () => (
-    <div className={`rounded-xl p-4 border ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.card ?? "bg-white"}`}>
+    <div className={`rounded-xl p-4 border ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.card ?? "bg-white"} shadow-sm`}>
       <div className="animate-pulse space-y-3">
-        <div className="h-4 bg-gray-200 rounded w-1/3" />
-        <div className="grid grid-cols-2 gap-3">
-          <div className="h-3 bg-gray-200 rounded" />
-          <div className="h-3 bg-gray-200 rounded" />
-          <div className="h-3 bg-gray-200 rounded" />
-          <div className="h-3 bg-gray-200 rounded" />
+        <div className="flex justify-between">
+          <div className="h-5 bg-gray-200 rounded w-20" />
+          <div className="h-6 bg-gray-200 rounded w-16" />
         </div>
-        <div className="h-8 bg-gray-200 rounded" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-12" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-12" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+          </div>
+        </div>
+        <div className="h-12 bg-gray-200 rounded" />
       </div>
     </div>
   )
@@ -350,22 +357,33 @@ const OrderHistory = () => {
   return (
     <div className="w-full min-h-screen" style={{ background: CSS_COLORS.background?.primary ?? "#f7fafc" }}>
       {/* Mobile View (Table Cards) */}
-      <div className="block lg:hidden p-3 sm:p-4">
-        <div className="space-y-4">
+      <div className="block lg:hidden w-full overflow-x-hidden">
+        <div className="w-full p-4 space-y-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl font-bold text-gray-800">Order History</h1>
+            <button
+              onClick={handleRefresh}
+              className={`p-2 rounded-lg border flex items-center justify-center ${THEME_COLORS.background?.card ?? "bg-white"} ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.hover?.primary100 ?? ""}`}
+            >
+              <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+
           {/* Status Filter Pills */}
-          <div className="overflow-x-auto pb-2">
+          <div className="overflow-x-auto pb-2 -mx-4 px-4">
             <div className="flex space-x-2" style={{ minWidth: "max-content" }}>
               {statusTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium ${
+                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                     activeTab === tab.id
-                      ? `${THEME_COLORS.primary?.[500] ?? "bg-blue-600"} text-white shadow-lg`
+                      ? `${THEME_COLORS.primary?.[500] ?? "bg-blue-600"} text-white shadow-md`
                       : `${THEME_COLORS.background?.card ?? "bg-white"} text-gray-700 ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} border ${THEME_COLORS.hover?.primary100 ?? ""}`
                   }`}
                 >
-                  {tab.color && activeTab !== tab.id && <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tab.color }} />}
+                  {tab.color && activeTab !== tab.id && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: tab.color }} />}
                   <span>{tab.label}</span>
                   {statusCounts[tab.id] > 0 && activeTab !== tab.id && <span className="text-xs text-gray-500">({statusCounts[tab.id]})</span>}
                 </button>
@@ -374,33 +392,29 @@ const OrderHistory = () => {
           </div>
 
           {/* Search and Actions */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.muted ?? "bg-gray-50"}`}
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.muted ?? "bg-gray-50"}`}
               />
             </div>
             <button
-              onClick={handleRefresh}
-              className={`p-2.5 rounded-xl border flex items-center ${THEME_COLORS.background?.card ?? "bg-white"} ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.hover?.primary100 ?? ""}`}
-            >
-              <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
-            </button>
-            <button
               onClick={() => handleExport({ exportAll: false })}
-              className={`p-2.5 rounded-xl border flex items-center ${THEME_COLORS.background?.card ?? "bg-white"} ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.hover?.primary100 ?? ""}`}
+              className={`px-4 py-3 rounded-xl border flex items-center justify-center gap-2 ${THEME_COLORS.background?.card ?? "bg-white"} ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.hover?.primary100 ?? ""} text-sm font-medium`}
               title="Export visible"
             >
-              <Download className="w-5 h-5" />
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Export</span>
             </button>
           </div>
 
           {/* Orders List - Mobile Table Cards */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             {loading && orders.length === 0 ? (
               <>
                 <MobileSkeleton />
@@ -409,104 +423,180 @@ const OrderHistory = () => {
               </>
             ) : orders.length > 0 ? (
               orders.map((order) => (
-                <div key={order.id} className={`rounded-xl p-4 border ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.card ?? "bg-white"}`}>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    {mobileColumns.map((column) => (
-                      <div key={column.key} className="space-y-1">
-                        <div className="text-xs text-gray-500">{column.label}</div>
-                        <div className={column.className}>
-                          {column.render ? column.render(order) : order[column.key]}
-                        </div>
+                <div key={order.id} className={`rounded-xl p-4 border ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.card ?? "bg-white"} shadow-sm hover:shadow-md transition-shadow`}>
+                  {/* Header Row */}
+                  <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-100">
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Order ID</div>
+                      <div className="text-base font-bold text-gray-800">#{order.id}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500 mb-1">Status</div>
+                      <div>
+                        {mobileColumns.find(c => c.key === "status")?.render(order)}
                       </div>
-                    ))}
+                    </div>
+                  </div>
+
+                  {/* Main Info Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Date</div>
+                      <div className="text-sm font-medium text-gray-800">{formatDate(order.created_at)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Price</div>
+                      <div className="text-sm font-semibold text-gray-800">{formatPrice(order.price)}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-xs text-gray-500 mb-1">Service</div>
+                      <div className="text-sm font-medium text-gray-800 truncate">{order.service_name || order.service_id || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Quantity</div>
+                      <div className="text-sm font-medium text-gray-800">{order.quantity || 0}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Remains</div>
+                      <div className="text-sm font-medium text-gray-800">{order.remains !== null ? order.remains : "N/A"}</div>
+                    </div>
+                  </div>
+
+                  {/* Link Preview */}
+                  <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Link</div>
+                    <div className="flex items-center gap-2">
+                      <a 
+                        href={order.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-xs text-blue-600 hover:underline truncate flex-1"
+                        title={order.link}
+                      >
+                        {order.link?.length > 40 ? `${order.link.substring(0, 40)}...` : order.link}
+                      </a>
+                      <button 
+                        onClick={() => copyToClipboard(order.link)} 
+                        className="text-gray-400 hover:text-blue-500 flex-shrink-0"
+                        title="Copy link"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Expandable details section */}
                   <button
                     onClick={() => toggleOrderExpansion(order.id)}
-                    className="w-full mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-sm text-gray-600 hover:text-gray-800"
+                    className="w-full pt-3 border-t border-gray-200 flex items-center justify-between text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
                   >
-                    <span>View Details</span>
-                    {expandedOrder === order.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    <span>{expandedOrder === order.id ? "Hide" : "View"} Details</span>
+                    {expandedOrder === order.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   </button>
 
                   {expandedOrder === order.id && (
                     <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
-                      {/* Link with copy button */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="text-xs text-gray-500">Link</div>
+                      {/* Link - Full display */}
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-gray-700">Full Link</div>
                           <div className="flex items-center gap-2">
-                            <button onClick={() => copyToClipboard(order.link)} className="text-gray-400 hover:text-blue-500">
+                            <button 
+                              onClick={() => copyToClipboard(order.link)} 
+                              className="text-gray-500 hover:text-blue-600 transition-colors"
+                              title="Copy link"
+                            >
                               <Copy className="w-4 h-4" />
                             </button>
-                            <a href={order.link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline break-all">
+                            <a 
+                              href={order.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-xs text-blue-600 hover:underline font-medium"
+                            >
                               Open
                             </a>
                           </div>
                         </div>
-                        <a href={order.link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline break-all">
+                        <a 
+                          href={order.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-xs text-blue-600 hover:underline break-all block"
+                        >
                           {order.link}
                         </a>
                       </div>
 
-                      {/* API Order ID */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">API Order ID:</span>
-                        <span>{order.api_order_id || "N/A"}</span>
-                      </div>
-
-                      {/* Category ID */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Category ID:</span>
-                        <span>{order.category_id || "N/A"}</span>
-                      </div>
-
-                      {/* Start Counter */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Start Counter:</span>
-                        <span>{order.start_counter !== null ? order.start_counter : "N/A"}</span>
-                      </div>
-
-                      {/* Remains */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Remains:</span>
-                        <span>{order.remains !== null ? order.remains : "N/A"}</span>
+                      {/* Order Details Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">API Order ID</div>
+                          <div className="text-sm font-medium text-gray-800">{order.api_order_id || "N/A"}</div>
+                        </div>
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">Category ID</div>
+                          <div className="text-sm font-medium text-gray-800">{order.category_id || "N/A"}</div>
+                        </div>
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">Start Counter</div>
+                          <div className="text-sm font-medium text-gray-800">{order.start_counter !== null ? order.start_counter : "N/A"}</div>
+                        </div>
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">User ID</div>
+                          <div className="text-sm font-medium text-gray-800">{order.user_id || "N/A"}</div>
+                        </div>
                       </div>
 
                       {/* Status Description */}
                       {order.status_description && (
-                        <div className="text-xs">
-                          <div className="text-gray-500 mb-1">Status Description:</div>
-                          <div className="bg-gray-50 p-2 rounded text-gray-700">{order.status_description}</div>
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                          <div className="text-xs font-medium text-blue-700 mb-1">Status Description</div>
+                          <div className="text-sm text-blue-800">{order.status_description}</div>
                         </div>
                       )}
 
                       {/* Reason */}
                       {order.reason && (
-                        <div className="text-xs">
-                          <div className="text-gray-500 mb-1">Reason:</div>
-                          <div className="bg-red-50 p-2 rounded text-red-700 border border-red-200">{order.reason}</div>
+                        <div className="p-3 bg-red-50 rounded-lg border border-red-100">
+                          <div className="text-xs font-medium text-red-700 mb-1">Reason</div>
+                          <div className="text-sm text-red-800">{order.reason}</div>
                         </div>
                       )}
 
                       {/* Additional Details */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <div className="text-gray-500">Runs:</div>
-                          <div>{order.runs !== null ? order.runs : "N/A"}</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">Runs</div>
+                          <div className="text-sm font-medium text-gray-800">{order.runs !== null ? order.runs : "N/A"}</div>
                         </div>
-                        <div>
-                          <div className="text-gray-500">Interval:</div>
-                          <div>{order.interval !== null ? order.interval : "N/A"}</div>
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">Interval</div>
+                          <div className="text-sm font-medium text-gray-800">{order.interval !== null ? order.interval : "N/A"}</div>
                         </div>
-                        <div>
-                          <div className="text-gray-500">Drip Feed:</div>
-                          <div>{order.drip_feed !== null ? (order.drip_feed ? "Yes" : "No") : "N/A"}</div>
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">Drip Feed</div>
+                          <div className="text-sm font-medium text-gray-800">{order.drip_feed !== null ? (order.drip_feed ? "Yes" : "No") : "N/A"}</div>
                         </div>
-                        <div>
-                          <div className="text-gray-500">Refilled At:</div>
-                          <div>{order.refilled_at ? formatDate(order.refilled_at) : "N/A"}</div>
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">Refilled At</div>
+                          <div className="text-sm font-medium text-gray-800">{order.refilled_at ? formatDate(order.refilled_at) : "N/A"}</div>
+                        </div>
+                      </div>
+
+                      {/* Timestamps */}
+                      <div className="pt-2 border-t border-gray-200">
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div className="flex justify-between">
+                            <span>Created:</span>
+                            <span className="text-gray-700">{formatDate(order.created_at)}</span>
+                          </div>
+                          {order.updated_at && (
+                            <div className="flex justify-between">
+                              <span>Updated:</span>
+                              <span className="text-gray-700">{formatDate(order.updated_at)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -518,13 +608,30 @@ const OrderHistory = () => {
                 <div className={`w-16 h-16 ${THEME_COLORS.background?.muted ?? "bg-gray-100"} rounded-full flex items-center justify-center mx-auto mb-4`}>
                   <Search className="w-8 h-8 text-gray-400" />
                 </div>
-                <p className="text-gray-500 font-medium">No orders found</p>
-                <p className="text-sm text-gray-400 mt-1">{searchQuery ? "Try adjusting your search terms" : "You haven't placed any orders yet"}</p>
+                <p className="text-gray-600 font-medium text-base mb-1">No orders found</p>
+                <p className="text-sm text-gray-500">{searchQuery ? "Try adjusting your search terms" : "You haven't placed any orders yet"}</p>
               </div>
             )}
           </div>
 
-          {/* Loading more sentinel (mobile/desktop share one sentinel at end) */}
+          {/* Loading More Indicator */}
+          {isFetchingMore && (
+            <div className="flex justify-center items-center py-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500" />
+            </div>
+          )}
+
+          {/* Pagination Info */}
+          {orders.length > 0 && (
+            <div className={`rounded-xl p-4 border ${THEME_COLORS.border?.primary200 ?? "border-gray-200"} ${THEME_COLORS.background?.card ?? "bg-white"}`}>
+              <div className="text-center text-sm text-gray-600">
+                Showing {orders.length} of {pagination.total} orders
+                {pagination.currentPage < pagination.lastPage && (
+                  <span className="block mt-1 text-xs text-gray-500">Scroll down for more</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
