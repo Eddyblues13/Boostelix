@@ -18,10 +18,9 @@ import {
 import {
   increaseServicePrices,
   getServicePriceStats,
-  fetchApiProviders
+  fetchApiProviders,
+  fetchAdminCategories
 } from "../../services/adminService"
-
-import { fetchSmmCategories, fetchSmmServices, createOrder } from "../../services/services"
 
 const BulkPriceIncrease = () => {
   const [percentage, setPercentage] = useState(10)
@@ -44,27 +43,37 @@ const BulkPriceIncrease = () => {
     { value: "provider", label: "By API Provider", icon: Server, description: "Increase prices for services from a specific API provider" }
   ]
 
+  // Load data on mount only
   useEffect(() => {
     loadCategories()
     loadProviders()
+  }, []) // Remove dependencies to prevent re-running
+
+  // Load stats when filters change
+  useEffect(() => {
     loadPriceStats()
   }, [scope, selectedCategory, selectedProvider])
 
   const loadCategories = async () => {
     try {
-      const response = await fetchSmmCategories()
-      setCategories(response.data.data || [])
+      const response = await fetchAdminCategories()
+      // Handle response structure from admin endpoint
+      const categoriesData = response?.data || response || []
+      setCategories(Array.isArray(categoriesData) ? categoriesData : [])
     } catch (err) {
       console.error("Error loading categories:", err)
+      setCategories([])
     }
   }
 
   const loadProviders = async () => {
     try {
       const response = await fetchApiProviders()
-      setProviders(response || [])
+      setProviders(Array.isArray(response) ? response : response?.data || [])
     } catch (err) {
       console.error("Error loading providers:", err)
+      setProviders([])
+      // Don't redirect - just show empty providers
     }
   }
 
@@ -76,26 +85,28 @@ const BulkPriceIncrease = () => {
       if (scope === "category" && selectedCategory) {
         params.category_id = selectedCategory
       } else if (scope === "provider" && selectedProvider) {
-        // You might need to adjust this based on your API
         params.provider_id = selectedProvider
       }
       
       const response = await getServicePriceStats(params)
-      setStats(response.data)
+      const statsData = response?.data || response
+      setStats(statsData)
       
       // Generate preview
-      if (response.data && response.data.average_price > 0) {
+      if (statsData && statsData.average_price > 0) {
         const increaseFactor = 1 + (percentage / 100)
-        const newAverage = response.data.average_price * increaseFactor
+        const newAverage = statsData.average_price * increaseFactor
         setPreview({
-          currentAverage: response.data.average_price,
+          currentAverage: statsData.average_price,
           newAverage: newAverage,
-          increaseAmount: newAverage - response.data.average_price,
-          totalIncrease: (newAverage * response.data.total_services) - (response.data.average_price * response.data.total_services)
+          increaseAmount: newAverage - statsData.average_price,
+          totalIncrease: (newAverage * statsData.total_services) - (statsData.average_price * statsData.total_services)
         })
       }
     } catch (err) {
       console.error("Error loading stats:", err)
+      setStats(null)
+      // Don't redirect - just show empty stats
     } finally {
       setIsLoadingStats(false)
     }
@@ -105,6 +116,14 @@ const BulkPriceIncrease = () => {
     try {
       setIsLoading(true)
       setError(null)
+      setSuccess(null)
+      
+      // Check if admin token exists
+      const adminToken = localStorage.getItem('adminToken')
+      if (!adminToken) {
+        setError('Admin authentication required. Please log in again.')
+        return
+      }
       
       const payload = {
         percentage: percentage,
@@ -119,15 +138,22 @@ const BulkPriceIncrease = () => {
 
       const response = await increaseServicePrices(payload)
       
-      setSuccess(response.message)
+      const successMsg = response?.message || response?.data?.message || 'Prices increased successfully!'
+      setSuccess(successMsg)
       
       // Reload stats to show updated numbers
-      loadPriceStats()
+      await loadPriceStats()
       
       // Clear success message after 5 seconds
       setTimeout(() => setSuccess(null), 5000)
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to increase prices")
+      console.error('Error increasing prices:', err)
+      // Don't redirect on error - let the interceptor handle it
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Failed to increase prices"
+      setError(errorMsg)
+      
+      // If it's a 401, the interceptor will handle the redirect
+      // Don't do anything else here
     } finally {
       setIsLoading(false)
     }

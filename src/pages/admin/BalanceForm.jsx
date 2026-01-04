@@ -13,11 +13,17 @@ const BalanceForm = ({ user, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error("Please enter a valid amount")
+      return
+    }
+    
     setLoading(true)
 
     try {
       const response = await adjustUserBalance(user.id, action, parseFloat(amount), notes)
-      toast.success(response.message || "Balance adjusted successfully.")
+      toast.success(response.message || response.status === 'success' ? 'Balance adjusted successfully' : response.message || "Balance adjusted successfully.")
       setAmount("")
       setNotes("")
       onCancel?.()

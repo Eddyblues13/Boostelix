@@ -62,6 +62,7 @@ Your cron jobs will now run automatically:
 - Refunds: Every hour
 - Notifications: Every 2 minutes
 - Database cleanup: Daily at 2 AM
+- Auto-close inactive tickets: Daily at 3 AM
 
 Check logs at: storage/logs/cron-*.log
 

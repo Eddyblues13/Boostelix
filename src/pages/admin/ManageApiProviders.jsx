@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useOutletContext } from "react-router-dom"
 import {
   Search,
   Plus,
@@ -34,8 +35,118 @@ import {
   toggleApiProviderStatus,
   syncApiProviderServices,
 } from "../../services/adminService"
+import toast from "react-hot-toast"
 
 const ManageApiProviders = () => {
+  // Get currency context from AdminLayout
+  const context = useOutletContext()
+  const {
+    selectedCurrency: contextSelectedCurrency,
+    convertToSelectedCurrency: contextConvertToSelectedCurrency,
+    formatCurrency: contextFormatCurrency,
+  } = context || {}
+
+  // Default currency if not provided
+  const selectedCurrency = contextSelectedCurrency || { 
+    code: "NGN", 
+    symbol: "₦", 
+    rate: 1 
+  }
+
+  // Fallback functions if not provided
+  const convertToSelectedCurrency = contextConvertToSelectedCurrency || ((amount, sourceCurrency = "NGN") => {
+    if (!amount || !selectedCurrency?.rate) return 0
+    return amount * (selectedCurrency.rate || 1)
+  })
+
+  const formatCurrency = contextFormatCurrency || ((amount, currency) => {
+    if (!currency || amount === null || amount === undefined) return '₦ 0.00'
+    const currencySymbol = currency?.symbol || '₦'
+    const formattedAmount = parseFloat(amount).toFixed(2)
+    return `${currencySymbol} ${formattedAmount}`
+  })
+
+  // Find USD currency for equivalent display
+  const [usdCurrency, setUsdCurrency] = useState({ code: "USD", symbol: "$", rate: 1 })
+  
+  useEffect(() => {
+    // Try to get USD currency from context currencies
+    if (context?.currencies) {
+      const usd = context.currencies.find(c => c.code === "USD")
+      if (usd) setUsdCurrency(usd)
+    }
+  }, [context?.currencies])
+
+  // Format provider balance with conversion
+  const formatProviderBalance = (provider) => {
+    if (!provider || provider.balance === null || provider.balance === undefined) {
+      return { converted: formatCurrency(0, selectedCurrency), original: "0.00", usd: "$0.00" }
+    }
+    
+    const providerCurrency = provider.currency || "USD"
+    const balance = parseFloat(provider.balance) || 0
+    
+    // Convert to selected currency (admin's chosen currency)
+    const convertedBalance = convertToSelectedCurrency(balance, providerCurrency)
+    const formattedConverted = formatCurrency(convertedBalance, selectedCurrency)
+    
+    // Convert to USD equivalent
+    // All currencies in the system are based on rates relative to a base currency
+    // We'll convert: provider currency -> NGN -> USD
+    let usdEquivalent = 0
+    
+    if (providerCurrency === "USD") {
+      usdEquivalent = balance
+    } else {
+      // Find currency rates
+      const providerCurrencyObj = currencies.find(c => c.code === providerCurrency)
+      const ngnCurrencyObj = currencies.find(c => c.code === "NGN")
+      
+      const providerRate = providerCurrencyObj?.rate || 1
+      const ngnRate = ngnCurrencyObj?.rate || 1
+      const usdRate = usdCurrency.rate || 1
+      
+      // Convert: provider currency -> NGN -> USD
+      // If rates are relative to USD, then: providerRate is provider/USD, ngnRate is NGN/USD
+      // So: balance in provider currency / providerRate = balance in USD
+      // But if rates are relative to NGN, then we need: balance / providerRate * ngnRate = NGN, then NGN / ngnRate * usdRate = USD
+      
+      // Simplified: Assuming all rates are relative to USD
+      // If provider rate is provider/USD, then balance / providerRate gives USD
+      // If provider rate is provider/NGN, then we need to convert via NGN
+      
+      // Try direct conversion first (assuming rates are USD-based)
+      try {
+        if (providerRate > 0) {
+          const balanceInUSD = balance / providerRate
+          usdEquivalent = balanceInUSD
+        } else {
+          // Fallback: assume 1:1 if rate is 0 or invalid
+          usdEquivalent = providerCurrency === "NGN" ? (balance / (ngnRate || 1)) * (usdRate || 1) : balance
+        }
+      } catch {
+        // Fallback calculation
+        usdEquivalent = balance
+      }
+    }
+    
+    const formattedUSD = `$${Math.max(0, usdEquivalent).toFixed(2)}`
+    
+    // Original balance in provider's currency
+    const originalFormat = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: providerCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(balance)
+    
+    return {
+      converted: formattedConverted,
+      original: originalFormat,
+      usd: formattedUSD,
+      providerCurrency: providerCurrency
+    }
+  }
   const [showAddForm, setShowAddForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All Status")
@@ -54,10 +165,13 @@ const ManageApiProviders = () => {
       try {
         setIsLoading(true)
         const data = await fetchApiProviders()
-        setApiProviders(data)
+        setApiProviders(Array.isArray(data) ? data : [])
         setError(null)
       } catch (err) {
-        setError(err.message || "Failed to load API providers")
+        const errorMsg = err?.response?.data?.message || err.message || "Failed to load API providers"
+        setError(errorMsg)
+        toast.error(errorMsg)
+        setApiProviders([])
       } finally {
         setIsLoading(false)
       }
@@ -83,14 +197,6 @@ const ManageApiProviders = () => {
     description: "",
   })
 
-  const formatCurrency = (amount, currency = "USD") => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 7,
-      maximumFractionDigits: 7,
-    }).format(amount)
-  }
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A"
@@ -127,19 +233,15 @@ const ManageApiProviders = () => {
       let response
       
       if (editingProvider) {
-        response = await updateApiProvider(editingProvider.id, formData)
-        setApiProviders((prev) =>
-          prev.map((provider) =>
-            provider.id === editingProvider.id ? response : provider
-          )
-        )
+        await updateApiProvider(editingProvider.id, formData)
         setEditingProvider(null)
-        setSuccess('API provider updated successfully!')
       } else {
-        response = await createApiProvider(formData)
-        setApiProviders((prev) => [...prev, response])
-        setSuccess('API provider created successfully!')
+        await createApiProvider(formData)
       }
+      
+      // Reload providers to get updated data
+      const updatedProviders = await fetchApiProviders()
+      setApiProviders(Array.isArray(updatedProviders) ? updatedProviders : [])
       
       setFormData({
         api_name: "",
@@ -150,9 +252,14 @@ const ManageApiProviders = () => {
       })
       setShowAddForm(false)
       setError(null)
+      const successMsg = editingProvider ? 'API provider updated successfully!' : 'API provider created successfully!'
+      setSuccess(successMsg)
+      toast.success(successMsg)
     } catch (err) {
-      setError(err.message || "Failed to save API provider")
+      const errorMsg = err?.response?.data?.message || err.message || "Failed to save API provider"
+      setError(errorMsg)
       setSuccess(null)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -173,6 +280,9 @@ const ManageApiProviders = () => {
   }
 
   const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this API provider? This action cannot be undone.")) {
+      return
+    }
     try {
       setIsLoading(true)
       await deleteApiProvider(id)
@@ -181,9 +291,12 @@ const ManageApiProviders = () => {
       setSelectedProvider(null)
       setError(null)
       setSuccess('API provider deleted successfully!')
+      toast.success('API provider deleted successfully!')
     } catch (err) {
-      setError(err.message || "Failed to delete API provider")
+      const errorMsg = err?.response?.data?.message || err.message || "Failed to delete API provider"
+      setError(errorMsg)
       setSuccess(null)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -200,10 +313,14 @@ const ManageApiProviders = () => {
       )
       setActiveDropdown(null)
       setError(null)
-      setSuccess(`Provider ${updatedProvider.status === 1 ? 'activated' : 'deactivated'} successfully!`)
+      const successMsg = `Provider ${updatedProvider.status === 1 ? 'activated' : 'deactivated'} successfully!`
+      setSuccess(successMsg)
+      toast.success(successMsg)
     } catch (err) {
-      setError(err.message || "Failed to toggle provider status")
+      const errorMsg = err.message || err?.response?.data?.message || "Failed to toggle provider status"
+      setError(errorMsg)
       setSuccess(null)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -232,9 +349,12 @@ const ManageApiProviders = () => {
       setApiProviders(updatedProviders)
       setError(null)
       setSuccess('Services synchronized successfully!')
+      toast.success('Services synchronized successfully!')
     } catch (err) {
-      setError(err.message || "Failed to sync services")
+      const errorMsg = err.message || err?.response?.data?.message || "Failed to sync services"
+      setError(errorMsg)
       setSuccess(null)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -377,18 +497,31 @@ const ManageApiProviders = () => {
             <h3 className="font-semibold text-gray-900">Financial Details</h3>
           </div>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Balance:</span>
-              <span className="text-gray-900 font-bold">{formatCurrency(provider.balance, provider.currency)}</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Balance:</span>
+                <div className="text-right">
+                  <span className="text-gray-900 font-bold text-base">{formatProviderBalance(provider).converted}</span>
+                  <span className="text-gray-500 text-xs block mt-0.5">
+                    ({formatProviderBalance(provider).original})
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+                <span className="text-gray-600">USD Equivalent:</span>
+                <span className="text-gray-900 font-semibold text-sm">{formatProviderBalance(provider).usd}</span>
+              </div>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between pt-2 border-t border-gray-100">
               <span className="text-gray-600">Currency:</span>
-              <span className="text-gray-900 font-semibold">{provider.currency}</span>
+              <span className="text-gray-900 font-semibold">{provider.currency || "USD"}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Rate (1 NGN):</span>
-              <span className="text-gray-900 font-semibold">₦{provider.convention_rate}</span>
-            </div>
+            {provider.convention_rate && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Rate (1 NGN):</span>
+                <span className="text-gray-900 font-semibold">₦{provider.convention_rate}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -490,10 +623,33 @@ const ManageApiProviders = () => {
             <span className="mx-2">/</span>
             <span className="text-gray-900 font-medium">Api Provider</span>
           </div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Manage API Providers</h1>
-          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
-            Configure and monitor your API service providers
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Manage API Providers</h1>
+              <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
+                Configure and monitor your API service providers
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  setIsLoading(true)
+                  const data = await fetchApiProviders()
+                  setApiProviders(Array.isArray(data) ? data : [])
+                  toast.success('Providers refreshed successfully!')
+                } catch (err) {
+                  toast.error('Failed to refresh providers')
+                } finally {
+                  setIsLoading(false)
+                }
+              }}
+              disabled={isLoading}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {/* Error Message */}
@@ -801,16 +957,21 @@ const ManageApiProviders = () => {
                           <h4 className="font-semibold text-gray-900">{provider.api_name}</h4>
                         </div>
                         <p className="text-xs text-gray-500 mb-2">{provider.services_count || 0} services</p>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-bold text-gray-900">
-                            {formatCurrency(provider.balance, provider.currency)}
-                          </span>
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                              provider.status === 1 ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {provider.status === 1 ? "Active" : "Inactive"}
+                        <div className="flex flex-col gap-1 mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-gray-900">
+                              {formatProviderBalance(provider).converted}
+                            </span>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                                provider.status === 1 ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {provider.status === 1 ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {formatProviderBalance(provider).usd} USD
                           </span>
                         </div>
                         <p className="text-xs text-gray-600 line-clamp-2">
@@ -872,9 +1033,14 @@ const ManageApiProviders = () => {
                       <td className="px-4 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-gray-900">
-                            {formatCurrency(provider.balance, provider.currency)}
+                            {formatProviderBalance(provider).converted}
                           </span>
-                          <span className="text-xs text-gray-500">Rate: ₦{provider.convention_rate}</span>
+                          <span className="text-xs text-gray-500">
+                            {formatProviderBalance(provider).usd} USD
+                          </span>
+                          {provider.convention_rate && (
+                            <span className="text-xs text-gray-400">Rate: ₦{provider.convention_rate}</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-4">
@@ -942,9 +1108,36 @@ const ManageApiProviders = () => {
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm text-gray-500">Total Balance</p>
-                  <p className="text-sm sm:text-xl font-bold text-gray-900">
-                    {formatCurrency(apiProviders.reduce((sum, p) => sum + p.balance, 0))}
-                  </p>
+                  <div className="flex flex-col">
+                    <p className="text-sm sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(
+                        apiProviders.reduce((sum, p) => {
+                          const balance = parseFloat(p.balance) || 0
+                          const providerCurrency = p.currency || "USD"
+                          return sum + convertToSelectedCurrency(balance, providerCurrency)
+                        }, 0),
+                        selectedCurrency
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {(() => {
+                        const totalUSD = apiProviders.reduce((sum, p) => {
+                          const balance = parseFloat(p.balance) || 0
+                          const providerCurrency = p.currency || "USD"
+                          if (providerCurrency === "USD") return sum + balance
+                          
+                          const providerRate = currencies.find(c => c.code === providerCurrency)?.rate || 1
+                          const usdRate = usdCurrency.rate || 1
+                          
+                          if (providerRate > 0 && usdRate > 0) {
+                            return sum + ((balance / providerRate) * usdRate)
+                          }
+                          return sum + balance
+                        }, 0)
+                        return `$${totalUSD.toFixed(2)} USD`
+                      })()}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

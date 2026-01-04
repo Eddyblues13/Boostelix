@@ -31,7 +31,7 @@ const UserActions = ({ user, onActionSelect, onEdit, onToggleStatus }) => {
       </h3>
       <div className="flex flex-wrap gap-3">
         <button
-            onClick={() => navigate(`/admin/users/${user.id}/balance`)}
+            onClick={() => onActionSelect("add_subtract_balance", user)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
         >
           <DollarSign className="w-4 h-4" />
@@ -60,7 +60,7 @@ const UserActions = ({ user, onActionSelect, onEdit, onToggleStatus }) => {
           Custom Rate
         </button>
         <button
-               onClick={() => navigate(`/admin/users/${user.id}/send-email`)}
+               onClick={() => onActionSelect("send_email", user)}
           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
         >
           <Send className="w-4 h-4" />

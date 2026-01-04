@@ -263,12 +263,33 @@ export const createTicket = async (ticketData) => {
 //user ticket history
 export const fetchUserTickets = async () => {
   try {
-    const response = await api.get('/ticketshistory');
-    console.log('Tickets from API:', response.data.tickets); // ✅ Confirm structure
-    return response.data.tickets;
+    const response = await api.get('/tickets');
+    return response.data?.tickets || [];
   } catch (error) {
     console.error('Error fetching tickets history:', error);
     return [];
+  }
+};
+
+// Get single ticket details
+export const fetchTicketDetails = async (id) => {
+  try {
+    const response = await api.get(`/tickets/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching ticket details:', error);
+    throw error;
+  }
+};
+
+// Reply to ticket (user)
+export const replyToTicket = async (id, message) => {
+  try {
+    const response = await api.post(`/tickets/${id}/reply`, { message });
+    return response.data;
+  } catch (error) {
+    console.error('Error replying to ticket:', error);
+    throw error;
   }
 };
 

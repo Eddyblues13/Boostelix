@@ -23,6 +23,7 @@ import {
   Eye,
   DollarSign
 } from "lucide-react"
+import toast from "react-hot-toast"
 import {
   fetchTransactions,
   fetchTransactionDetails,
@@ -81,14 +82,22 @@ const ManageTransactions = () => {
       setIsLoading(true)
       const params = {
         page,
-        search: searchTerm,
+        per_page: 15,
+        search: searchTerm || undefined,
         status: statusFilter !== "All Status" ? statusFilter.toLowerCase() : undefined,
         type: typeFilter !== "All Types" ? typeFilter.toLowerCase() : undefined,
       }
       
+      // Remove undefined values
+      Object.keys(params).forEach(key => {
+        if (params[key] === undefined || params[key] === '') {
+          delete params[key];
+        }
+      });
+      
       const response = await fetchTransactions(params)
       
-      // Ensure transactions is always an array
+      // Handle response structure
       const transactionsData = Array.isArray(response?.data) 
         ? response.data 
         : Array.isArray(response)
@@ -99,16 +108,17 @@ const ManageTransactions = () => {
       
       // Handle pagination with fallbacks
       setPagination({
-        current_page: response?.current_page || response?.page || 1,
-        last_page: response?.last_page || response?.total_pages || 1,
-        per_page: response?.per_page || response?.limit || 15,
-        total: response?.total || response?.total_items || transactionsData.length,
+        current_page: response?.current_page || page || 1,
+        last_page: response?.last_page || 1,
+        per_page: response?.per_page || 15,
+        total: response?.total || transactionsData.length,
       })
       
       setError(null)
     } catch (err) {
       console.error('Error loading transactions:', err)
-      setError(err.message || "Failed to load transactions. Please try again.")
+      const errorMsg = err?.response?.data?.message || err.message || "Failed to load transactions. Please try again."
+      setError(errorMsg)
       setTransactions([]) // Reset to empty array on error
     } finally {
       setIsLoading(false)
@@ -185,13 +195,11 @@ const ManageTransactions = () => {
       
       if (editingTransaction) {
         const response = await updateTransaction(editingTransaction.id, formData)
-        setTransactions((prev) =>
-          prev.map((transaction) =>
-            transaction.id === editingTransaction.id ? response : transaction
-          )
-        )
+        // Reload transactions to get updated data
+        await loadTransactions(pagination.current_page)
         setEditingTransaction(null)
         setSuccess('Transaction updated successfully!')
+        toast.success('Transaction updated successfully!')
       }
       
       setFormData({
@@ -203,8 +211,10 @@ const ManageTransactions = () => {
       })
       setError(null)
     } catch (err) {
-      setError(err.message || "Failed to save transaction")
+      const errorMsg = err?.response?.data?.message || err.message || "Failed to save transaction"
+      setError(errorMsg)
       setSuccess(null)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -224,17 +234,21 @@ const ManageTransactions = () => {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this transaction?")) return
+    if (!window.confirm("Are you sure you want to delete this transaction? This action cannot be undone.")) return
     
     try {
       setIsLoading(true)
       await deleteTransaction(id)
-      setTransactions((prev) => prev.filter((transaction) => transaction.id !== id))
+      // Reload transactions
+      await loadTransactions(pagination.current_page)
       setActiveDropdown(null)
       setSelectedTransaction(null)
       setSuccess('Transaction deleted successfully!')
+      toast.success('Transaction deleted successfully!')
     } catch (err) {
-      setError(err.message || "Failed to delete transaction")
+      const errorMsg = err?.response?.data?.message || err.message || "Failed to delete transaction"
+      setError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -243,16 +257,17 @@ const ManageTransactions = () => {
   const changeStatus = async (id, newStatus) => {
     try {
       setIsLoading(true)
-      const updatedTransaction = await changeTransactionStatus(id, newStatus)
-      setTransactions((prev) =>
-        prev.map((transaction) =>
-          transaction.id === id ? updatedTransaction : transaction
-        )
-      )
+      await changeTransactionStatus(id, newStatus)
+      // Reload transactions
+      await loadTransactions(pagination.current_page)
       setActiveDropdown(null)
-      setSuccess(`Transaction status changed to ${newStatus} successfully!`)
+      const successMsg = `Transaction status changed to ${newStatus} successfully!`
+      setSuccess(successMsg)
+      toast.success(successMsg)
     } catch (err) {
-      setError(err.message || "Failed to change transaction status")
+      const errorMsg = err?.response?.data?.message || err.message || "Failed to change transaction status"
+      setError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }

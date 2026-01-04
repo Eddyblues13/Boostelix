@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, MoreVertical, X, UserPlus, Menu } from "lucide-react"
+import { Search, UserPlus, Menu, X, RefreshCw, Download, Filter } from "lucide-react"
 import UserDetailsCard from "./UserDetailsCard"
 import UserForm from "./UserForm"
 import SendEmailForm from "./SendEmailForm"
@@ -9,7 +9,20 @@ import BalanceForm from "./BalanceForm"
 import CustomRateForm from "./CustomRateForm"
 import UserTable from "./UserTable"
 import UserStats from "./UserStats"
-import { fetchUsers } from "../../services/adminService"; 
+import { 
+  fetchUsers, 
+  updateUser, 
+  deleteUser, 
+  changeUserStatus,
+  generateUserApiKey,
+  adjustUserBalance,
+  sendEmailToUser,
+  fetchUserOrders,
+  fetchUserTransactions,
+  loginAsUser,
+} from "../../services/adminService"
+import toast from "react-hot-toast"
+import { useOutletContext } from "react-router-dom"
 
 const ManageUsers = () => {
   // State management
@@ -19,150 +32,214 @@ const ManageUsers = () => {
   const [selectedUser, setSelectedUser] = useState(null)
   const [editingUser, setEditingUser] = useState(null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [activeUserAction, setActiveUserAction] = useState(null)
-  const [users, setUsers] = useState({ data: [] });
-  const [activeDropdownUserId, setActiveDropdownUserId] = useState(null);
+  const [users, setUsers] = useState({ data: [] })
+  const [activeDropdownUserId, setActiveDropdownUserId] = useState(null)
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 0,
+  })
 
+  // Get currency context from AdminLayout
+  const context = useOutletContext()
+  const {
+    selectedCurrency: contextSelectedCurrency,
+    convertToSelectedCurrency: contextConvertToSelectedCurrency,
+    formatCurrency: contextFormatCurrency,
+  } = context || {}
 
-useEffect(() => {
+  // Default currency if not provided
+  const selectedCurrency = contextSelectedCurrency || { 
+    code: "NGN", 
+    symbol: "₦", 
+    rate: 1 
+  }
+
+  // Fallback functions if not provided
+  const convertToSelectedCurrency = contextConvertToSelectedCurrency || ((amount, sourceCurrency = "NGN") => {
+    if (!amount || !selectedCurrency?.rate) return 0
+    return amount * (selectedCurrency.rate || 1)
+  })
+
+  const formatCurrency = contextFormatCurrency || ((amount, currency) => {
+    if (!currency || amount === null || amount === undefined) return '₦ 0.00'
+    const currencySymbol = currency?.symbol || '₦'
+    const formattedAmount = parseFloat(amount).toFixed(2)
+    return `${currencySymbol} ${formattedAmount}`
+  })
+
+  // Format user balance with currency conversion
+  const formatUserBalance = (user) => {
+    if (!user || user.balance === null || user.balance === undefined) return formatCurrency(0, selectedCurrency)
+    const userCurrency = user.currency || "NGN"
+    const convertedBalance = convertToSelectedCurrency(user.balance, userCurrency)
+    return formatCurrency(convertedBalance, selectedCurrency)
+  }
+
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (pagination.current_page === 1) {
+        loadUsers()
+      } else {
+        setPagination(prev => ({ ...prev, current_page: 1 }))
+      }
+    }, 500) // 500ms debounce
+    
+    return () => clearTimeout(timer)
+  }, [searchTerm, statusFilter])
+
+  // Fetch users on component mount and when pagination changes
+  useEffect(() => {
+    loadUsers()
+  }, [pagination.current_page])
+
   const loadUsers = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const response = await fetchUsers(); 
-      setUsers(response); // Directly set array
+      // Use AbortController for request cancellation
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+      const response = await fetchUsers()
+      
+      clearTimeout(timeoutId)
+      
+      // Handle both paginated and non-paginated responses
+      if (response?.data) {
+        // Apply client-side filtering for search and status if backend doesn't support it
+        let filteredData = response.data
+        
+        if (searchTerm) {
+          const searchLower = searchTerm.toLowerCase()
+          filteredData = filteredData.filter(user => 
+            (user.first_name || user.firstname || "").toLowerCase().includes(searchLower) ||
+            (user.last_name || user.lastname || "").toLowerCase().includes(searchLower) ||
+            (user.username || "").toLowerCase().includes(searchLower) ||
+            (user.email || "").toLowerCase().includes(searchLower)
+          )
+        }
+        
+        if (statusFilter !== "All Status") {
+          filteredData = filteredData.filter(user => {
+            if (statusFilter === "Active") {
+              return user.status === "active" || user.status === 1
+            } else if (statusFilter === "Banned") {
+              return user.status === "banned" || user.status === 0
+            }
+            return true
+          })
+        }
+        
+        setUsers({ data: filteredData })
+        setPagination(prev => ({
+          ...prev,
+          current_page: response.current_page || 1,
+          last_page: response.last_page || 1,
+          total: filteredData.length,
+        }))
+      } else if (Array.isArray(response)) {
+        setUsers({ data: response })
+        setPagination(prev => ({
+          ...prev,
+          total: response.length,
+        }))
+      } else {
+        setUsers({ data: [] })
+      }
     } catch (error) {
-      console.error("Failed to fetch users:", error);
-      setUsers([]); // Reset to empty array
+      if (error.name === 'AbortError') {
+        console.error("Request timeout")
+        toast.error("Request took too long. Please try again.")
+      } else {
+        console.error("Failed to fetch users:", error)
+        toast.error("Failed to load users. Please try again.")
+      }
+      setUsers({ data: [] })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
-  loadUsers();
-}, []);
-
-
+  }
 
   const [formData, setFormData] = useState({
-    // Your existing form data
+    first_name: "",
+    last_name: "",
+    username: "",
+    email: "",
+    phone: "",
+    address: "",
+    preferred_language: "English",
+    status: "active",
+    email_verified: false,
+    sms_verified: false,
+    two_factor_enabled: false,
+    balance: "",
+    currency: "NGN",
+    account_type: "standard",
   })
-
-  const [passwordData, setPasswordData] = useState({
-    new_password: "",
-    confirm_password: "",
-  })
-
-  // Utility functions
-  const formatCurrency = (amount, currency = "NGN") => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)
-  }
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
-  }
-
-  const generateApiKey = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    let result = ""
-    for (let i = 0; i < 20; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return result
-  }
 
   // Handler functions
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : type === "number" ? Number.parseFloat(value) || 0 : value,
+      [name]: type === "checkbox" ? checked : type === "number" ? parseFloat(value) || 0 : value,
     }))
   }
 
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target
-    setPasswordData(prev => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (editingUser) {
-      setUsers(prev =>
-        prev.map(user => (user.id === editingUser.id ? { ...user, ...formData, id: editingUser.id } : user))
-      )
-      setEditingUser(null)
-    } else {
-      const newUser = {
-        ...formData,
-        id: Date.now(),
-        balance: Number.parseFloat(formData.balance) || 0,
-        api_key: generateApiKey(),
-        avatar: null,
-        joined_at: new Date().toISOString(),
-        last_login: new Date().toISOString(),
-        total_orders: 0,
-        total_spent: 0,
+    setIsLoading(true)
+
+    try {
+      if (editingUser) {
+        // Update existing user
+        const updateData = {
+          firstname: formData.first_name,
+          lastname: formData.last_name,
+          username: formData.username,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+        }
+        
+        await updateUser(editingUser.id, updateData)
+        toast.success("User updated successfully!")
+        await loadUsers()
+        setEditingUser(null)
+        setShowAddForm(false)
+        setActiveUserAction(null)
+      } else {
+        toast.error("User creation not yet implemented. Please use registration.")
       }
-      setUsers(prev => [...prev, newUser])
+    } catch (error) {
+      const errorMsg = error?.response?.data?.message || "Failed to update user"
+      toast.error(errorMsg)
+      console.error("User update error:", error)
+    } finally {
+      setIsLoading(false)
     }
-
-    setFormData({
-      first_name: "",
-      last_name: "",
-      username: "",
-      email: "",
-      phone: "",
-      address: "",
-      preferred_language: "English",
-      status: "active",
-      email_verified: false,
-      sms_verified: false,
-      two_factor_enabled: false,
-      balance: "",
-      currency: "NGN",
-      account_type: "standard",
-    })
-    setShowAddForm(false)
-    setActiveUserAction(null)
-  }
-
-  const handlePasswordUpdate = (e) => {
-    e.preventDefault()
-    if (passwordData.new_password !== passwordData.confirm_password) {
-      alert("Passwords do not match!")
-      return
-    }
-    // Update password logic here
-    setPasswordData({ new_password: "", confirm_password: "" })
-    setShowPasswordChange(false)
-    alert("Password updated successfully!")
   }
 
   const handleEdit = (user) => {
     setFormData({
-      first_name: user.first_name,
-      last_name: user.last_name,
-      username: user.username,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
-      preferred_language: user.preferred_language,
-      status: user.status,
-      email_verified: user.email_verified,
-      sms_verified: user.sms_verified,
-      two_factor_enabled: user.two_factor_enabled,
-      balance: user.balance.toString(),
-      currency: user.currency,
-      account_type: user.account_type,
+      first_name: user.first_name || user.firstname || "",
+      last_name: user.last_name || user.lastname || "",
+      username: user.username || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      address: user.address || "",
+      preferred_language: user.preferred_language || "English",
+      status: user.status === 1 ? "active" : user.status === 0 ? "banned" : user.status || "active",
+      email_verified: user.email_verified || false,
+      sms_verified: user.sms_verified || false,
+      two_factor_enabled: user.two_factor_enabled || false,
+      balance: (user.balance || 0).toString(),
+      currency: user.currency || "NGN",
+      account_type: user.account_type || "standard",
     })
     setEditingUser(user)
     setShowAddForm(true)
@@ -170,28 +247,71 @@ useEffect(() => {
     setActiveUserAction("edit")
   }
 
-  const handleDelete = (id) => {
-    setUsers(prev => prev.filter(user => user.id !== id))
-    setSelectedUser(null)
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await deleteUser(id)
+      toast.success("User deleted successfully!")
+      await loadUsers()
+      if (selectedUser?.id === id) {
+        setSelectedUser(null)
+      }
+    } catch (error) {
+      const errorMsg = error?.response?.data?.message || "Failed to delete user"
+      toast.error(errorMsg)
+      console.error("Delete user error:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
- const toggleUserStatus = (id) => {
-  setUsers(prev =>
-    prev.map(user => 
-      user.id === id 
-        ? { ...user, status: user.status === "active" ? "banned" : "active" } 
-        : user
-    )
-  );
-};
-
-  const handleSyncServices = (id) => {
+  const toggleUserStatus = async (id) => {
     setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      alert(`Syncing services for user ID: ${id}`)
+    try {
+      const user = users.data.find(u => u.id === id)
+      if (!user) return
+
+      // Convert status to backend format (0 = banned, 1 = active)
+      const newStatus = user.status === "active" || user.status === 1 ? 0 : 1
+      
+      await changeUserStatus(id, newStatus)
+      toast.success(`User ${newStatus === 1 ? "activated" : "deactivated"} successfully!`)
+      await loadUsers()
+      
+      // Update selected user if it's the one being toggled
+      if (selectedUser?.id === id) {
+        const updatedUser = { ...selectedUser, status: newStatus === 1 ? "active" : "banned" }
+        setSelectedUser(updatedUser)
+      }
+    } catch (error) {
+      const errorMsg = error?.response?.data?.message || "Failed to update user status"
+      toast.error(errorMsg)
+      console.error("Toggle status error:", error)
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
+  }
+
+  const handleGenerateApiKey = async (userId) => {
+    setIsLoading(true)
+    try {
+      const response = await generateUserApiKey(userId)
+      toast.success("API key generated successfully!")
+      await loadUsers()
+      if (selectedUser?.id === userId) {
+        setSelectedUser({ ...selectedUser, api_token: response.data?.api_key })
+      }
+    } catch (error) {
+      const errorMsg = error?.response?.data?.message || "Failed to generate API key"
+      toast.error(errorMsg)
+      console.error("Generate API key error:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleViewDetails = (user) => {
@@ -200,54 +320,104 @@ useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  const handleActionSubmit = (action, data) => {
+  const handleActionSubmit = async (action, data) => {
     switch (action) {
       case "add_subtract_balance":
-        // Handle balance adjustment
-        setUsers(prev =>
-          prev.map(user =>
-            user.id === data.userId
-              ? {
-                  ...user,
-                  balance:
-                    data.action === "add"
-                      ? user.balance + data.amount
-                      : user.balance - data.amount,
-                }
-              : user
+        setIsLoading(true)
+        try {
+          await adjustUserBalance(
+            data.userId,
+            data.action,
+            data.amount,
+            data.notes || ""
           )
-        )
-        alert(`Balance ${data.action === "add" ? "added" : "subtracted"} successfully!`)
+          toast.success(`Balance ${data.action === "add" ? "added" : "subtracted"} successfully!`)
+          await loadUsers()
+          // Refresh selected user if it's the one being adjusted
+          if (selectedUser?.id === data.userId) {
+            const updatedUser = await fetchUsers().then(res => 
+              res.data?.find(u => u.id === data.userId) || res.data?.data?.find(u => u.id === data.userId)
+            )
+            if (updatedUser) setSelectedUser(updatedUser)
+          }
+        } catch (error) {
+          const errorMsg = error?.response?.data?.message || "Failed to adjust balance"
+          toast.error(errorMsg)
+        } finally {
+          setIsLoading(false)
+        }
+        setActiveUserAction(null)
+        break
+      case "send_email":
+        setIsLoading(true)
+        try {
+          await sendEmailToUser(data.userId, data.subject, data.message)
+          toast.success("Email sent successfully!")
+        } catch (error) {
+          const errorMsg = error?.response?.data?.message || "Failed to send email"
+          toast.error(errorMsg)
+        } finally {
+          setIsLoading(false)
+        }
+        setActiveUserAction(null)
         break
       case "custom_rate":
-         // Handle custom rate setting
-        alert(`Custom rate set for ${data.service}: ${data.rate}${data.type === "percentage" ? "%" : ""}`)
+        toast.success(`Custom rate set for ${data.service}: ${data.rate}${data.type === "percentage" ? "%" : ""}`)
+        setActiveUserAction(null)
+        break
+      case "login_as_user":
+        handleLoginAsUser(data.userId)
         break
       default:
         break
     }
-    setActiveUserAction(null)
   }
 
+  const handleLoginAsUser = async (userId) => {
+    setIsLoading(true)
+    try {
+      // Store current admin session before impersonating
+      const adminToken = localStorage.getItem('adminToken')
+      const adminData = localStorage.getItem('adminData')
+      
+      // Store admin info for return
+      if (adminToken) {
+        sessionStorage.setItem('adminToken_backup', adminToken)
+      }
+      if (adminData) {
+        sessionStorage.setItem('adminData_backup', adminData)
+      }
+      
+      // Login as user
+      const response = await loginAsUser(userId)
+      
+      if (response.success && response.token && response.user) {
+        // Store user token and data
+        localStorage.setItem('authToken', response.token)
+        localStorage.setItem('userData', JSON.stringify(response.user))
+        localStorage.setItem('isAdminImpersonating', 'true') // Flag to indicate impersonation
+        
+        toast.success(`Logged in as ${response.user.first_name || response.user.firstname || response.user.username}`)
+        
+        // Navigate to user dashboard
+        window.location.href = '/dashboard'
+      } else {
+        toast.error(response.message || 'Failed to login as user')
+      }
+    } catch (error) {
+      const errorMsg = error?.response?.data?.message || "Failed to login as user"
+      toast.error(errorMsg)
+      console.error("Login as user error:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-  const filteredUsers = users.data.filter(user => {
-    const matchesSearch =
-     user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-
-  const matchesStatus =
-    statusFilter === "All Status" ||
-    (statusFilter === "Active" && user.status === "active") ||
-    (statusFilter === "Banned" && user.status === "banned");
-
-   return matchesSearch && matchesStatus;
-   });
-
+  // Users are already filtered in loadUsers, so use them directly
+  const filteredUsers = users.data || []
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 p-2 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -256,15 +426,51 @@ useEffect(() => {
             <span className="mx-2">/</span>
             <span className="text-gray-900 font-medium">Users</span>
           </div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Manage Users</h1>
-          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
-            Manage user accounts, permissions, and activities
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Manage Users</h1>
+              <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
+                Manage user accounts, permissions, and activities
+              </p>
+            </div>
+            <button
+              onClick={loadUsers}
+              disabled={isLoading}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
         </div>
 
-        {/* Conditional Rendering */}
-       
-        {activeUserAction === "edit" && showAddForm && (
+        {/* User Details Card */}
+        {selectedUser && !activeUserAction && (
+          <UserDetailsCard
+            user={selectedUser}
+            onClose={() => setSelectedUser(null)}
+            onCopyApiKey={() => handleGenerateApiKey(selectedUser.id)}
+            onEdit={handleEdit}
+            onToggleStatus={toggleUserStatus}
+            showPasswordChange={false}
+            onTogglePasswordChange={() => {}}
+            onPasswordUpdate={() => {}}
+            passwordData={{ new_password: "", confirm_password: "" }}
+            onPasswordChange={() => {}}
+            onActionSelect={(action, userData) => {
+              if (action === "add_subtract_balance" || action === "send_email" || action === "custom_rate") {
+                setActiveUserAction(action)
+              } else if (action === "login_as_user") {
+                handleActionSubmit("login_as_user", { userId: selectedUser.id })
+              } else {
+                toast.info(`Action "${action}" coming soon!`)
+              }
+            }}
+          />
+        )}
+
+        {/* Conditional Rendering - Forms */}
+        {activeUserAction === "edit" && showAddForm && editingUser && (
           <UserForm
             formData={formData}
             editingUser={editingUser}
@@ -282,10 +488,10 @@ useEffect(() => {
           <SendEmailForm
             user={selectedUser}
             onCancel={() => setActiveUserAction(null)}
-            onSubmit={({ to, subject, message }) => {
-              alert(`Sending email to ${to} with subject: ${subject} and message: ${message}`)
-              setActiveUserAction(null)
-            }}
+            onSubmit={(data) => handleActionSubmit("send_email", {
+              userId: selectedUser.id,
+              ...data
+            })}
           />
         )}
 
@@ -293,7 +499,10 @@ useEffect(() => {
           <BalanceForm
             user={selectedUser}
             onCancel={() => setActiveUserAction(null)}
-            onSubmit={(data) => handleActionSubmit("add_subtract_balance", data)}
+            onSubmit={(data) => handleActionSubmit("add_subtract_balance", {
+              userId: selectedUser.id,
+              ...data
+            })}
           />
         )}
 
@@ -301,7 +510,10 @@ useEffect(() => {
           <CustomRateForm
             user={selectedUser}
             onCancel={() => setActiveUserAction(null)}
-            onSubmit={(data) => handleActionSubmit("custom_rate", data)}
+            onSubmit={(data) => handleActionSubmit("custom_rate", {
+              userId: selectedUser.id,
+              ...data
+            })}
           />
         )}
 
@@ -328,58 +540,34 @@ useEffect(() => {
                     placeholder="Search users..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                   />
                 </div>
 
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full sm:w-auto px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white min-w-[140px] transition-all duration-200 text-sm"
+                  className="w-full sm:w-auto px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-[140px] transition-all duration-200 text-sm"
                 >
                   <option>All Status</option>
                   <option>Active</option>
                   <option>Banned</option>
                 </select>
-
-                <button className="w-full sm:w-auto px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center gap-2 font-medium text-sm">
-                  <Search className="w-4 h-4" />
-                  Search
-                </button>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <button
                   onClick={() => {
-                    setShowAddForm(!showAddForm)
+                    setShowAddForm(false)
                     setEditingUser(null)
                     setSelectedUser(null)
-                    setFormData({
-                      first_name: "",
-                      last_name: "",
-                      username: "",
-                      email: "",
-                      phone: "",
-                      address: "",
-                      preferred_language: "English",
-                      status: "active",
-                      email_verified: false,
-                      sms_verified: false,
-                      two_factor_enabled: false,
-                      balance: "",
-                      currency: "NGN",
-                      account_type: "standard",
-                    })
+                    setActiveUserAction(null)
+                    toast.info("User creation is handled through registration. Please use the registration system.")
                   }}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center justify-center gap-2 font-medium text-sm"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2 font-medium text-sm"
                 >
                   <UserPlus className="w-4 h-4" />
                   Add User
-                </button>
-
-                <button className="w-full sm:w-auto px-6 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors duration-200 flex items-center justify-center gap-2 font-medium text-sm">
-                  <MoreVertical className="w-4 h-4" />
-                  Bulk Actions
                 </button>
               </div>
             </div>
@@ -394,18 +582,39 @@ useEffect(() => {
           onViewDetails={handleViewDetails}
           onEdit={handleEdit}
           onToggleStatus={toggleUserStatus}
-          onSyncServices={handleSyncServices}
+          onSyncServices={() => {}}
           onDelete={handleDelete}
           isLoading={isLoading}
-          formatCurrency={formatCurrency}
-          activeDropdownUserId={activeDropdownUserId}        
-          setActiveDropdownUserId={setActiveDropdownUserId}  
+          formatCurrency={formatUserBalance}
+          activeDropdownUserId={activeDropdownUserId}
+          setActiveDropdownUserId={setActiveDropdownUserId}
         />
 
         {/* Stats Summary */}
-   
         <UserStats users={users.data || []} formatCurrency={formatCurrency} />
 
+        {/* Pagination */}
+        {pagination.last_page > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <button
+              onClick={() => setPagination(prev => ({ ...prev, current_page: prev.current_page - 1 }))}
+              disabled={pagination.current_page === 1 || isLoading}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2 text-sm text-gray-700">
+              Page {pagination.current_page} of {pagination.last_page}
+            </span>
+            <button
+              onClick={() => setPagination(prev => ({ ...prev, current_page: prev.current_page + 1 }))}
+              disabled={pagination.current_page >= pagination.last_page || isLoading}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

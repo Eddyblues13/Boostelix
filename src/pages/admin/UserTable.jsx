@@ -22,15 +22,10 @@ const UserTable = ({
   onSyncServices,
   onDelete,
   isLoading,
-  formatCurrency
+  formatCurrency,
+  activeDropdownUserId,
+  setActiveDropdownUserId,
 }) => {
-  const handleToggleDropdown = (user) => {
-    if (selectedUser?.id === user.id) {
-      onViewDetails(null) // Close dropdown
-    } else {
-      onViewDetails(user) // Open dropdown for this user
-    }
-  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -66,7 +61,7 @@ const UserTable = ({
                         <p className="text-xs text-gray-600 mb-2">{user.email}</p>
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-sm font-bold text-gray-900">
-                            {formatCurrency(user.balance, user.currency)}
+                            {formatCurrency(user)}
                           </span>
                           <span
                             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
@@ -84,12 +79,13 @@ const UserTable = ({
                   </div>
                   <ActionDropdown
                     user={user}
-                    isOpen={selectedUser?.id === user.id}
-                    onToggle={() => handleToggleDropdown(user)}
-                    onViewDetails={() => onViewDetails(user)}
+                    isOpen={activeDropdownUserId === user.id}
+                    onToggle={() => {
+                      setActiveDropdownUserId(activeDropdownUserId === user.id ? null : user.id)
+                    }}
+                    onViewDetails={onViewDetails}
                     onEdit={onEdit}
                     onToggleStatus={onToggleStatus}
-                 
                     onDelete={onDelete}
                     isLoading={isLoading}
                   />
@@ -156,7 +152,7 @@ const UserTable = ({
                   <td className="px-4 py-4">
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-gray-900">
-                        {formatCurrency(user.balance, user.currency)}
+                        {formatCurrency(user)}
                       </span>
                       <span className="text-xs text-gray-500">{user.total_orders} orders</span>
                     </div>
@@ -174,9 +170,11 @@ const UserTable = ({
                   <td className="px-4 py-4">
                     <ActionDropdown
                       user={user}
-                      isOpen={selectedUser?.id === user.id}
-                      onToggle={() => handleToggleDropdown(user)}
-                      onViewDetails={() => onViewDetails(user)}
+                      isOpen={activeDropdownUserId === user.id}
+                      onToggle={() => {
+                        setActiveDropdownUserId(activeDropdownUserId === user.id ? null : user.id)
+                      }}
+                      onViewDetails={onViewDetails}
                       onEdit={onEdit}
                       onToggleStatus={onToggleStatus}
                       onDelete={onDelete}

@@ -1,7 +1,7 @@
 "use client"
 import NotificationButton from "./NotificationButton"
 import { useState, useRef, useEffect } from "react"
-import { Bell, LogOut, Globe, ChevronDown, Settings, Menu } from "lucide-react"
+import { Bell, LogOut, Globe, ChevronDown, Settings, Menu, Shield } from "lucide-react"
 import { CSS_COLORS } from "../constant/colors"
 import { useNavigate } from "react-router-dom"
 
@@ -17,6 +17,31 @@ const Header = ({
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false)
   const currencyRef = useRef(null)
   const navigate = useNavigate()
+  const isAdminImpersonating = localStorage.getItem('isAdminImpersonating') === 'true'
+
+  // Handle return to admin
+  const handleReturnToAdmin = () => {
+    // Restore admin session
+    const adminToken = sessionStorage.getItem('adminToken_backup')
+    const adminData = sessionStorage.getItem('adminData_backup')
+    
+    if (adminToken && adminData) {
+      localStorage.setItem('adminToken', adminToken)
+      localStorage.setItem('adminData', adminData)
+    }
+    
+    // Clear impersonation flags
+    localStorage.removeItem('isAdminImpersonating')
+    sessionStorage.removeItem('adminToken_backup')
+    sessionStorage.removeItem('adminData_backup')
+    
+    // Clear user session
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('userData')
+    
+    // Navigate to admin dashboard
+    window.location.href = '/admin/dashboard'
+  }
 
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -58,6 +83,18 @@ const Header = ({
 
         {/* Right side */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3">
+          {/* Return to Admin Button - Show when impersonating */}
+          {isAdminImpersonating && (
+            <button
+              onClick={handleReturnToAdmin}
+              className="flex items-center space-x-1.5 sm:space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-semibold transition-colors shadow-sm"
+              title="Return to Admin Panel"
+            >
+              <Shield className="w-4 h-4" />
+              <span className="hidden sm:inline">Return to Admin</span>
+            </button>
+          )}
+          
           {/* Currency Dropdown */}
           <div className="relative" ref={currencyRef}>
             <button

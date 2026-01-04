@@ -14,6 +14,7 @@ const ActionDropdown = ({
   user,
   isOpen,
   onToggle,
+  onViewDetails,
   onEdit,
   onToggleStatus,
   onSyncServices,
@@ -23,12 +24,22 @@ const ActionDropdown = ({
   const navigate = useNavigate();
 
   const handleView = () => {
-    navigate(`/admin/users/${user.id}/View`);
+    // Use onViewDetails if provided, otherwise navigate
+    if (onViewDetails) {
+      onViewDetails(user);
+    } else {
+      navigate(`/admin/users/${user.id}/View`);
+    }
     onToggle();
   }; 
 
   const handleEdit = () => {
-    navigate(`/admin/users/${user.id}/Edit`);
+    // Use onEdit if provided, otherwise navigate
+    if (onEdit) {
+      onEdit(user);
+    } else {
+      navigate(`/admin/users/${user.id}/Edit`);
+    }
     onToggle();
   };
 

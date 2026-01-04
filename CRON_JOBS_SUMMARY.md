@@ -35,6 +35,7 @@ Boostelixbackend/routes/console.php
 | `orders:process-refunds` | Every hour | `cron-refunds.log` |
 | `notifications:send` | Every 2 minutes | `cron-notifications.log` |
 | `database:cleanup` | Daily at 2 AM | `cron-cleanup.log` |
+| `tickets:auto-close` | Daily at 3 AM | `cron-tickets-close.log` |
 
 ## 🚀 Setup Instructions
 

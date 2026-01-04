@@ -53,7 +53,7 @@ const UserStats = ({ users = [], formatCurrency }) => {
           <div>
             <p className="text-xs sm:text-sm text-gray-500">Total Balance</p>
             <p className="text-sm sm:text-xl font-bold text-gray-900">
-              {formatCurrency(users.reduce((sum, u) => sum + u.balance, 0))}
+              {formatCurrency(users.reduce((sum, u) => sum + (u.balance || 0), 0), { symbol: "₦" })}
             </p>
           </div>
         </div>

@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, X, Send, MessageCircle, Clock, CheckCircle, AlertCircle, Eye } from "lucide-react"
 import toast from "react-hot-toast"
 import { fetchUserData } from "../../services/userService"
 import { CSS_COLORS } from "../../components/constant/colors"
-import { createTicket, fetchUserTickets} from "../../services/services"
+import { createTicket, fetchUserTickets, fetchTicketDetails, replyToTicket } from "../../services/services"
 import { Search } from "lucide-react"
+import { Loader2 } from "lucide-react"
 
 
 
@@ -23,6 +24,12 @@ const Support = () => {
   const [orderIds, setOrderIds] = useState("")
   const [message, setMessage] = useState("")
   const [expandedFaq, setExpandedFaq] = useState("why-choose")
+  const [selectedTicket, setSelectedTicket] = useState(null)
+  const [showTicketModal, setShowTicketModal] = useState(false)
+  const [replyMessage, setReplyMessage] = useState("")
+  const [isReplying, setIsReplying] = useState(false)
+  const [isLoadingTicket, setIsLoadingTicket] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const categories = [
     { id: "order", label: "Order", icon: "📦" },
@@ -140,6 +147,7 @@ const Support = () => {
     message,
   }
 
+  setIsSubmitting(true)
   try {
     const response = await createTicket(ticketData)
 
@@ -161,9 +169,54 @@ const Support = () => {
     const errorMsg = error?.response?.data?.message || "Failed to submit ticket"
     toast.error(errorMsg)
     console.error("Ticket submission error:", errorMsg)
+  } finally {
+    setIsSubmitting(false)
+  }
+}
+
+  const handleViewTicket = async (ticketId) => {
+    setIsLoadingTicket(true)
+    try {
+      const response = await fetchTicketDetails(ticketId)
+      setSelectedTicket(response.ticket || response.data)
+      setShowTicketModal(true)
+    } catch (error) {
+      toast.error("Failed to load ticket details")
+    } finally {
+      setIsLoadingTicket(false)
+    }
   }
 
-}
+  const handleReply = async () => {
+    if (!replyMessage.trim() || !selectedTicket) return
+    
+    setIsReplying(true)
+    try {
+      await replyToTicket(selectedTicket.id, replyMessage)
+      toast.success("Reply sent successfully!")
+      setReplyMessage("")
+      // Reload ticket details
+      const response = await fetchTicketDetails(selectedTicket.id)
+      setSelectedTicket(response.ticket || response.data)
+      // Reload tickets list
+      const updatedTickets = await fetchUserTickets()
+      setTickets(updatedTickets)
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to send reply")
+    } finally {
+      setIsReplying(false)
+    }
+  }
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      0: { text: 'Pending', class: 'bg-yellow-100 text-yellow-700' },
+      1: { text: 'Answered', class: 'bg-green-100 text-green-700' },
+      2: { text: 'In Progress', class: 'bg-blue-100 text-blue-700' },
+      3: { text: 'Closed', class: 'bg-red-100 text-red-700' },
+    }
+    return badges[status] || badges[0]
+  }
 
 
   return (
@@ -296,10 +349,18 @@ const Support = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity"
+                disabled={isSubmitting}
+                className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 style={{ backgroundColor: CSS_COLORS.primary }}
               >
-                Submit Ticket
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Ticket"
+                )}
               </button>
             </form>
           </div>
@@ -518,10 +579,18 @@ const Support = () => {
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity text-lg"
+                    disabled={isSubmitting}
+                    className="w-full text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:opacity-90 transition-opacity text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     style={{ backgroundColor: CSS_COLORS.primary }}
                   >
-                    Submit Ticket
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Ticket"
+                    )}
                   </button>
                 </form>
               </div>
@@ -591,58 +660,60 @@ const Support = () => {
           </div>
 
           <div className="mt-10 space-y-6">
-  <h2 className="text-xl font-semibold text-gray-800">My Ticket History</h2>
+            <h2 className="text-xl font-semibold text-gray-800">My Ticket History</h2>
 
-  <div className="space-y-3">
-    {tickets.length > 0 ? (
-      tickets.map((ticket) => (
-        <div
-          key={ticket.id}
-          className="rounded-2xl p-4 shadow-sm border border-white/50 backdrop-blur-sm"
-          style={{ backgroundColor: CSS_COLORS.background.card }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-semibold text-gray-800">#{ticket.id}</span>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                ticket.status === 0
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : ticket.status === 1
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-red-100 text-red-700'
-              }`}
-            >
-              {ticket.status === 0 ? 'Pending' : ticket.status === 1 ? 'Answered' : 'Closed'}
-            </span>
-          </div>
-
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Subject:</span>
-              <span className="text-gray-800">{ticket.subject}</span>
+            <div className="space-y-3">
+              {tickets.length > 0 ? (
+                tickets.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    onClick={() => handleViewTicket(ticket.id)}
+                    className="rounded-2xl p-4 shadow-sm border border-white/50 backdrop-blur-sm cursor-pointer hover:shadow-md transition-shadow"
+                    style={{ backgroundColor: CSS_COLORS.background.card }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-semibold text-gray-800">#{ticket.id}</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(ticket.status).class}`}>
+                        {getStatusBadge(ticket.status).text}
+                      </span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Subject:</span>
+                        <span className="text-gray-800 font-medium">{ticket.subject}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Category:</span>
+                        <span className="text-gray-800">{ticket.category_id}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Last Updated:</span>
+                        <span className="text-gray-800">
+                          {new Date(ticket.updated_at || ticket.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      {ticket.replies && ticket.replies.length > 0 && (
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <MessageCircle className="w-4 h-4" />
+                          <span>{ticket.replies.length} {ticket.replies.length === 1 ? 'reply' : 'replies'}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 font-medium">No tickets found</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    You haven't submitted any tickets yet
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Last Updated:</span>
-              <span className="text-gray-800">
-                {new Date(ticket.updated_at || ticket.created_at).toLocaleString()}
-              </span>
-            </div>
           </div>
-        </div>
-      ))
-    ) : (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Search className="w-8 h-8 text-gray-400" />
-        </div>
-        <p className="text-gray-500 font-medium">No tickets found</p>
-        <p className="text-sm text-gray-400 mt-1">
-          You haven’t submitted any tickets yet
-        </p>
-      </div>
-    )}
-  </div>
-</div>
 
 
           {/* Footer */}
@@ -654,11 +725,124 @@ const Support = () => {
           </div>
         </div>
       </div>
+
+      {/* Ticket Details Modal */}
+      {showTicketModal && selectedTicket && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Ticket #{selectedTicket.id}</h2>
+                <p className="text-sm text-gray-500">{selectedTicket.subject}</p>
+              </div>
+              <button onClick={() => { setShowTicketModal(false); setSelectedTicket(null); setReplyMessage("") }} className="text-gray-500 hover:text-gray-700">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Ticket Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-gray-500">Status</span>
+                  <div className="mt-1">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(selectedTicket.status).class}`}>
+                      {getStatusBadge(selectedTicket.status).text}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Category</span>
+                  <p className="mt-1 font-medium">{selectedTicket.category_id}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Request Type</span>
+                  <p className="mt-1 font-medium">{selectedTicket.request_type}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Created</span>
+                  <p className="mt-1 text-sm">{new Date(selectedTicket.created_at).toLocaleString()}</p>
+                </div>
+              </div>
+
+              {selectedTicket.order_ids && (
+                <div>
+                  <span className="text-xs text-gray-500">Order IDs</span>
+                  <p className="mt-1 font-mono text-sm">{selectedTicket.order_ids}</p>
+                </div>
+              )}
+
+              {/* Original Message */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                    {user?.first_name?.[0] || 'U'}
+                  </div>
+                  <div>
+                    <p className="font-medium">{user?.first_name} {user?.last_name}</p>
+                    <p className="text-xs text-gray-500">{new Date(selectedTicket.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 whitespace-pre-wrap">{selectedTicket.message || 'No message provided'}</p>
+              </div>
+
+              {/* Replies */}
+              {(selectedTicket.replies || []).length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900">Replies</h3>
+                  {selectedTicket.replies.map((reply) => (
+                    <div key={reply.id} className={`rounded-lg p-4 ${reply.admin_id ? 'bg-blue-50 border-l-4 border-blue-600' : 'bg-gray-50'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold ${reply.admin_id ? 'bg-green-600' : 'bg-blue-600'}`}>
+                          {reply.admin_id ? 'A' : user?.first_name?.[0] || 'U'}
+                        </div>
+                        <div>
+                          <p className="font-medium">{reply.admin_id ? 'Support Team' : `${user?.first_name} ${user?.last_name}`}</p>
+                          <p className="text-xs text-gray-500">{new Date(reply.created_at).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-700 whitespace-pre-wrap">{reply.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Reply Form - Only show if ticket is not closed */}
+              {selectedTicket.status !== 3 && (
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">Add Reply</h3>
+                  <textarea
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+                    placeholder="Type your reply here..."
+                  />
+                  <button
+                    onClick={handleReply}
+                    disabled={!replyMessage.trim() || isReplying}
+                    className="mt-4 w-full text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    style={{ backgroundColor: CSS_COLORS.primary }}
+                  >
+                    {isReplying ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Send Reply
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-
-
-
-
   )
 }
 

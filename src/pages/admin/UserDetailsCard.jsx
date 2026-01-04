@@ -40,6 +40,7 @@ const UserDetailsCard = ({
   onPasswordUpdate,
   passwordData,
   onPasswordChange,
+  onActionSelect,
 }) => {
   const [currentModal, setCurrentModal] = useState(null)
   const [modalData, setModalData] = useState(null)
@@ -142,15 +143,17 @@ const UserDetailsCard = ({
             <Copy className="w-4 h-4" />
           </button>
         </div>
-        <div className="bg-gray-50 rounded-lg p-3 font-mono text-sm text-gray-800 break-all">{user.api_key}</div>
+        <div className="bg-gray-50 rounded-lg p-3 font-mono text-sm text-gray-800 break-all">
+          {user.api_key || user.api_token || "No API key generated yet"}
+        </div>
       </div>
 
       {/* User Actions Section */}
       <UserActions 
         user={user} 
-        onActionSelect={handleActionSelect}
-        onEdit={handleEdit}
-        onToggleStatus={handleToggleStatus}
+        onActionSelect={onActionSelect || handleActionSelect}
+        onEdit={onEdit}
+        onToggleStatus={onToggleStatus}
       />
 
       {/* User Information Grid */}
