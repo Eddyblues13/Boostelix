@@ -119,6 +119,12 @@ export const createOrder = async (orderData) => {
         errorMessage = serverError.message;
       }
       
+      // Show debug info if available
+      if (serverError.debug) {
+        console.error('Debug Info:', serverError.debug);
+        errorMessage += `\n\nDebug: ${serverError.debug.error} at ${serverError.debug.file}:${serverError.debug.line}`;
+      }
+      
       if (serverError.shortfall) {
         errorMessage += ` You need $${serverError.shortfall} more.`;
       }
